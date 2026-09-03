@@ -143,6 +143,11 @@ svg{display:block;inline-size:100%;block-size:auto}
   border-inline-start:4px solid var(--warn);border-radius:11px;padding:11px 12px;font-size:14px;margin-block-end:8px}
 .note.bad{border-inline-start-color:var(--out)} .note.ok{border-inline-start-color:var(--in)}
 .note.info{border-inline-start-color:var(--move)}
+.note{position:relative;padding-inline-end:34px}
+.sipx{position:absolute;inset-block-start:6px;inset-inline-end:6px;inline-size:26px;block-size:26px;
+  border-radius:8px;font-size:.78rem;line-height:1;opacity:.6;flex:none}
+.sipx:hover,.sipx:focus-visible{opacity:1;background:var(--surface-3)}
+.card .sipx{position:static;margin-inline-start:6px;vertical-align:middle}
 .badge-bank{display:grid;place-items:center;border-radius:11px;color:#fff;font-weight:800;
   letter-spacing:.02em;flex:0 0 auto;text-align:center;line-height:1.05;padding:2px}
 .wtile{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);
@@ -223,6 +228,7 @@ nav.bottom button.plus{color:var(--accent)}
   </div>
 </header>
 
+<div class="wrap" id="saveWarn" hidden></div>
 <main class="wrap" id="app" tabindex="-1"></main>
 
 <nav class="bottom" id="nav" aria-label="Main"></nav>
@@ -292,7 +298,10 @@ function blank() {
     statements: [],
     pots: [],
     funds: [],
+    sipSkip: {},
+    sipSnooze: {},
     perks: {},
+    emis: [],
     auth: { user:"", pwHash:"", dob:"", gender:"", createdAt:"", lastSignIn:"" },
     seeded: false,
     sync: { user:"", repo:"", branch:"main", file:"data.json.enc", on:false,
@@ -320,6 +329,7 @@ var ui = {
   syncState: "",
   syncError: "",
   accId: "",
+  fundId: "",
   accRange: null,
   shown: {},
   syncTimer: null,
@@ -401,9 +411,26 @@ function el(x) { return document.getElementById(x); }
 /* =========================================================
    3. SAVE / LOAD
    ========================================================= */
+var BACKUP_KEY = "moneytracker.previous";
+var saveFailed = false;
 function saveLocalOnly() {
-  try { localStorage.setItem(KEY, JSON.stringify(db)); return true; }
-  catch (e) { toast("Couldn't save — this device's storage may be full"); return false; }
+  var text;
+  try { text = JSON.stringify(db); } catch (e) { return false; }
+  /* Keep the copy that was already good, so one bad write can never wipe you out. */
+  try {
+    var prev = localStorage.getItem(KEY);
+    if (prev && prev !== text) localStorage.setItem(BACKUP_KEY, prev);
+  } catch (e) {}
+  try {
+    localStorage.setItem(KEY, text);
+    if (saveFailed) { saveFailed = false; paintSaveWarning(); }
+    return true;
+  } catch (e) {
+    saveFailed = true;
+    paintSaveWarning();
+    toast("Couldn't save on this device \u2014 storage may be full or blocked");
+    return false;
+  }
 }
 function save() {
   var ok = saveLocalOnly();
@@ -415,7 +442,22 @@ function load() {
   try { raw = localStorage.getItem(KEY); } catch (e) { return; }
   if (!raw) return;
   var parsed;
-  try { parsed = JSON.parse(raw); } catch (e) { toast("Saved data looked damaged, starting fresh"); return; }
+  try { parsed = JSON.parse(raw); } catch (e) { parsed = null; }
+  if (!parsed) {
+    var back;
+    try { back = localStorage.getItem(BACKUP_KEY); } catch (e2) { back = null; }
+    if (back) {
+      try { parsed = JSON.parse(back); } catch (e3) { parsed = null; }
+      if (parsed) {
+        applyLoaded(parsed);
+        saveLocalOnly();
+        toast("Your latest save looked damaged \u2014 restored the copy before it");
+        return;
+      }
+    }
+    toast("Saved data looked damaged and could not be read");
+    return;
+  }
   applyLoaded(parsed);
 }
 /** Take a plain data object (from storage, a backup, or GitHub) and make it live. */
@@ -429,7 +471,7 @@ function applyLoaded(parsed) {
   base.profile = Object.assign({ name: "" }, parsed.profile || {});
   base.auth = Object.assign(blank().auth, parsed.auth || {});
   if (!Array.isArray(base.cats) || !base.cats.length) base.cats = DEFAULT_CATS.slice();
-  ["accounts", "apps", "tx", "goals", "bills", "views", "statements", "pots", "funds"].forEach(function (k) {
+  ["accounts", "apps", "tx", "goals", "bills", "views", "statements", "pots", "funds", "emis"].forEach(function (k) {
     if (!Array.isArray(base[k])) base[k] = [];
   });
   base.tx.forEach(function (t) {
@@ -551,15 +593,22 @@ function cardInfo(a) {
   var used = cardOutstanding(a), limit = Math.round(a.limit || 0);
   return { used: used, limit: limit, left: limit - used, use: limit > 0 ? (used / limit) * 100 : 0 };
 }
+/** Money put into savings this period. It leaves your account, but you
+    still own it \u2014 so it is counted as money out, never as spending on things. */
+function intoSavings(t) {
+  return (t.type === "move" && t.potId) ? Math.round(t.amt || 0) : 0;
+}
 function totalsFor(list) {
-  var out = 0, inc = 0, back = 0, held = 0;
+  var out = 0, inc = 0, back = 0, held = 0, saved = 0;
   list.forEach(function (t) {
     out += netSpend(t);
     inc += netIncome(t);
     back += t.type === "out" ? refundTotal(t) : 0;
     held += stuck(t);
+    saved += intoSavings(t);
   });
-  return { out: out, in: inc, back: back, stuck: held, net: inc - out };
+  return { out: out + saved, spend: out, saved: saved,
+    in: inc, back: back, stuck: held, net: inc - out - saved };
 }
 function txOn(iso) { return db.tx.filter(function (t) { return t.date === iso; }); }
 function txIn(mk) { return db.tx.filter(function (t) { return mOf(t.date) === mk; }); }
@@ -1102,11 +1151,13 @@ function tx(x) {
   return null;
 }
 function txTitle(t) {
+  if (t.potId) return t.note || "Moved into savings";
   if (t.type === "bill") return "Card bill paid";
   if (t.type === "move") return accName(t.acc) + " → " + accName(t.to);
   return t.note || t.cat || (t.type === "in" ? "Money in" : "Spent");
 }
 function txIconOf(t) {
+  if (t.potId) return "🏦";
   if (t.type === "bill") return "💳";
   if (t.type === "move") return "🔁";
   if (t.type === "in") return "💰";
@@ -1269,14 +1320,14 @@ var TITLES = {
   home:"Home", history:"History", stats:"Stats", more:"More",
   money:"Accounts & cards", budget:"Budget & goals", bills:"Bills",
   reports:"Reports", settings:"Settings", card:"Credit card", cycle:"Billing cycle", stmt:"Statement",
-  account:"Account", funds:"Mutual funds", saved:"Money set aside", cardplan:"Which card to use", perks:"Card perks"
+  account:"Account", funds:"Mutual funds", fund:"Fund", saved:"Money set aside", cardplan:"Which card to use", perks:"Card perks"
 };
 
 function drawNav() {
   el("nav").innerHTML = NAV.map(function (x) {
     var current = ui.view === x.v ||
       (x.v === "more" && ["money", "budget", "bills", "reports", "settings", "card", "cycle",
-        "stmt", "account", "funds", "saved", "cardplan", "perks"].indexOf(ui.view) > -1);
+        "stmt", "account", "funds", "fund", "saved", "cardplan", "perks"].indexOf(ui.view) > -1);
     return '<button type="button" class="' + (x.v === "add" ? "plus" : "") + '" data-act="' +
       (x.v === "add" ? "add" : "go") + '" data-view="' + x.v + '"' +
       (x.v === "add" ? "" : ' aria-current="' + (current ? "page" : "false") + '"') +
@@ -1290,7 +1341,7 @@ function render() {
     money: pageMoney, budget: pageBudget, bills: pageBills,
     reports: pageReports, settings: pageSettings,
     card: pageCard, cycle: pageCycle, stmt: pageStatement,
-    account: pageAccount, funds: pageFunds, saved: pageSaved, cardplan: pageCardPlan, perks: pagePerks
+    account: pageAccount, funds: pageFunds, fund: pageFund, saved: pageSaved, cardplan: pageCardPlan, perks: pagePerks
   }[ui.view] || pageHome;
   el("app").innerHTML = fn();
   if (window.scrollTo) window.scrollTo(0, 0);
@@ -1333,7 +1384,11 @@ function pageHome() {
   h += '<div class="grid">' +
     '<div class="card"><span class="lbl">Spent today</span><p class="mid out">' + money(tToday.out) + "</p></div>" +
     '<div class="card"><span class="lbl">Received today</span><p class="mid in">' + money(tToday.in) + "</p></div>" +
-    '<div class="card"><span class="lbl">Spent this month</span><p class="mid out">' + money(tMonth.out) + "</p></div>" +
+    '<div class="card"><span class="lbl">Money out this month</span><p class="mid out">' +
+      money(tMonth.out) + "</p>" +
+      (tMonth.saved > 0
+        ? '<p class="sub">' + money(tMonth.spend) + " spent \u00b7 " + money(tMonth.saved) + " into savings</p>"
+        : "") + "</div>" +
     '<div class="card"><span class="lbl">Left to spend</span><p class="mid ' +
       (left.amount >= 0 ? "in" : "out") + '">' + money(left.amount) + "</p>" +
       '<p class="sub">' + (left.basis === "budget"
@@ -1341,6 +1396,8 @@ function pageHome() {
         : (cardsDueNow() ? "after " + money(cardsDueNow()) + " of card bills due" : "money you hold") +
           (bufferTotal() ? " and the " + money(bufferTotal()) + " you keep aside" : "")) +
       "</p></div></div></div>";
+
+  h += sipBlock();
 
   /* savings accounts */
   var banks = spendAccounts();
@@ -1373,6 +1430,54 @@ function pageHome() {
           '</td><td class="n"><button type="button" class="btn s" data-act="payCard" data-id="' +
           esc(x.card.id) + '">Pay</button></td></tr>';
       }).join("") + "</table></div></div>";
+  }
+
+  /* all cards together — a shared pool counts ONCE, not once per card */
+  if (cardList.length) {
+    var pools = {}, noLim = [];
+    cardList.forEach(function (c) {
+      var lim = sharedLimitOf(c);
+      if (!lim) { if (!c.virtualOf) noLim.push(c); return; }
+      var key = c.sharedLimit ? "s:" + c.sharedLimit : (c.virtualOf || c.id);
+      if (!pools[key]) pools[key] = { limit: lim, used: familyUsed(c), cards: [] };
+      pools[key].cards.push(c);
+    });
+    var keys = Object.keys(pools);
+    var limTotal = keys.reduce(function (n, k) { return n + pools[k].limit; }, 0);
+    var usedTotal = keys.reduce(function (n, k) { return n + pools[k].used; }, 0);
+    h += '<div class="sec"><div class="card"><span class="lbl">All your cards together</span>' +
+      (keys.length
+        ? '<div class="grid" style="margin-block:8px">' +
+          '<div><span class="lbl">Total limit</span><p class="mid">' + maskMoney(limTotal, "cardsum") + "</p></div>" +
+          '<div><span class="lbl">Used</span><p class="mid out">' + maskMoney(usedTotal, "cardsum") + "</p></div>" +
+          '<div><span class="lbl">Left to use</span><p class="mid in">' +
+            maskMoney(limTotal - usedTotal, "cardsum") + "</p></div></div>" +
+          '<div class="bar"><i class="' + (limTotal > 0 && usedTotal / limTotal > 0.3 ? "w" : "") +
+          '" style="inline-size:' + (limTotal > 0 ? Math.min(100, (usedTotal / limTotal) * 100).toFixed(1) : 0) +
+          '%"></i></div><p class="sub">' +
+          (limTotal > 0 ? ((usedTotal / limTotal) * 100).toFixed(1) + "% of your total limit used" : "") +
+          " \u00b7 across " + keys.length + " pool" + (keys.length === 1 ? "" : "s") + " of credit</p>"
+        : '<p class="sub">No limits saved yet.</p>') +
+      eyeBtn("cardsum", "your card totals") +
+      (function () {
+        var shares = keys.filter(function (k) { return pools[k].cards.length > 1; });
+        return shares.length
+          ? '<p class="hint">' + shares.map(function (k) {
+              return esc(pools[k].cards.map(function (c) { return c.name; }).join(" and ")) +
+                " share one " + money(pools[k].limit) + " limit";
+            }).join("; ") + ". Counted once, not twice.</p>"
+          : "";
+      })() +
+      (noLim.length
+        ? '<div class="note" style="margin-block-start:10px"><span aria-hidden="true">\u2139\ufe0f</span><div>' +
+          "<b>" + noLim.length + " card" + (noLim.length === 1 ? " has" : "s have") + " no limit saved.</b>" +
+          '<div class="btns" style="margin-block-start:8px">' +
+          noLim.map(function (c) {
+            return '<button type="button" class="btn g s" data-act="setLimit" data-id="' + esc(c.id) + '">' +
+              esc(c.name) + "</button>";
+          }).join("") + "</div></div></div>"
+        : "") +
+      "</div></div>";
   }
 
   /* card timing nudges */
@@ -1416,11 +1521,11 @@ function pageHome() {
         return "<tr><td>" + esc(f.name) + '</td><td class="n">' + maskMoney(f.invested, "funds") + "</td></tr>";
       }).join("") + "</table>" +
       (function () {
-        var soon = sipDue().filter(function (x) { return x.due; });
-        return soon.length
-          ? '<p class="sub" style="margin-block-start:8px">\u23f0 ' + soon.length +
-            " SIP" + (soon.length === 1 ? "" : "s") + " due soon</p>"
-          : "";
+        var hl = sipHeadline();
+        if (!hl) return "";
+        var icon = hl.tone === "ask" ? "\u2753" : hl.tone === "short" ? "\u26a0\ufe0f" : "\u2705";
+        return '<p class="sub ' + (hl.tone === "short" ? "out" : "") +
+          '" style="margin-block-start:8px">' + icon + " " + esc(hl.text) + "</p>";
       })() + "</div></div>";
   }
 
@@ -1459,6 +1564,149 @@ function pageHome() {
     '<button type="button" class="btn g s" data-act="go" data-view="history">See all</button></div>' +
     '<div class="card">' + (recent.length ? recent.map(txRow).join("")
       : '<p class="empty">Nothing recorded yet.</p>') + "</div></div>";
+  return h;
+}
+
+/* ---------- the SIP reminder block, shown on Home and on Mutual funds ---------- */
+function sipCloseBtn(a) {
+  return '<button type="button" class="ib sipx" data-act="sipHide" data-k="' + esc(snoozeKey(a)) +
+    '" aria-label="Close this reminder for now" title="Hide for now \u2014 it comes back later">' +
+    "\u2715</button>";
+}
+function sipAlertCard(a) {
+  if (a.kind === "ask") {
+    return '<div class="card"><div class="rowline"><b>' + esc(a.title) + "</b>" +
+      '<span class="n">' + money(a.amt) + " " + sipCloseBtn(a) + "</span></div>" +
+      '<p class="sub">' + esc(a.body) + " Nothing was taken by this app \u2014 tell it what really " +
+      "happened. Not sure yet? Close this and it will ask again later.</p>" +
+      '<div class="btns" style="margin-block-start:8px">' +
+      '<button type="button" class="btn s" data-act="payFund" data-id="' + esc(a.fundId) + '">Yes, I paid it</button>' +
+      '<button type="button" class="btn g s" data-act="skipSip" data-id="' + esc(a.fundId) +
+      '">Not this month</button></div></div>';
+  }
+  /* Balances stay behind the eye here too, so Home never leaks them. */
+  var when = a.date === today() ? "today"
+    : daysBetween(today(), a.date) === 1 ? "tomorrow" : "on " + fDate(a.date);
+  var held = maskMoney(a.have, "total");
+  var forWhat = a.funds && a.funds.length
+    ? '<br><span class="sub">For ' + esc(a.funds.join(", ")) + "</span>" : "";
+  if (a.kind === "short") {
+    return '<div class="note bad" title="' + esc(a.title) + '"><span aria-hidden="true">\u26a0\ufe0f</span>' +
+      sipCloseBtn(a) + "<div>" +
+      "<b>Put " + money(a.short) + " into " + esc(accName(a.accId)) + "</b><br>" +
+      money(a.need) + " of SIPs is set to leave " + esc(accName(a.accId)) + " " + when +
+      ", but it holds " + held + ". You are <b>" + money(a.short) + "</b> short." + forWhat +
+      "</div></div>";
+  }
+  return '<div class="note info" title="' + esc(a.title) + '"><span aria-hidden="true">\u2705</span>' +
+    sipCloseBtn(a) + "<div>" +
+    "<b>" + money(a.need) + " will leave " + esc(accName(a.accId)) + " " + when + "</b><br>" +
+    "That account holds " + held + ", so this is covered. Nothing is taken by this app \u2014 " +
+    "your bank moves it." + forWhat + "</div></div>";
+}
+function sipBlock(opts) {
+  var o = opts || {}, list = sipAlerts();
+  if (!list.length) {
+    var back = sipHiddenRow();
+    return back ? '<div class="sec">' + back + "</div>" : "";
+  }
+  var asks = list.filter(function (a) { return a.kind === "ask"; });
+  var rest = list.filter(function (a) { return a.kind !== "ask"; });
+  var h = '<div class="sec"><div class="rowline"><h2>' +
+    (asks.length ? "Did your SIPs go through?" : "Your SIPs are coming up") + "</h2>" +
+    (o.link !== false
+      ? '<button type="button" class="btn g s" data-act="go" data-view="funds">Mutual funds</button>'
+      : "") + "</div>";
+  if (asks.length) {
+    h += '<p class="sub" style="margin-block-end:8px">' +
+      "This app never moves money on its own. Confirm each one so what you see stays true.</p>";
+  }
+  h += asks.map(sipAlertCard).join("") + rest.map(sipAlertCard).join("");
+  h += sipHiddenRow();
+  return h + "</div>";
+}
+/** A quiet line offering back anything you closed. */
+function sipHiddenRow() {
+  var n = sipDismissed().length;
+  if (!n) return "";
+  return '<p class="sub" style="margin-block-start:8px">\ud83d\udd15 ' + n +
+    " reminder" + (n === 1 ? "" : "s") + " hidden for now \u00b7 " +
+    '<button type="button" class="btn g s" data-act="sipShowHidden">Show them again</button></p>';
+}
+/** Which account needs what, as a small table. */
+function sipNeedTable(within) {
+  var g = sipNeeds(new Date(), within === undefined ? 7 : within);
+  if (!g.length) return "";
+  return '<div class="sec"><h2>What must sit in which account</h2><div class="card"><table>' +
+    "<tr><th>Account</th><th class=\"n\">Needs</th><th class=\"n\">Has</th><th class=\"n\">When</th></tr>" +
+    g.map(function (x) {
+      return "<tr><td>" + esc(accName(x.accId)) + '<br><span class="sub">' +
+        esc(x.items.map(function (i) { return i.fund.name; }).join(", ")) + "</span></td>" +
+        '<td class="n">' + money(x.need) + "</td>" +
+        '<td class="n ' + (x.enough ? "in" : "out") + '">' + maskMoney(x.have, "total") + "</td>" +
+        '<td class="n">' + (x.away === 0 ? "today" : x.away === 1 ? "tomorrow" : fDate(x.date)) + "</td></tr>" +
+        '<tr><td colspan="4" class="sub">' +
+        (x.enough
+          ? "\u2705 Covered. Your bank moves this, not this app."
+          : "\u26a0\ufe0f Short by " + money(x.short) + " \u2014 add it before " + fDate(x.date) + ".") +
+        "</td></tr>";
+    }).join("") + "</table></div></div>";
+}
+
+/* ---------- how well you keep up with your SIPs ---------- */
+function sipReportBlock() {
+  var r = sipRecord();
+  if (!r.months) {
+    if (!sipFunds().length) return "";
+    /* Honest: this app can only judge months it has actually watched. */
+    return '<div class="sec"><h2>How you are keeping up with your SIPs</h2>' +
+      '<div class="note info"><span aria-hidden="true">\u23f3</span><div>' +
+      "<b>Nothing to judge yet.</b><br>You started tracking here on " +
+      esc(fDate(today())) + ", and no SIP day has passed since. From the first one on, " +
+      "this section will show how many months you paid and which you missed. It will not " +
+      "guess about months from before you started \u2014 only what is recorded here counts." +
+      "</div></div></div>";
+  }
+  var tone = r.tone === "good" ? "ok" : r.tone === "bad" ? "bad" : "info";
+  var icon = r.tone === "good" ? "\ud83c\udfc6" : r.tone === "bad" ? "\u26a0\ufe0f" : "\ud83d\udcc8";
+  var h = '<div class="sec"><h2>How you are keeping up with your SIPs</h2>';
+  h += '<div class="note ' + tone + '"><span aria-hidden="true">' + icon + "</span><div><b>" +
+    esc(r.verdict) + "</b><br>" + r.paid + " of " + r.months +
+    " SIP months were paid \u2014 that is " + r.rate + "%." +
+    (r.unpaid ? " " + r.missed + " went by with nothing recorded" +
+      (r.skipped ? " and " + r.skipped + " you marked as skipped." : ".") : "") +
+    "</div></div>";
+
+  h += '<div class="grid">' +
+    '<div class="card"><span class="lbl">Kept up</span><p class="mid ' +
+      (r.rate >= 90 ? "in" : r.rate >= 70 ? "warnc" : "out") + '">' + r.rate + "%</p>" +
+      '<p class="sub">of every SIP month so far</p></div>' +
+    '<div class="card"><span class="lbl">Months paid</span><p class="mid in">' + r.paid + "</p>" +
+      '<p class="sub">across ' + r.per.length + " funds</p></div>" +
+    '<div class="card"><span class="lbl">Months unpaid</span><p class="mid ' +
+      (r.unpaid ? "out" : "") + '">' + r.unpaid + "</p>" +
+      '<p class="sub">' + (r.unpaid ? "missed or skipped" : "none at all") + "</p></div>" +
+    '<div class="card"><span class="lbl">Best run</span><p class="mid">' +
+      (r.best ? r.best.streak : 0) + "</p>" +
+      '<p class="sub">' + (r.best && r.best.streak
+        ? esc(r.best.fund.name.split(" ").slice(0, 3).join(" ")) + ", in a row"
+        : "no run going yet") + "</p></div></div>";
+
+  h += '<div class="card"><table><tr><th>Fund</th><th class="n">Paid</th>' +
+    '<th class="n">Unpaid</th><th class="n">Kept up</th><th>Months missed</th></tr>' +
+    r.per.slice().sort(function (a, b) { return a.rate - b.rate; }).map(function (x) {
+      return "<tr><td>" + esc(x.fund.name) + "</td>" +
+        '<td class="n">' + x.paid + " / " + x.months + "</td>" +
+        '<td class="n ' + (x.gaps.length ? "out" : "in") + '">' + x.gaps.length + "</td>" +
+        '<td class="n">' + x.rate + "%</td>" +
+        "<td class=\"sub\">" + (x.gaps.length
+          ? esc(x.gaps.map(function (g) {
+              return g.label.replace(/ \d{4}$/, "") + (g.state === "skipped" ? " (skipped)" : "");
+            }).join(", "))
+          : "\u2014") + "</td></tr>";
+    }).join("") + "</table>" +
+    '<p class="sub">A month counts as unpaid only when nothing was recorded here for it. ' +
+    "If the money really did leave your bank, record it and this corrects itself.</p></div></div>";
   return h;
 }
 
@@ -2022,7 +2270,9 @@ function pageReports() {
   } else {
     h += '<div class="sec"><h2>The headlines</h2><div class="grid">' +
       '<div class="card"><span class="lbl">Money in</span><p class="mid in">' + money(R.totals.in) + "</p></div>" +
-      '<div class="card"><span class="lbl">Real spending</span><p class="mid out">' + money(R.totals.out) + "</p>" +
+      '<div class="card"><span class="lbl">Money out</span><p class="mid out">' + money(R.totals.out) + "</p>" +
+      (R.totals.saved > 0 ? '<p class="sub">' + money(R.totals.spend) + " spent, " +
+        money(R.totals.saved) + " saved</p>" : "") +
         (R.totals.back ? '<p class="sub">after ' + money(R.totals.back) + " of refunds</p>" : "") + "</div>" +
       '<div class="card"><span class="lbl">' + (R.totals.net >= 0 ? "Kept" : "Short by") + '</span><p class="mid ' +
         (R.totals.net >= 0 ? "in" : "out") + '">' + plus(R.totals.net) + "</p>" +
@@ -2138,6 +2388,8 @@ function pageReports() {
       money(fRows.reduce(function (n, f) { return n + (f.oneOff ? 0 : Math.round(f.sip || 0)); }, 0)) +
       '</b></td><td class="n"><b>' + money(fTotal) + "</b></td></tr></table></div></div>";
   }
+
+  h += sipReportBlock();
   if (pots().length) {
     h += '<div class="sec"><h2>Money set aside</h2><div class="card"><table>' +
       '<tr><th scope="col">What</th><th scope="col">Where</th><th scope="col" class="n">Amount</th></tr>' +
@@ -2441,25 +2693,61 @@ function unbilled(card) {
   var a = cardActivity(card.id, from, "");
   return Math.max(0, a.net);
 }
+function emis() { db.emis = db.emis || []; return db.emis; }
+/** Instalments still to run on a card. They hold up limit before being billed. */
+function emiLeft(cardId) {
+  return emis().filter(function (e) { return e.cardId === cardId && Math.round(e.left || 0) > 0; })
+    .reduce(function (n, e) { return n + Math.round(e.left); }, 0);
+}
+/** Cards that share one pool of credit — a shared limit is ONE limit,
+    not one each. Spending on either card reduces the same pool. */
+function limitFamily(card) {
+  if (!card) return [];
+  if (card.sharedLimit) {
+    return db.accounts.filter(function (a) {
+      return a.kind === "card" && !a.archived && a.sharedLimit === card.sharedLimit;
+    });
+  }
+  return [card];
+}
+function sharedLimitOf(card) {
+  var fam = limitFamily(card);
+  /* every card in the family carries the same figure, so take the largest */
+  return fam.reduce(function (n, a) { return Math.max(n, Math.round(a.limit || 0)); }, 0);
+}
+function familyUsed(card) {
+  return limitFamily(card).reduce(function (n, a) {
+    return n + cardOutstanding(a) + emiLeft(a.id);
+  }, 0);
+}
 function cardMoney(card) {
-  var limit = Math.round(card.limit || 0);
+  var limit = sharedLimitOf(card);
   var outstanding = cardOutstanding(card);
+  var emi = emiLeft(card.id);
   var st = latestStatement(card.id);
+  var fam = limitFamily(card);
+  var shared = fam.length > 1;
+  var poolUsed = familyUsed(card);
   return {
     limit: limit,
+    shared: shared,
+    family: fam,
     outstanding: outstanding,
+    emi: emi,
+    held: outstanding + emi,
+    poolUsed: poolUsed,
     unbilled: unbilled(card),
-    available: limit > 0 ? limit - outstanding : null,
-    utilisation: limit > 0 ? (outstanding / limit) * 100 : null,
+    available: limit > 0 ? limit - poolUsed : null,
+    utilisation: limit > 0 ? (poolUsed / limit) * 100 : null,
     statement: st,
     statementBalance: st ? Math.round(st.balance || 0) : 0,
     statementPaid: st ? paidOnStatement(st.id) + statementCredits(st) : 0,
     statementRemaining: st ? statementRemaining(st) : 0,
     minDue: st ? Math.round(st.minDue || 0) : 0,
     minRemaining: st ? minStillDue(st) : 0,
-    pastDue: unpaidStatements(card.id).filter(function (s) {
-      return st && s.id !== st.id;
-    }).reduce(function (sum, s) { return sum + statementRemaining(s); }, 0)
+    pastDue: unpaidStatements(card.id).filter(function (s2) {
+      return st && s2.id !== st.id;
+    }).reduce(function (sum, s2) { return sum + statementRemaining(s2); }, 0)
   };
 }
 /** Which of the six states the tile should show. */
@@ -2500,10 +2788,41 @@ function cardTile(card) {
     var klass = m.utilisation > 70 ? "o" : m.utilisation > 30 ? "w" : "";
     h += '<div class="bar"><i class="' + klass + '" style="inline-size:' +
       Math.min(100, Math.max(0, m.utilisation)).toFixed(1) + '%"></i></div>' +
-      '<p class="sub">' + m.utilisation.toFixed(1) + "% of your " + money(m.limit) +
-      " limit used · " + money(m.available) + " still available</p>";
+      '<div class="grid" style="margin-block:8px">' +
+      '<div><span class="lbl">' + (m.shared ? "Shared limit" : "Total limit") + '</span><p class="mid">' +
+        money(m.limit) + "</p></div>" +
+      '<div><span class="lbl">Used</span><p class="mid out">' + money(m.poolUsed) + "</p></div>" +
+      '<div><span class="lbl">Left to use</span><p class="mid in">' + money(m.available) + "</p></div></div>" +
+      '<p class="sub">' + m.utilisation.toFixed(1) + "% of the limit used" +
+      (m.unbilled > 0 ? " \u00b7 " + money(m.unbilled) + " not billed yet" : "") + "</p>";
+    if (m.shared) {
+      h += '<div class="note info"><span aria-hidden="true">\ud83d\udd17</span><div>' +
+        "<b>This limit is shared.</b> " +
+        esc(m.family.map(function (a) { return a.name; }).join(" and ")) +
+        " draw on the same " + money(m.limit) + " \u2014 it is one pool, not one limit each.<br>" +
+        m.family.map(function (a) {
+          var own = cardOutstanding(a) + emiLeft(a.id);
+          return esc(a.name) + ": " + money(own);
+        }).join("<br>") + "</div></div>";
+    }
+    if (m.emi > 0) {
+      h += '<div class="note"><span aria-hidden="true">\ud83d\udcc5</span><div>' +
+        "<b>" + money(m.emi) + " of instalments still to run.</b> That holds up your limit even though " +
+        "it has not been billed yet, so it is counted in the figures above." +
+        '<div class="btns" style="margin-block-start:8px">' +
+        '<button type="button" class="btn g s" data-act="editEmi" data-id="' + esc(card.id) + '">Update it</button>' +
+        "</div></div></div>";
+    } else {
+      h += '<div class="btns" style="margin-block-start:8px">' +
+        '<button type="button" class="btn g s" data-act="editEmi" data-id="' + esc(card.id) +
+        '">Add an instalment plan</button></div>';
+    }
   } else {
-    h += '<p class="sub">No credit limit saved, so no usage figure is shown.</p>';
+    h += '<div class="note"><span aria-hidden="true">\u2139\ufe0f</span><div>' +
+      "<b>No limit saved for this card.</b> Add it to see how much is left to use." +
+      '<div class="btns" style="margin-block-start:8px">' +
+      '<button type="button" class="btn s" data-act="setLimit" data-id="' + esc(card.id) + '">Add the limit</button>' +
+      "</div></div></div>";
   }
 
   h += "<table>";
@@ -3773,16 +4092,24 @@ function seedData() {
   /* Spending accounts. Openings undo the September entries below. */
   db.accounts = [
     A({ id:"a_sbi",  name:"SBI Savings",  kind:"bank", bank:"SBI", subtype:"savings",
-        open: toMinor(5680.42) + toMinor(33500) + toMinor(1306.22), primary:true }),
+        open: toMinor(5680.42) + toMinor(33500) + toMinor(1306.22)
+              + toMinor(500) + toMinor(1000) + toMinor(100), primary:true }),
     A({ id:"a_hdfc", name:"HDFC Savings", kind:"bank", bank:"HDFC", subtype:"savings",
         open: toMinor(1943.92) }),
     A({ id:"a_pnb",  name:"PNB Savings",  kind:"bank", bank:"PNB", subtype:"savings",
         open: toMinor(2434.20), minBalance: toMinor(2000) }),
     A({ id:"a_cash", name:"Cash", kind:"cash",
-        open: toMinor(650) + toMinor(30) + toMinor(30) + toMinor(49) })
+        open: toMinor(650) + toMinor(30) + toMinor(30) + toMinor(49) + toMinor(30) })
   ];
 
   /* Money set aside by hand — not spending, not a daily deduction. */
+  /* Money you still owe in instalments. It takes up card limit even though
+     it has not been billed yet. */
+  db.emis = [
+    { id:"e_axis", cardId:"c_axis1", name:"Axis EMI", left: toMinor(5000),
+      note:"Final instalments \u2014 the EMI ends after this", startedOn:"" }
+  ];
+
   db.pots = [
     { id:"p_fd",    name:"Fixed deposit",  kind:"fd",      bank:"SBI",   amt: toMinor(1000),
       openedOn: today(), note:"" },
@@ -3797,23 +4124,29 @@ function seedData() {
   };
   db.accounts = db.accounts.concat([
     C({ id:"c_hdfc1", name:"Swiggy HDFC Credit Card", bank:"HDFC", last4:"8256",
-        open:-toMinor(1185),    stmtDay:"13", dueDay:2 }),
+        open:-toMinor(1185),    stmtDay:"13", dueDay:2,
+        limit: toMinor(68000), sharedLimit:"hdfc" }),
     C({ id:"c_hdfc2", name:"Swiggy HDFC \u2014 virtual RuPay", bank:"HDFC", last4:"8486",
-        open:-toMinor(2089),    stmtDay:"13", dueDay:2, virtualOf:"c_hdfc1" }),
+        open:-toMinor(2089),    stmtDay:"13", dueDay:2, virtualOf:"c_hdfc1",
+        limit: toMinor(68000), sharedLimit:"hdfc" }),
     C({ id:"c_axis1", name:"Axis My Zone",           bank:"Axis", last4:"7779",
-        open:-toMinor(475.20),  stmtDay:"7",  dueDay:27 }),
+        open:-toMinor(475.20),  stmtDay:"7",  dueDay:27,
+        limit: toMinor(130000), sharedLimit:"axis" }),
     C({ id:"c_axis2", name:"Axis Neo",               bank:"Axis", last4:"",
-        open:-toMinor(857),     stmtDay:"7",  dueDay:27 }),
+        open:-toMinor(857),     stmtDay:"7",  dueDay:27,
+        limit: toMinor(130000), sharedLimit:"axis" }),
     C({ id:"c_idfc",  name:"IDFC Credit Card",       bank:"IDFC", last4:"4314",
-        open:-toMinor(1450.64), stmtDay:"20", dueRule:"days", dueDays:20 }),
+        open:-toMinor(1450.64), stmtDay:"20", dueRule:"days", dueDays:20,
+        limit: toMinor(93000) }),
     C({ id:"c_yes1",  name:"Yes Bank Uni Gold",      bank:"Yes Bank", last4:"7630",
-        open:-toMinor(2189.43), stmtDay:"17", dueDay:5 }),
+        open:-toMinor(2189.43), stmtDay:"17", dueDay:5, limit: toMinor(66000) }),
     C({ id:"c_yes2",  name:"Yes Bank Uni Gold UPI",  bank:"Yes Bank", last4:"8929",
-        open:-toMinor(2438.04), stmtDay:"17", dueDay:5 }),
+        open:-toMinor(2438.04), stmtDay:"17", dueDay:5, limit: toMinor(66000) }),
     C({ id:"c_sbi1",  name:"Tata Neu Plus SBI Card", bank:"SBI",  last4:"7955",
-        open:0, stmtDay:"13", dueDay:2 }),
+        open:0, stmtDay:"13", dueDay:2, limit: toMinor(97000), sharedLimit:"sbi" }),
     C({ id:"c_sbi2",  name:"Tata Neu Plus SBI \u2014 RuPay", bank:"SBI",  last4:"7963",
-        open:0, stmtDay:"13", dueDay:2, virtualOf:"c_sbi1" }),
+        open:0, stmtDay:"13", dueDay:2, virtualOf:"c_sbi1",
+        limit: toMinor(97000), sharedLimit:"sbi" }),
     C({ id:"c_slice", name:"Slice Credit Card",      bank:"Slice", last4:"",
         open:0, limit: toMinor(93000), stmtDay:"21", dueDay:5 })
   ]);
@@ -3859,7 +4192,18 @@ function seedData() {
     T({ id:"t_auto", amt: toMinor(30), cat:"Travel", acc:"a_cash", how:"cash",
         date:"2026-09-01", note:"Auto, metro to Panama" }),
     T({ id:"t_bike", amt: toMinor(49), cat:"Travel", acc:"a_cash", how:"cash",
-        date:"2026-09-02", note:"Bike ride, home to metro" })
+        date:"2026-09-02", note:"Bike ride, home to metro" }),
+    T({ id:"t_lpu",  amt: toMinor(500), cat:"Education", acc:"a_sbi", how:"app",
+        date:"2026-09-02", note:"LPU B.Tech certificate, parcel from Punjab" }),
+    T({ id:"t_auto2", amt: toMinor(30), cat:"Travel", acc:"a_cash", how:"cash",
+        date:"2026-09-02", note:"Auto, metro to home at night" }),
+
+    /* Money you moved into savings. Recorded as a move, not spending on things,
+       so it counts in what left your account without pretending you consumed it. */
+    T({ id:"t_fd",   type:"move", amt: toMinor(1000), cat:"", acc:"a_sbi", to:"",
+        how:"bank", date:"2026-09-03", note:"Into the fixed deposit", potId:"p_fd" }),
+    T({ id:"t_slice", type:"move", amt: toMinor(100), cat:"", acc:"a_sbi", to:"",
+        how:"bank", date:"2026-09-03", note:"Into Slice savings", potId:"p_slice" })
   ];
 
   db.settings.setupDone = true;
@@ -4382,6 +4726,19 @@ function syncWords() {
     default:         return { text:"Ready", tone:"" };
   }
 }
+/** A loud, honest banner when this device refuses to keep your data. */
+function paintSaveWarning() {
+  var box = el("saveWarn");
+  if (!box) return;
+  if (!saveFailed) { box.innerHTML = ""; box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = '<div class="note bad" role="alert"><span aria-hidden="true">\u26a0\ufe0f</span><div>' +
+    "<b>This device is not saving your entries.</b><br>Storage is full, or your browser is in " +
+    "private mode where nothing is kept. What you add now will disappear when you close the tab. " +
+    'Download a backup from Settings before you lose it.<br>' +
+    '<button type="button" class="btn s" data-act="go" data-view="settings" ' +
+    'style="margin-block-start:8px">Open Settings</button></div></div>';
+}
 function paintSync() {
   var pill = el("syncPill");
   if (!pill) return;
@@ -4561,6 +4918,258 @@ function sipDue() {
   });
   return out.sort(function (a, b) { return (a.days === null ? 99 : a.days) - (b.days === null ? 99 : b.days); });
 }
+
+/* ---------- SIP check-in, and the money-must-be-there warning ----------
+   Nothing is ever taken automatically. On the SIP day the app asks whether
+   you actually paid. Two days before, it checks the account really holds
+   enough for the SIPs that come out of it. */
+var SIP_WARN_DAYS = 2;
+
+function sipSkips() {
+  if (!db.sipSkip || typeof db.sipSkip !== "object") db.sipSkip = {};
+  return db.sipSkip;
+}
+function sipFunds() {
+  return funds().filter(function (f) {
+    return !f.oneOff && Math.round(f.sip || 0) > 0 && parseInt(f.day, 10) > 0;
+  });
+}
+/** The day this month a SIP falls on. Short months pull it to the last day. */
+function sipDateFor(day, ref) {
+  var d = ref || new Date(), n = parseInt(day, 10);
+  if (!n || n < 1 || n > 31) return "";
+  var dim = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  return isoOf(new Date(d.getFullYear(), d.getMonth(), Math.min(n, dim)));
+}
+function daysBetween(a, b) {
+  return Math.round((dateFrom(b) - dateFrom(a)) / 86400000);
+}
+function sipPaidTx(f, mk) {
+  return db.tx.filter(function (t) { return t.fundId === f.id && mOf(t.date) === mk; });
+}
+/** paid | skipped | open — for one fund in one month. */
+function sipStatus(f, ref) {
+  var mk = mKey(ref || new Date());
+  if (sipPaidTx(f, mk).length) return "paid";
+  if (sipSkips()[f.id + ":" + mk]) return "skipped";
+  return "open";
+}
+function sipSkip(f, ref, on) {
+  var mk = mKey(ref || new Date());
+  if (on === false) delete sipSkips()[f.id + ":" + mk];
+  else sipSkips()[f.id + ":" + mk] = true;
+  save();
+}
+/** Every SIP this month, with where it stands. */
+function sipMonth(ref) {
+  var d = ref || new Date(), mk = mKey(d), td = isoOf(d);
+  return sipFunds().map(function (f) {
+    var date = sipDateFor(f.day, d);
+    var st = sipStatus(f, d);
+    var paidAmt = sipPaidTx(f, mk).reduce(function (s, t) { return s + Math.round(t.amt || 0); }, 0);
+    return {
+      fund: f, date: date, mk: mk, status: st, paid: paidAmt,
+      away: date ? daysBetween(td, date) : null,
+      overdue: st === "open" && !!date && date < td
+    };
+  }).sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+}
+/** Which SIPs the app should ask about right now — the day has come or gone. */
+function sipAsk(ref) {
+  return sipMonth(ref).filter(function (x) { return x.status === "open" && x.away !== null && x.away <= 0; });
+}
+/** Group the SIPs still to come into "this much must sit in this account". */
+function sipNeeds(ref, within) {
+  var win = within === undefined ? SIP_WARN_DAYS : within, byAcc = {};
+  sipMonth(ref).forEach(function (x) {
+    if (x.status !== "open" || x.away === null || x.away < 0 || x.away > win) return;
+    var k = x.fund.acc || "";
+    if (!byAcc[k]) byAcc[k] = { accId: k, need: 0, items: [], date: x.date, away: x.away };
+    var g = byAcc[k];
+    g.need += Math.round(x.fund.sip || 0);
+    g.items.push(x);
+    if (String(x.date) < String(g.date)) { g.date = x.date; g.away = x.away; }
+  });
+  return Object.keys(byAcc).map(function (k) {
+    var g = byAcc[k];
+    g.have = balance(g.accId);
+    g.short = Math.max(0, g.need - g.have);
+    g.enough = g.have >= g.need;
+    g.spare = g.have - g.need;
+    return g;
+  }).sort(function (a, b) { return a.away - b.away || b.need - a.need; });
+}
+/* ---------- dismissing a reminder without answering it ----------
+   Banks do not always move the money on the day. It can land the next
+   morning, or after a weekend. Closing a reminder just hides it for a
+   while — it never means "paid" and it never means "skipped". */
+var SNOOZE_HOURS = 20;
+
+function sipSnoozes() {
+  if (!db.sipSnooze || typeof db.sipSnooze !== "object") db.sipSnooze = {};
+  return db.sipSnooze;
+}
+function snoozeKey(a) {
+  return (a.kind === "ask" ? "ask:" + a.fundId : a.kind + ":" + a.accId + ":" + a.date);
+}
+function snoozeUntil(hours) {
+  var d = new Date();
+  d.setHours(d.getHours() + (hours === undefined ? SNOOZE_HOURS : hours));
+  return isoOf(d) + "T" + hm(d);
+}
+function sipHidden(a, ref) {
+  var until = sipSnoozes()[snoozeKey(a)];
+  if (!until) return false;
+  var now = ref ? isoOf(ref) + "T00:00" : stamp();
+  return String(until) > now;
+}
+function sipDismiss(a, hours) {
+  sipSnoozes()[snoozeKey(a)] = snoozeUntil(hours);
+  save();
+}
+function sipUndismiss(a) {
+  delete sipSnoozes()[snoozeKey(a)];
+  save();
+}
+/** Forget snoozes whose time has passed, so the store stays small. */
+function sipTidySnooze() {
+  var s = sipSnoozes(), now = stamp(), n = 0;
+  Object.keys(s).forEach(function (k) { if (String(s[k]) <= now) { delete s[k]; n++; } });
+  if (n) save();
+  return n;
+}
+/** Everything currently hidden, so you can bring it back. */
+function sipDismissed(ref) {
+  return sipAlerts(ref, true).filter(function (a) { return sipHidden(a, ref); });
+}
+function sipBringBack(ref) {
+  sipDismissed(ref).forEach(function (a) { delete sipSnoozes()[snoozeKey(a)]; });
+  save();
+}
+
+/** Plain-language reminders. kind: ask | short | ready */
+function sipAlerts(ref, showAll) {
+  var out = [];
+  sipAsk(ref).forEach(function (x) {
+    out.push({
+      kind: "ask", fundId: x.fund.id, amt: Math.round(x.fund.sip || 0), date: x.date,
+      title: "Did you pay " + x.fund.name + "?",
+      body: money(x.fund.sip) + " was due " + (x.away === 0 ? "today" : "on " + fDate(x.date) +
+        ", " + Math.abs(x.away) + (Math.abs(x.away) === 1 ? " day" : " days") + " ago") +
+        " from " + accName(x.fund.acc) + "."
+    });
+  });
+  sipNeeds(ref).forEach(function (g) {
+    var when = g.away === 0 ? "today" : g.away === 1 ? "tomorrow" : "on " + fDate(g.date);
+    var names = g.items.map(function (x) { return x.fund.name; });
+    if (!g.enough) {
+      out.push({
+        kind: "short", accId: g.accId, need: g.need, have: g.have, short: g.short, date: g.date,
+        title: "Put " + money(g.short) + " into " + accName(g.accId),
+        body: money(g.need) + " of SIPs is set to go out of " + accName(g.accId) + " " + when +
+          ", but it holds " + money(g.have) + ". You are " + money(g.short) + " short.",
+        funds: names
+      });
+    } else {
+      out.push({
+        kind: "ready", accId: g.accId, need: g.need, have: g.have, spare: g.spare, date: g.date,
+        title: money(g.need) + " will go out of " + accName(g.accId) + " " + when,
+        body: accName(g.accId) + " holds " + money(g.have) + ", so " + money(g.need) + " for " +
+          names.length + (names.length === 1 ? " SIP" : " SIPs") + " is covered with " +
+          money(g.spare) + " to spare.",
+        funds: names
+      });
+    }
+  });
+  return showAll ? out : out.filter(function (a) { return !sipHidden(a, ref); });
+}
+/** One short line for the top of Home. */
+function sipHeadline(ref) {
+  var a = sipAlerts(ref);
+  var ask = a.filter(function (x) { return x.kind === "ask"; }).length;
+  var short = a.filter(function (x) { return x.kind === "short"; });
+  if (ask) return { tone: "ask", text: ask === 1 ? "1 SIP to confirm" : ask + " SIPs to confirm" };
+  if (short.length) {
+    var need = short.reduce(function (s, x) { return s + x.short; }, 0);
+    return { tone: "short", text: money(need) + " short for your SIPs" };
+  }
+  var ready = a.filter(function (x) { return x.kind === "ready"; });
+  if (ready.length) return { tone: "ready", text: "SIPs covered" };
+  return null;
+}
+
+/* ---------- month-by-month record for one fund ----------
+   Only counts months the fund could actually have been paid in:
+   from its first recorded payment (or the day you added it) to now. */
+function fundStartMonth(f) {
+  var months = db.tx.filter(function (t) { return t.fundId === f.id; })
+    .map(function (t) { return mOf(t.date); }).sort();
+  if (f.since) return mOf(f.since);
+  if (months.length) return months[0];
+  return mKey(new Date());
+}
+/** paid | skipped | missed | upcoming, for every month up to now. */
+function fundHistory(f, ref) {
+  if (f.oneOff || !f.sip || !f.day) return [];
+  var now = ref || new Date(), nowMk = mKey(now), out = [];
+  var mk = fundStartMonth(f), guard = 0;
+  while (guard++ < 240) {
+    var paidTx = db.tx.filter(function (t) { return t.fundId === f.id && mOf(t.date) === mk; });
+    var amt = paidTx.reduce(function (s, t) { return s + Math.round(t.amt || 0); }, 0);
+    var parts = mk.split("-");
+    var dt = sipDateFor(f.day, new Date(+parts[0], +parts[1] - 1, 1));
+    var state = paidTx.length ? "paid"
+      : sipSkips()[f.id + ":" + mk] ? "skipped"
+      : dt > isoOf(now) ? "upcoming"
+      : "missed";
+    out.push({ mk: mk, label: mLabel(mk), due: dt, state: state, amt: amt,
+               on: paidTx.length ? paidTx[0].date : "" });
+    if (mk === nowMk) break;
+    mk = mShift(mk, 1);
+  }
+  return out;
+}
+/** How steady you have been with one fund. */
+function fundRecord(f, ref) {
+  var h = fundHistory(f, ref).filter(function (x) { return x.state !== "upcoming"; });
+  var paid = h.filter(function (x) { return x.state === "paid"; }).length;
+  var skipped = h.filter(function (x) { return x.state === "skipped"; }).length;
+  var missed = h.filter(function (x) { return x.state === "missed"; }).length;
+  var streak = 0;
+  for (var i = h.length - 1; i >= 0; i--) {
+    if (h[i].state === "paid") streak++;
+    else break;
+  }
+  return { months: h.length, paid: paid, skipped: skipped, missed: missed, streak: streak,
+           gaps: h.filter(function (x) { return x.state !== "paid"; }),
+           rate: h.length ? Math.round((paid / h.length) * 100) : 100, rows: h };
+}
+/** The same picture across every SIP you run. */
+function sipRecord(ref) {
+  var per = sipFunds().map(function (f) {
+    var r = fundRecord(f, ref);
+    r.fund = f;
+    return r;
+  });
+  var months = per.reduce(function (s, r) { return s + r.months; }, 0);
+  var paid = per.reduce(function (s, r) { return s + r.paid; }, 0);
+  var skipped = per.reduce(function (s, r) { return s + r.skipped; }, 0);
+  var missed = per.reduce(function (s, r) { return s + r.missed; }, 0);
+  var rate = months ? Math.round((paid / months) * 100) : 100;
+  var verdict = !months ? "No SIP months to judge yet."
+    : missed + skipped === 0 ? "Going strong \u2014 you have not missed a single SIP."
+    : missed + skipped === 1 ? "Nearly perfect \u2014 1 month went unpaid."
+    : rate >= 80 ? "Mostly steady \u2014 " + (missed + skipped) + " months went unpaid."
+    : "Patchy \u2014 " + (missed + skipped) + " of " + months + " months went unpaid.";
+  var tone = !months ? "info" : missed + skipped === 0 ? "good"
+    : rate >= 80 ? "ok" : "bad";
+  return { per: per, months: months, paid: paid, skipped: skipped, missed: missed,
+           unpaid: skipped + missed, rate: rate, verdict: verdict, tone: tone,
+           worst: per.slice().sort(function (a, b) { return a.rate - b.rate; })[0] || null,
+           best: per.filter(function (r) { return r.months; })
+                    .sort(function (a, b) { return b.streak - a.streak; })[0] || null };
+}
+
 /** Record a SIP payment. Money leaves the account and goes into the fund. */
 function payFund(f, amount, accId, dateIso) {
   var amt = Math.round(amount || 0);
@@ -4612,15 +5221,32 @@ function cardTileSmall(c) {
   var look = bankLook(c);
   var m = cardMoney(c);
   var st = cardState(c);
-  return '<div class="wtile" style="--brand:' + look.c + '">' +
+  var hasLimit = m.limit > 0;
+  var klass = !hasLimit ? "" : m.utilisation > 70 ? "o" : m.utilisation > 30 ? "w" : "";
+  return '<div class="wtile" style="--brand:' + look.c + ';flex-wrap:wrap">' +
     '<button type="button" class="wtile-main" data-act="openCard" data-id="' + esc(c.id) + '">' +
     bankBadge(c, 40) +
     "<span class=\"wtile-txt\"><b>" + esc(c.name) + "</b>" +
     '<span class="sub">' + (c.last4 ? "\u2022\u2022" + esc(c.last4) + " \u00b7 " : "") +
     esc(stateWords(st.id)) + "</span></span>" +
     '<span class="wtile-amt' + (m.outstanding > 0 ? " out" : "") + '">' +
-    maskMoney(m.outstanding, c.id) + "</span></button>" +
-    eyeBtn(c.id, c.name) + "</div>";
+    maskMoney(m.outstanding, c.id) + "<small>used</small></span></button>" +
+    eyeBtn(c.id, c.name) +
+    (hasLimit
+      ? '<div style="flex-basis:100%;margin-block-start:8px">' +
+        '<div class="bar"><i class="' + klass + '" style="inline-size:' +
+        Math.min(100, Math.max(0, m.utilisation)).toFixed(1) + '%"></i></div>' +
+        '<div class="rowline sub"><span>' + (m.shared ? "Shared limit " : "Limit ") +
+        maskMoney(m.limit, c.id) + "</span>" +
+        '<span><b class="in">' + maskMoney(m.available, c.id) + "</b> left</span></div>" +
+        '<p class="sub" style="margin-block-start:2px">' + m.utilisation.toFixed(1) + "% used" +
+        (m.emi > 0 ? " \u00b7 " + money(m.emi) + " on EMI" : "") +
+        (m.unbilled > 0 ? " \u00b7 " + money(m.unbilled) + " not billed" : "") + "</p></div>"
+      : '<div style="flex-basis:100%;margin-block-start:8px">' +
+        '<button type="button" class="btn g s" data-act="setLimit" data-id="' + esc(c.id) + '">' +
+        "Add this card's limit</button>" +
+        '<span class="sub" style="margin-inline-start:8px">to see what is left</span></div>') +
+    "</div>";
 }
 function potTile(p) {
   var look = BANK_LOOK[p.bank] || BANK_LOOK[""];
@@ -4708,7 +5334,6 @@ function pageFunds() {
   var list = funds();
   var invested = fundsTotal();
   var monthly = list.reduce(function (s, f) { return s + (f.oneOff ? 0 : Math.round(f.sip || 0)); }, 0);
-  var due = sipDue();
   var mk = mKey(new Date());
   var paidThisMonth = db.tx.filter(function (t) { return t.fundId && mOf(t.date) === mk; })
     .reduce(function (s, t) { return s + Math.round(t.amt || 0); }, 0);
@@ -4725,18 +5350,26 @@ function pageFunds() {
       " funds</p></div>" +
     '<div class="card"><span class="lbl">Paid this month</span><p class="mid ' +
       (paidThisMonth > 0 ? "in" : "") + '">' + money(paidThisMonth) + "</p>" +
-      '<p class="sub">' + (paidThisMonth > 0 ? "recorded here" : "nothing recorded yet") + "</p></div></div>";
+      '<p class="sub">' + (paidThisMonth > 0 ? "recorded here" : "nothing recorded yet") + "</p></div>" +
+    '<div class="card"><span class="lbl">Waiting on your answer</span><p class="mid ' +
+      (sipAsk().length ? "warnc" : "in") + '">' + sipAsk().length + "</p>" +
+      '<p class="sub">' + (sipAsk().length
+        ? "SIP" + (sipAsk().length === 1 ? "" : "s") + " whose day has passed"
+        : "nothing to confirm right now") + "</p></div></div>";
 
   h += '<div class="note info"><span aria-hidden="true">\u2139\ufe0f</span><div>Nothing is deducted ' +
     "automatically. Since you pay some months and skip others, these are reminders \u2014 " +
     "tap <b>I paid this</b> when you actually do.</div></div>";
 
-  var soon = due.filter(function (x) { return !x.paid && x.days !== null && x.days <= 5; });
-  if (soon.length) {
-    h += '<div class="sec"><h2>Coming up</h2><div class="card"><table>' +
-      soon.map(function (x) {
-        return "<tr><td>" + esc(x.fund.name) + '<br><span class="sub">day ' + x.fund.day + " \u00b7 " +
-          (x.days === 0 ? "today" : x.days === 1 ? "tomorrow" : "in " + x.days + " days") +
+  h += sipBlock({ link: false });
+  h += sipNeedTable(7);
+
+  var upcoming = sipMonth().filter(function (x) { return x.status === "open" && x.away !== null && x.away > 0; });
+  if (upcoming.length) {
+    h += '<div class="sec"><h2>Still to come this month</h2><div class="card"><table>' +
+      upcoming.map(function (x) {
+        return "<tr><td>" + esc(x.fund.name) + '<br><span class="sub">' +
+          (x.away === 1 ? "tomorrow" : "in " + x.away + " days") + " \u00b7 " + fDate(x.date) +
           " \u00b7 from " + esc(accName(x.fund.acc)) + '</span></td><td class="n">' + money(x.fund.sip) +
           '</td><td class="n"><button type="button" class="btn s" data-act="payFund" data-id="' +
           esc(x.fund.id) + '">I paid this</button></td></tr>';
@@ -4745,24 +5378,131 @@ function pageFunds() {
 
   h += '<div class="sec"><h2>Your funds</h2>' + list.map(function (f) {
     var share = invested > 0 ? (Math.round(f.invested || 0) / invested) * 100 : 0;
-    var paid = db.tx.some(function (t) { return t.fundId === f.id && mOf(t.date) === mk; });
+    var st = f.oneOff ? "" : sipStatus(f);
+    var paidNow = db.tx.filter(function (t) { return t.fundId === f.id && mOf(t.date) === mk; })
+      .reduce(function (sum, t) { return sum + Math.round(t.amt || 0); }, 0);
+    var dueOn = f.oneOff ? "" : sipDateFor(f.day);
+    var pill = st === "paid" ? '<span class="in">\u2705 paid this month</span>'
+      : st === "skipped" ? '<span class="sub">\u23ed\ufe0f skipped this month</span>'
+      : dueOn && dueOn < today() ? '<span class="out">\u2757 still unanswered for ' + esc(fDate(dueOn)) + "</span>"
+      : dueOn ? '<span class="warnc">\u23f0 due ' + esc(fDate(dueOn)) + "</span>" : "";
     return '<div class="card"><div class="rowline"><b>' + esc(f.name) + "</b>" +
       "<span>" + maskMoney(f.invested, "funds") + "</span></div>" +
       '<div class="bar"><i style="inline-size:' + share.toFixed(1) + '%"></i></div>' +
+      '<div class="rowline sub"><span>Put in so far</span><span>' + share.toFixed(0) +
+      "% of your total</span></div>" +
       '<div class="rowline sub"><span>' + esc(f.type) +
-      (f.oneOff ? " \u00b7 one-time, no SIP" : " \u00b7 " + money(f.sip) + " on day " + (f.day || "\u2014")) +
-      "</span><span>" + share.toFixed(0) + "% of your total</span></div>" +
+      (f.oneOff ? " \u00b7 one-time, no SIP" : " \u00b7 " + money(f.sip) + " every month on day " +
+        (f.day || "\u2014")) + "</span><span>" + pill + "</span></div>" +
       '<p class="sub">Paid from ' + esc(accName(f.acc)) +
-      (paid ? ' \u00b7 <span class="in">paid this month</span>' : f.oneOff ? "" : " \u00b7 not paid this month yet") +
+      (paidNow > 0 ? " \u00b7 " + money(paidNow) + " recorded this month" : "") +
       (f.lastPaid ? " \u00b7 last on " + esc(fDate(f.lastPaid)) : "") + "</p>" +
+      (function () {
+        var r = fundRecord(f);
+        if (f.oneOff || !r.months) return "";
+        return '<p class="sub">' + (r.gaps.length
+          ? "\u26a0\ufe0f Missed " + r.gaps.length + " of " + r.months + " months \u2014 " +
+            esc(r.gaps.map(function (x) { return x.label.replace(/ \d{4}$/, ""); }).join(", "))
+          : "\u2705 Paid every one of its " + r.months + " months") + "</p>";
+      })() +
       '<div class="btns" style="margin-block-start:8px">' +
       (f.oneOff ? "" : '<button type="button" class="btn s" data-act="payFund" data-id="' + esc(f.id) +
         '">I paid this</button>') +
+      (st === "open" ? '<button type="button" class="btn g s" data-act="skipSip" data-id="' + esc(f.id) +
+        '">Not this month</button>' : "") +
+      (st === "skipped" ? '<button type="button" class="btn g s" data-act="unskipSip" data-id="' + esc(f.id) +
+        '">Undo skip</button>' : "") +
+      '<button type="button" class="btn g s" data-act="openFund" data-id="' + esc(f.id) + '">Details</button>' +
       '<button type="button" class="btn g s" data-act="editFund" data-id="' + esc(f.id) + '">Edit</button>' +
       '<button type="button" class="btn g s" data-act="delFund" data-id="' + esc(f.id) + '">Remove</button>' +
       "</div></div>";
   }).join("") +
   '<button type="button" class="btn g full" data-act="newFund">Add a fund</button></div>';
+  return h;
+}
+
+/* ---------- one fund, in full ---------- */
+function fundStateDot(st) {
+  return st === "paid" ? '<span class="in">\u2705 paid</span>'
+    : st === "skipped" ? '<span class="warnc">\u23ed\ufe0f skipped</span>'
+    : st === "missed" ? '<span class="out">\u274c not paid</span>'
+    : '<span class="sub">\u2013 not due yet</span>';
+}
+function pageFund() {
+  var f = fund(ui.fundId);
+  if (!f) { ui.view = "funds"; return pageFunds(); }
+  var rec = fundRecord(f);
+  var paidTx = sortTx(db.tx.filter(function (t) { return t.fundId === f.id; }));
+  var h = '<div class="sec" style="display:flex;align-items:center;gap:10px;margin-block:14px 6px">' +
+    '<button type="button" class="ib" data-act="go" data-view="funds" aria-label="Back">\u2190</button>' +
+    "<h2>" + esc(f.name) + "</h2></div>";
+
+  h += '<div class="card"><span class="lbl">Put into this fund so far</span>' +
+    '<p class="big">' + maskMoney(f.invested, "funds") + "</p>" + eyeBtn("funds", "what you put in") +
+    "<table style=\"margin-block-start:10px\">" +
+    row2("Kind", f.type || "Mutual fund") +
+    row2("Monthly SIP", f.oneOff ? "One-time, no SIP" : money(f.sip) + " on day " + (f.day || "\u2014")) +
+    row2("Paid from", accName(f.acc)) +
+    (f.lastPaid ? row2("Last paid", fDate(f.lastPaid)) : "") +
+    "</table>" +
+    '<div class="btns" style="margin-block-start:10px">' +
+    (f.oneOff ? "" : '<button type="button" class="btn s" data-act="payFund" data-id="' + esc(f.id) +
+      '">I paid this</button>') +
+    '<button type="button" class="btn g s" data-act="editFund" data-id="' + esc(f.id) + '">Edit</button>' +
+    "</div></div>";
+
+  if (f.oneOff) {
+    h += '<div class="note info"><span aria-hidden="true">\u2139\ufe0f</span><div>This was a one-time ' +
+      "investment, not a monthly SIP, so there is no month-by-month record to keep.</div></div>";
+  } else if (rec.months) {
+    h += '<div class="grid">' +
+      '<div class="card"><span class="lbl">Months paid</span><p class="mid in">' + rec.paid +
+        ' <span class="sub">of ' + rec.months + "</span></p></div>" +
+      '<div class="card"><span class="lbl">Months missed</span><p class="mid ' +
+        (rec.skipped + rec.missed ? "out" : "") + '">' + (rec.skipped + rec.missed) + "</p>" +
+        (rec.skipped ? '<p class="sub">' + rec.skipped + " you marked as skipped</p>" : "") + "</div>" +
+      '<div class="card"><span class="lbl">Run of paid months</span><p class="mid ' +
+        (rec.streak ? "in" : "") + '">' + rec.streak + "</p>" +
+        '<p class="sub">' + (rec.streak ? "in a row, right now" : "the last one went unpaid") +
+        "</p></div>" +
+      '<div class="card"><span class="lbl">Kept up</span><p class="mid">' + rec.rate + "%</p>" +
+        '<p class="sub">of the months it was due</p></div></div>';
+
+    if (rec.gaps.length) {
+      var names = rec.gaps.map(function (x) {
+        return x.label.replace(/ \d{4}$/, "") + (x.state === "skipped" ? " (skipped)" : "");
+      });
+      h += '<div class="note ' + (rec.gaps.length > 2 ? "bad" : "info") +
+        '"><span aria-hidden="true">\ud83d\udcc6</span><div><b>Unpaid months: ' +
+        esc(names.join(", ")) + "</b><br>Everything else was paid on time.</div></div>";
+    } else {
+      h += '<div class="note ok"><span aria-hidden="true">\ud83c\udfc6</span><div>' +
+        "<b>Not one month missed.</b><br>You have paid this SIP every month it was due.</div></div>";
+    }
+
+    h += '<div class="sec"><h2>Month by month</h2><div class="card"><table>' +
+      "<tr><th>Month</th><th>Due on</th><th class=\"n\">Paid</th><th class=\"n\">How it went</th></tr>" +
+      rec.rows.slice().reverse().map(function (x) {
+        return "<tr><td>" + esc(x.label) + "</td>" +
+          '<td class="sub">' + (x.due ? esc(fDate(x.due)) : "\u2014") + "</td>" +
+          '<td class="n">' + (x.amt ? money(x.amt) : "\u2014") + "</td>" +
+          '<td class="n">' + fundStateDot(x.state) +
+          (x.state === "skipped"
+            ? '<br><button type="button" class="btn g s" data-act="unskipMonth" data-id="' +
+              esc(f.id) + '" data-mk="' + esc(x.mk) + '">Undo</button>'
+            : "") + "</td></tr>";
+      }).join("") + "</table>" +
+      '<p class="sub">"Not paid" only means nothing was recorded here. If the money did leave ' +
+      'your bank, tap <b>I paid this</b> and pick that date \u2014 the record will correct itself.</p>' +
+      "</div></div>";
+  } else {
+    h += '<div class="note info"><span aria-hidden="true">\u2139\ufe0f</span><div>No months to show ' +
+      "yet. Once a SIP day passes, this fund gets its own month-by-month record.</div></div>";
+  }
+
+  h += '<div class="sec"><h2>Every payment recorded</h2><div class="card">' +
+    (paidTx.length ? paidTx.map(txRow).join("") : '<p class="empty">Nothing recorded yet.</p>') +
+    "</div></div>";
   return h;
 }
 
@@ -5537,8 +6277,53 @@ function pageBills() {
 }
 
 /* ---------- Settings ---------- */
+/** Plain answer to "will my data still be here tomorrow?" */
+function dataHomeCard() {
+  var c = syncCfg(), n = db.tx.length;
+  var stored = "unknown";
+  try { stored = localStorage.getItem(KEY) ? "yes" : "no"; } catch (e) { stored = "blocked"; }
+  var h = '<div class="card"><h3>Where your data lives</h3>';
+  if (saveFailed || stored === "blocked") {
+    h += '<div class="note bad"><span aria-hidden="true">\u26a0\ufe0f</span><div>' +
+      "<b>Not being saved on this device.</b><br>Your browser is blocking storage, or it is full. " +
+      "Anything you add will vanish when the tab closes.</div></div>";
+  } else {
+    h += '<div class="note ok"><span aria-hidden="true">\u2705</span><div>' +
+      "<b>Saved on this device.</b><br>Your " + n + " entr" + (n === 1 ? "y" : "ies") +
+      " and all your accounts, cards and funds are kept in this browser and reload " +
+      "automatically. Opening the page again never asks you to enter them a second time, " +
+      "and a new version of the page will not wipe them.</div></div>";
+  }
+  h += "<table>" +
+    row2("Entries kept", String(n)) +
+    row2("Accounts", String(db.accounts.length)) +
+    row2("Credit cards", String(cards().length)) +
+    row2("Mutual funds", String(funds().length)) +
+    row2("Also on your other devices", c.on ? "yes, through GitHub" : "no \u2014 this device only") +
+    (c.on && c.lastPush ? row2("Last sent up", fStamp(c.lastPush)) : "") +
+    (c.on && c.lastPull ? row2("Last checked", fStamp(c.lastPull)) : "") +
+    "</table>";
+  if (!c.on) {
+    h += '<div class="note info"><span aria-hidden="true">\ud83d\udcf1</span><div>' +
+      "<b>Your phone will not see this yet.</b><br>A browser keeps data per device, so what " +
+      "you add on your laptop stays on your laptop. Turn on syncing and every device reads " +
+      "and writes the same encrypted copy.<br>" +
+      '<button type="button" class="btn s" data-act="syncSetup" style="margin-block-start:8px">' +
+      "Set up syncing</button></div></div>";
+  }
+  h += '<div class="btns" style="margin-block-start:10px">' +
+    '<button type="button" class="btn g s" data-act="exportJson">Download a backup</button>' +
+    '<button type="button" class="btn g s" data-act="importJson">Restore from a backup</button>' +
+    "</div>" +
+    '<p class="hint">A backup is a single file holding everything. Keep one somewhere safe \u2014 ' +
+    "it is the only thing that survives clearing your browser data.</p></div>";
+  return h;
+}
+
 function pageSettings() {
   var h = backBar(TITLES.settings);
+
+  h += dataHomeCard();
 
   h += '<div class="card"><h3>Your account</h3><table>' +
     row2("Username", db.auth.user || "not set") +
@@ -7343,6 +8128,43 @@ function act(name, d) {
       }
       return;
     }
+    case "editEmi": {
+      var cardE = acc(d.id);
+      if (!cardE) return;
+      var existing = emis().filter(function (e) { return e.cardId === cardE.id; })[0];
+      openSheet('<div class="shd"><h2>Instalments on ' + esc(cardE.name) + '</h2>' +
+        '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+        '<p class="sub">How much of your EMI is still to be paid? This holds up your credit limit ' +
+        "even before it is billed.</p>" +
+        '<form data-form="emi"><input type="hidden" name="card" value="' + esc(cardE.id) + '">' +
+        '<input type="hidden" name="id" value="' + esc(existing ? existing.id : "") + '">' +
+        '<div class="f"><label for="emAmt">Amount still to run</label>' +
+        '<input id="emAmt" name="left" type="number" inputmode="decimal" min="0" step="0.01" value="' +
+        (existing ? toMajor(existing.left) : "") + '" required autofocus></div>' +
+        '<div class="f"><label for="emNote">Note</label>' +
+        '<input id="emNote" name="note" value="' + esc(existing ? existing.note || "" : "") +
+        '" placeholder="e.g. two instalments left"></div>' +
+        '<p class="hint">Set it to 0 when the EMI finishes and the limit frees up.</p>' +
+        '<div class="btns"><button type="submit" class="btn" style="flex:1">Save</button>' +
+        '<button type="button" class="btn g" data-act="closeSheet">Cancel</button></div></form>');
+      return;
+    }
+    case "setLimit": {
+      var cardL = acc(d.id);
+      if (!cardL) return;
+      openSheet('<div class="shd"><h2>' + esc(cardL.name) + '</h2>' +
+        '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+        '<p class="sub">Enter the total credit limit printed on your statement or shown in the bank app.</p>' +
+        '<form data-form="cardLimit"><input type="hidden" name="id" value="' + esc(cardL.id) + '">' +
+        '<div class="f"><label for="clAmt">Total credit limit</label>' +
+        '<input id="clAmt" name="limit" type="number" inputmode="decimal" min="0" step="1" value="' +
+        (cardL.limit ? toMajor(cardL.limit) : "") + '" required autofocus></div>' +
+        '<p class="hint">Once saved you will see how much is left to use, ' +
+        "and how much of the limit your unbilled spending has taken up.</p>" +
+        '<div class="btns"><button type="submit" class="btn" style="flex:1">Save</button>' +
+        '<button type="button" class="btn g" data-act="closeSheet">Cancel</button></div></form>');
+      return;
+    }
     case "newPerk": openSheet(perkSheet(d.card, null)); return;
     case "delPerk": {
       var listP = cardPerks(d.card).filter(function (x) { return x.id !== d.perk; });
@@ -7379,6 +8201,35 @@ function act(name, d) {
       db.funds = funds().filter(function (x) { return x.id !== d.id; });
       save(); render(); toast("Fund removed"); return;
     case "payFund": { var fY = fund(d.id); if (fY) openSheet(payFundSheet(fY)); return; }
+    case "sipHide": {
+      var all = sipAlerts(null, true);
+      for (var iH = 0; iH < all.length; iH++) {
+        if (snoozeKey(all[iH]) === d.k) { sipDismiss(all[iH]); break; }
+      }
+      render(); toast("Hidden for now \u2014 it will come back"); return;
+    }
+    case "sipShowHidden":
+      sipBringBack(); render(); toast("Reminders are back"); return;
+    case "openFund":
+      ui.fundId = d.id; ui.view = "fund"; render(); return;
+    case "unskipMonth": {
+      var fM = fund(d.id);
+      if (!fM || !d.mk) return;
+      delete sipSkips()[fM.id + ":" + d.mk];
+      save(); render(); toast("That month is open again"); return;
+    }
+    case "skipSip": {
+      var fS = fund(d.id);
+      if (!fS) return;
+      sipSkip(fS, new Date(), true);
+      render(); toast("Marked as not paid this month"); return;
+    }
+    case "unskipSip": {
+      var fU = fund(d.id);
+      if (!fU) return;
+      sipSkip(fU, new Date(), false);
+      render(); toast("Back on the reminder list"); return;
+    }
     case "syncSetup": ui.syncError = ""; openSheet(syncSheet()); return;
     case "tokenHelp": openSheet(tokenHelpSheet()); return;
     case "syncForgetToken":
@@ -7669,6 +8520,31 @@ function submitForm(kind, form) {
           return saveEncrypted().then(function () { openSheet(recoverySheet(recovery)); });
         });
       });
+      return;
+    }
+    case "emi": {
+      var cardEm = acc(f.card);
+      if (!cardEm) return;
+      var leftAmt = toMinor(f.left);
+      db.emis = emis().filter(function (e) { return e.id !== f.id; });
+      if (leftAmt > 0) {
+        db.emis.push({ id: f.id || id("e"), cardId: f.card, name: "EMI", left: leftAmt,
+          note: String(f.note || "").trim(), startedOn: "" });
+      }
+      save(); closeSheet(); render();
+      toast(leftAmt > 0 ? money(leftAmt) + " of instalments recorded" : "EMI cleared \u2014 limit freed up");
+      return;
+    }
+    case "cardLimit": {
+      var cardLim = acc(f.id);
+      if (!cardLim) return;
+      var lim = toMinor(f.limit);
+      if (lim <= 0) { toast("Enter the credit limit"); return; }
+      var owedNow = familyUsed(cardLim);
+      if (lim < owedNow) { toast("That is less than the " + money(owedNow) + " already on this card"); return; }
+      limitFamily(cardLim).forEach(function (x) { x.limit = lim; });
+      save(); closeSheet(); render();
+      toast(money(lim - owedNow) + " left to use on " + esc(cardLim.name));
       return;
     }
     case "perk": {
@@ -7974,12 +8850,18 @@ function boot() {
   });
 
   var testing = typeof window !== "undefined" && window.__MT_TEST__;
-  if (!db.seeded && !testing) {
+  /* Only ever seed a truly empty app. Once you have your own entries,
+     a new version of this page must never write over them. */
+  var hasYourData = db.tx.length > 0 || db.accounts.length > 1 ||
+    funds().length > 0 || pots().length > 0 || cards().length > 0;
+  if (!db.seeded && !hasYourData && !testing) {
     db.auth = { user:"Abhinay", pwHash:"", dob:"2003-05-29", gender:"Male",
       createdAt: stamp(), lastSignIn:"" };
     db.profile.name = "Abhinay";
     seedData();
   }
+
+  sipTidySnooze();
 
   /* opens straight to your money — no sign-in screen */
   ui.authed = true;
@@ -8035,12 +8917,22 @@ return {
              potsTotal: potsTotal, fundsTotal: fundsTotal, cardsOwed: cardsOwed,
              safeToSpend: safeToSpend, leftToSpend: leftToSpend, bufferTotal: bufferTotal,
              cardsDueNow: cardsDueNow,
+             emis: emis, emiLeft: emiLeft, limitFamily: limitFamily,
+             sharedLimitOf: sharedLimitOf, familyUsed: familyUsed,
              cardPerks: cardPerks, setCardPerks: setCardPerks, perkUsed: perkUsed,
              perkLeft: perkLeft, perkAvailable: perkAvailable, suggestFor: suggestFor,
              perkBoard: perkBoard, usedUpPerks: usedUpPerks, seedPerks: seedPerks,
              cardTiming: cardTiming, cardAdvice: cardAdvice, freshCards: freshCards,
              closingSoon: closingSoon, freeDays: freeDays,
-             sipDue: sipDue, payFund: payFund, bankLook: bankLook, txForAccount: txForAccount,
+             sipDue: sipDue, payFund: payFund,
+             sipMonth: sipMonth, sipAsk: sipAsk, sipNeeds: sipNeeds, sipAlerts: sipAlerts,
+             sipStatus: sipStatus, sipSkip: sipSkip, sipHeadline: sipHeadline,
+             sipDateFor: sipDateFor, sipFunds: sipFunds, sipBlock: sipBlock,
+             setFund: function (x) { ui.fundId = x; }, fundHistory: fundHistory, fundRecord: fundRecord, sipRecord: sipRecord,
+             fundStartMonth: fundStartMonth,
+             sipNeedTable: sipNeedTable, sipDismiss: sipDismiss, sipUndismiss: sipUndismiss,
+             sipHidden: sipHidden, sipDismissed: sipDismissed, sipBringBack: sipBringBack,
+             sipTidySnooze: sipTidySnooze, snoozeKey: snoozeKey, bankLook: bankLook, txForAccount: txForAccount,
              spendAccounts: spendAccounts, setAcc: function (x) { ui.accId = x; },
              cards: cards, cardMoney: cardMoney, cardState: cardState, currentCycle: currentCycle,
              nextClosing: nextClosing, lastExpectedClosing: lastExpectedClosing, expectedDue: expectedDue,
