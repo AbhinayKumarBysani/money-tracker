@@ -15,16 +15,16 @@
   --r:14px; --r2:10px;
 }
 [data-theme="dark"]{
-  --bg:#0d1015; --surface:#161a21; --surface-2:#1d222b; --border:#2a313c;
-  --text:#e9ecf1; --muted:#9aa3b2; --accent:#2dd4bf; --accent-soft:#14312f;
-  --in:#34d399; --out:#f87171; --move:#a5a5f5; --warn:#fbbf24;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.3);
+  --bg:#15181d; --surface:#1d2127; --surface-2:#252a32; --border:#333944;
+  --text:#dde1e7; --muted:#98a1af; --accent:#5fb6ab; --accent-soft:#1f3431;
+  --in:#6fc49c; --out:#e0908b; --move:#9a9ddd; --warn:#d3a468;
+  --shadow:0 1px 2px rgba(0,0,0,.32),0 8px 22px rgba(0,0,0,.24);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0d1015; --surface:#161a21; --surface-2:#1d222b; --border:#2a313c;
-  --text:#e9ecf1; --muted:#9aa3b2; --accent:#2dd4bf; --accent-soft:#14312f;
-  --in:#34d399; --out:#f87171; --move:#a5a5f5; --warn:#fbbf24;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.3);
+  --bg:#15181d; --surface:#1d2127; --surface-2:#252a32; --border:#333944;
+  --text:#dde1e7; --muted:#98a1af; --accent:#5fb6ab; --accent-soft:#1f3431;
+  --in:#6fc49c; --out:#e0908b; --move:#9a9ddd; --warn:#d3a468;
+  --shadow:0 1px 2px rgba(0,0,0,.32),0 8px 22px rgba(0,0,0,.24);
 }}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;overflow-x:hidden}
@@ -62,7 +62,7 @@ header.top .wrap{display:flex;align-items:center;gap:8px;min-block-size:56px}
 .rowline{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .hero{background:linear-gradient(135deg,var(--accent),#0e7490);color:#fff;border:0}
 .hero .lbl,.hero .sub{color:rgba(255,255,255,.88)}
-[data-theme="dark"] .hero{background:linear-gradient(135deg,#0c5c56,#0b4a5c)}
+[data-theme="dark"] .hero{background:linear-gradient(135deg,#2b5c57,#2a4d5c)}
 
 label{display:block;font-size:13px;color:var(--muted);font-weight:600;margin-block-end:4px}
 input,select,textarea{inline-size:100%;background:var(--surface-2);border:1px solid var(--border);
@@ -111,9 +111,9 @@ input[type=checkbox]{inline-size:20px;block-size:20px;min-block-size:20px;margin
 .tag.w{background:#fff7e6;color:#92400e;border-color:#fcd9a3}
 .tag.r{background:#fee4e2;color:#912018;border-color:#fda29b}
 .tag.g{background:#e7f7ee;color:#05603a;border-color:#a6e9c5}
-[data-theme=dark] .tag.w{background:#3a2c10;color:#fcd34d;border-color:#5b4514}
-[data-theme=dark] .tag.r{background:#3d1614;color:#fca5a5;border-color:#5d211d}
-[data-theme=dark] .tag.g{background:#0d2d20;color:#6ee7b7;border-color:#14532d}
+[data-theme=dark] .tag.w{background:#33291a;color:#dcb277;border-color:#4a3a22}
+[data-theme=dark] .tag.r{background:#33201f;color:#e0a09b;border-color:#4a2b29}
+[data-theme=dark] .tag.g{background:#1b2f26;color:#84c6a5;border-color:#2a4536}
 
 .bar{block-size:10px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-block:6px}
 .bar i{display:block;block-size:100%;background:var(--accent);border-radius:99px}
@@ -143,6 +143,20 @@ svg{display:block;inline-size:100%;block-size:auto}
   border-inline-start:4px solid var(--warn);border-radius:11px;padding:11px 12px;font-size:14px;margin-block-end:8px}
 .note.bad{border-inline-start-color:var(--out)} .note.ok{border-inline-start-color:var(--in)}
 .note.info{border-inline-start-color:var(--move)}
+.badge-bank{display:grid;place-items:center;border-radius:11px;color:#fff;font-weight:800;
+  letter-spacing:.02em;flex:0 0 auto;text-align:center;line-height:1.05;padding:2px}
+.wtile{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);
+  border-inline-start:5px solid var(--brand,var(--accent));border-radius:var(--r);
+  padding:10px 12px;box-shadow:var(--shadow);margin-block-end:10px}
+.wtile-main{flex:1;min-inline-size:0;display:flex;align-items:center;gap:11px;background:none;
+  border:0;padding:0;text-align:start;color:inherit}
+.wtile-txt{flex:1;min-inline-size:0}
+.wtile-txt b{display:block;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wtile-txt .sub{display:block;font-size:12px}
+.wtile-amt{font-weight:750;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.eye{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;
+  min-inline-size:38px;min-block-size:38px;font-size:15px;flex:0 0 auto}
+.eye[aria-pressed=true]{border-color:var(--accent)}
 .empty{text-align:center;color:var(--muted);padding:22px 8px;font-size:14.5px}
 
 nav.bottom{position:fixed;inset-inline:0;inset-block-end:0;z-index:40;background:var(--surface);
@@ -276,6 +290,9 @@ function blank() {
     bills: [],
     views: [],
     statements: [],
+    pots: [],
+    funds: [],
+    perks: {},
     auth: { user:"", pwHash:"", dob:"", gender:"", createdAt:"", lastSignIn:"" },
     seeded: false,
     sync: { user:"", repo:"", branch:"main", file:"data.json.enc", on:false,
@@ -301,6 +318,10 @@ var ui = {
   receipt: null,
   auth: null,
   syncState: "",
+  syncError: "",
+  accId: "",
+  accRange: null,
+  shown: {},
   syncTimer: null,
   recovery: "",
   authed: false,
@@ -408,7 +429,7 @@ function applyLoaded(parsed) {
   base.profile = Object.assign({ name: "" }, parsed.profile || {});
   base.auth = Object.assign(blank().auth, parsed.auth || {});
   if (!Array.isArray(base.cats) || !base.cats.length) base.cats = DEFAULT_CATS.slice();
-  ["accounts", "apps", "tx", "goals", "bills", "views", "statements"].forEach(function (k) {
+  ["accounts", "apps", "tx", "goals", "bills", "views", "statements", "pots", "funds"].forEach(function (k) {
     if (!Array.isArray(base[k])) base[k] = [];
   });
   base.tx.forEach(function (t) {
@@ -521,11 +542,7 @@ function balance(accountId) {
   });
   return bal;
 }
-function netWorth() {
-  return db.accounts.reduce(function (s, a) {
-    return (a.archived || a.include === false) ? s : s + balance(a.id);
-  }, 0);
-}
+/* netWorth lives in the wealth section below */
 function cardOutstanding(a) {
   var b = balance(a.id);
   return b < 0 ? -b : 0;
@@ -790,7 +807,7 @@ function newDraft(type, date) {
   return {
     editing: null, type: type || "out", amt: "", cat: "",
     how: db.settings.lastHow || "", appId: db.settings.lastApp || "", acc: "", to: "",
-    date: date || today(), time: hm(new Date()), noTime: false, channel: "",
+    date: date || today(), time: hm(new Date()), noTime: false, channel: "", perkId: "",
     note: "", more: false, createdAt: "", status: "done", deducted: 0, refunds: []
   };
 }
@@ -1040,6 +1057,7 @@ function saveDraft(force) {
     date: d.date,
     time: d.noTime ? "" : (d.time || ""),
     noTime: !!d.noTime,
+    perkId: d.perkId || "",
     channel: (type === "out" && isCard(fromAcc))
       ? (d.channel || (d.how === "app" ? "upi" : ""))
       : "",
@@ -1250,13 +1268,15 @@ var NAV = [
 var TITLES = {
   home:"Home", history:"History", stats:"Stats", more:"More",
   money:"Accounts & cards", budget:"Budget & goals", bills:"Bills",
-  reports:"Reports", settings:"Settings", card:"Credit card", cycle:"Billing cycle", stmt:"Statement"
+  reports:"Reports", settings:"Settings", card:"Credit card", cycle:"Billing cycle", stmt:"Statement",
+  account:"Account", funds:"Mutual funds", saved:"Money set aside", cardplan:"Which card to use", perks:"Card perks"
 };
 
 function drawNav() {
   el("nav").innerHTML = NAV.map(function (x) {
     var current = ui.view === x.v ||
-      (x.v === "more" && ["money", "budget", "bills", "reports", "settings", "card", "cycle", "stmt"].indexOf(ui.view) > -1);
+      (x.v === "more" && ["money", "budget", "bills", "reports", "settings", "card", "cycle",
+        "stmt", "account", "funds", "saved", "cardplan", "perks"].indexOf(ui.view) > -1);
     return '<button type="button" class="' + (x.v === "add" ? "plus" : "") + '" data-act="' +
       (x.v === "add" ? "add" : "go") + '" data-view="' + x.v + '"' +
       (x.v === "add" ? "" : ' aria-current="' + (current ? "page" : "false") + '"') +
@@ -1269,7 +1289,8 @@ function render() {
     home: pageHome, history: pageHistory, stats: pageStats, more: pageMore,
     money: pageMoney, budget: pageBudget, bills: pageBills,
     reports: pageReports, settings: pageSettings,
-    card: pageCard, cycle: pageCycle, stmt: pageStatement
+    card: pageCard, cycle: pageCycle, stmt: pageStatement,
+    account: pageAccount, funds: pageFunds, saved: pageSaved, cardplan: pageCardPlan, perks: pagePerks
   }[ui.view] || pageHome;
   el("app").innerHTML = fn();
   if (window.scrollTo) window.scrollTo(0, 0);
@@ -1284,35 +1305,124 @@ function backBar(title) {
 function pageHome() {
   var td = today(), mk = mKey(new Date());
   var tToday = totalsFor(txOn(td)), tMonth = totalsFor(txIn(mk));
-  var bt = budgetTotal(), left = bt > 0 ? bt - tMonth.out : null;
-  var recent = sortTx(db.tx).slice(0, 6);
-  var cardDue = cards().reduce(function (s, a) { return s + cardOutstanding(a); }, 0);
+  var left = leftToSpend();
+  var owed = cardsOwed();
   var stuckAll = db.tx.reduce(function (s, t) { return s + stuck(t); }, 0);
   var h = "";
 
-  if (!db.tx.length) {
-    h += '<div class="sec"><div class="card"><h2>Welcome' + (db.profile.name ? ", " + esc(db.profile.name) : "") + " 👋</h2>" +
-      '<p class="sub">Nothing recorded yet. Tap the big ＋ button below and add what you spent — it takes about five seconds.</p>' +
+  if (!db.tx.length && db.accounts.length <= 1 && !pots().length && !funds().length) {
+    return '<div class="sec"><div class="card"><h2>Welcome \ud83d\udc4b</h2>' +
+      '<p class="sub">Nothing recorded yet. Tap the big \uff0b button below.</p>' +
       '<div class="btns" style="margin-block-start:12px">' +
       '<button type="button" class="btn" data-act="add">Add my first entry</button>' +
-      '<button type="button" class="btn g" data-act="addReceipt">📷 From a bill</button>' +
       '<button type="button" class="btn g" data-act="go" data-view="money">Set up accounts</button>' +
-      '<button type="button" class="btn g" data-act="demo">Show me an example</button></div></div></div>';
+      '<button type="button" class="btn g" data-act="demo">Show me an example</button>' +
+      "</div></div></div>";
   }
 
-  h += '<div class="sec"><div class="card hero"><span class="lbl">Money you have</span>' +
-    '<p class="big">' + money(netWorth()) + "</p>" +
-    '<p class="sub">Spent today: ' + money(tToday.out) + (cardDue ? " · card bills: " + money(cardDue) : "") + "</p></div>";
+  /* headline: spendable money, then what it is made of */
+  h += '<div class="sec"><div class="card hero">' +
+    '<div style="display:flex;align-items:center;gap:10px">' +
+    '<div style="flex:1"><span class="lbl">Money you can spend</span>' +
+    '<p class="big">' + maskMoney(spendable(), "total") + "</p></div>" +
+    eyeBtn("total", "your total") + "</div>" +
+    '<p class="sub">In your banks and cash' +
+    (owed ? " \u00b7 " + money(owed) + " on cards (" +
+      (cardsDueNow() ? money(cardsDueNow()) + " due now" : "none due yet") + ")" : "") + "</p></div>";
 
   h += '<div class="grid">' +
     '<div class="card"><span class="lbl">Spent today</span><p class="mid out">' + money(tToday.out) + "</p></div>" +
     '<div class="card"><span class="lbl">Received today</span><p class="mid in">' + money(tToday.in) + "</p></div>" +
     '<div class="card"><span class="lbl">Spent this month</span><p class="mid out">' + money(tMonth.out) + "</p></div>" +
     '<div class="card"><span class="lbl">Left to spend</span><p class="mid ' +
-      (left === null ? "" : left >= 0 ? "in" : "out") + '">' +
-      (left === null ? '<span class="sub">No budget set</span>' : money(left)) + "</p>" +
-      (left === null ? '<button type="button" class="btn g s" style="margin-block-start:6px" data-act="go" data-view="budget">Set a budget</button>' : "") +
-    "</div></div></div>";
+      (left.amount >= 0 ? "in" : "out") + '">' + money(left.amount) + "</p>" +
+      '<p class="sub">' + (left.basis === "budget"
+        ? "of your " + money(left.budget) + " budget"
+        : (cardsDueNow() ? "after " + money(cardsDueNow()) + " of card bills due" : "money you hold") +
+          (bufferTotal() ? " and the " + money(bufferTotal()) + " you keep aside" : "")) +
+      "</p></div></div></div>";
+
+  /* savings accounts */
+  var banks = spendAccounts();
+  h += '<div class="sec"><div class="rowline"><h2>Savings accounts</h2>' +
+    '<button type="button" class="btn g s" data-act="go" data-view="money">Manage</button></div>' +
+    (banks.length ? banks.map(accountTile).join("")
+      : '<div class="card"><p class="empty">No accounts yet.</p></div>') + "</div>";
+
+  /* credit cards */
+  var cardList = cards();
+  if (cardList.length) {
+    h += '<div class="sec"><div class="rowline"><h2>Credit cards</h2>' +
+      "<span class=\"sub\">" + money(owed) + " owed</span></div>" +
+      cardList.map(cardTileSmall).join("") + "</div>";
+  }
+
+  /* bills generated but not yet paid */
+  var dueNow = cardsDueNow();
+  if (dueNow > 0) {
+    var dueCards = [];
+    cards().forEach(function (c) {
+      var left2 = unpaidStatements(c.id).reduce(function (n, st) { return n + statementRemaining(st); }, 0);
+      if (left2 > 0) dueCards.push({ card: c, left: left2 });
+    });
+    h += '<div class="sec"><h2>Bills to pay</h2><div class="card">' +
+      '<p class="sub">' + money(dueNow) + " has been billed and is waiting. Your bank balance " +
+      "does not change until you record the payment.</p><table style=\"margin-block-start:8px\">" +
+      dueCards.map(function (x) {
+        return "<tr><td>" + esc(x.card.name) + '</td><td class="n">' + money(x.left) +
+          '</td><td class="n"><button type="button" class="btn s" data-act="payCard" data-id="' +
+          esc(x.card.id) + '">Pay</button></td></tr>';
+      }).join("") + "</table></div></div>";
+  }
+
+  /* card timing nudges */
+  var fresh = freshCards(), closing = closingSoon();
+  if (fresh.length || closing.length) {
+    h += '<div class="sec"><div class="rowline"><h2>Card timing</h2>' +
+      '<button type="button" class="btn g s" data-act="go" data-view="cardplan">See all</button></div>';
+    if (fresh.length) {
+      h += '<div class="note ok"><span aria-hidden="true">\u2705</span><div><b>' +
+        esc(fresh[0].card.name) + "</b> just billed \u2014 spending on it now gives you about " +
+        fresh[0].free.total + " days before you pay." +
+        (fresh.length > 1 ? " " + (fresh.length - 1) + " other card" +
+          (fresh.length > 2 ? "s are" : " is") + " in the same position." : "") + "</div></div>";
+    }
+    closing.slice(0, 2).forEach(function (x) {
+      h += '<div class="note"><span aria-hidden="true">\u26a0\ufe0f</span><div><b>' + esc(x.card.name) +
+        "</b> \u2014 " + esc(x.head).toLowerCase() + ". Anything you spend now lands on that bill, due " +
+        esc(fDateLong(x.free.due)) + ".</div></div>";
+    });
+    h += "</div>";
+  }
+
+  /* money set aside */
+  var potList = pots();
+  if (potList.length) {
+    h += '<div class="sec"><div class="rowline"><h2>Money set aside</h2>' +
+      '<button type="button" class="btn g s" data-act="go" data-view="saved">Manage</button></div>' +
+      potList.map(potTile).join("") + "</div>";
+  }
+
+  /* mutual funds */
+  var fundList = funds();
+  if (fundList.length) {
+    var top = fundList.slice().sort(function (a, b) { return (b.invested || 0) - (a.invested || 0); }).slice(0, 3);
+    h += '<div class="sec"><div class="rowline"><h2>Mutual funds</h2>' +
+      '<button type="button" class="btn g s" data-act="go" data-view="funds">See all</button></div>' +
+      '<div class="card"><div class="rowline"><span class="lbl">Put in so far</span>' +
+      "<span>" + eyeBtn("funds", "total invested") + "</span></div>" +
+      '<p class="mid">' + maskMoney(fundsTotal(), "funds") + "</p>" +
+      "<table style=\"margin-block-start:8px\">" + top.map(function (f) {
+        return "<tr><td>" + esc(f.name) + '</td><td class="n">' + maskMoney(f.invested, "funds") + "</td></tr>";
+      }).join("") + "</table>" +
+      (function () {
+        var soon = sipDue().filter(function (x) { return x.due; });
+        return soon.length
+          ? '<p class="sub" style="margin-block-start:8px">\u23f0 ' + soon.length +
+            " SIP" + (soon.length === 1 ? "" : "s") + " due soon</p>"
+          : "";
+      })() + "</div></div>";
+  }
 
   var list = alerts();
   if (list.length) {
@@ -1326,28 +1436,29 @@ function pageHome() {
   if (stuckAll > 0) {
     h += '<div class="sec"><div class="card"><span class="lbl">Waiting to come back</span>' +
       '<p class="mid warnc">' + money(stuckAll) + "</p>" +
-      '<p class="sub">Failed or cancelled payments where the money hasn\'t returned yet.</p>' +
       '<button type="button" class="btn g s" data-act="filterStuck">See them</button></div></div>';
   }
 
-  var top = byCategory(txIn(mk)).slice(0, 5);
-  if (top.length) {
-    h += '<div class="sec"><h2>Where this month went</h2><div class="card">' + barList(top, tMonth.out) + "</div></div>";
+  var topCats = byCategory(txIn(mk)).slice(0, 5);
+  if (topCats.length) {
+    h += '<div class="sec"><h2>Where this month went</h2><div class="card">' +
+      barList(topCats, tMonth.out) + "</div></div>";
   }
 
-  var soon = upcomingBills().slice(0, 3);
-  if (soon.length) {
-    h += '<div class="sec"><h2>Coming up</h2><div class="card"><table>' + soon.map(function (u) {
+  var soonBills = upcomingBills().slice(0, 3);
+  if (soonBills.length) {
+    h += '<div class="sec"><h2>Coming up</h2><div class="card"><table>' + soonBills.map(function (u) {
       return "<tr><td>" + esc(u.bill.name) + '<br><span class="sub">' +
         (u.days === 0 ? "today" : u.days === 1 ? "tomorrow" : "in " + u.days + " days") +
         '</span></td><td class="n"><b>' + money(u.bill.amt) + "</b></td></tr>";
     }).join("") + "</table></div></div>";
   }
 
+  var recent = sortTx(db.tx).slice(0, 6);
   h += '<div class="sec"><div class="rowline"><h2>Latest</h2>' +
     '<button type="button" class="btn g s" data-act="go" data-view="history">See all</button></div>' +
-    '<div class="card">' + (recent.length ? recent.map(txRow).join("") :
-      '<p class="empty">Nothing recorded yet.</p>') + "</div></div>";
+    '<div class="card">' + (recent.length ? recent.map(txRow).join("")
+      : '<p class="empty">Nothing recorded yet.</p>') + "</div></div>";
   return h;
 }
 
@@ -1543,6 +1654,10 @@ function pageMore() {
     ["money", "🏦", "Accounts & cards", "Bank, cash, wallets and credit cards"],
     ["budget", "🎯", "Budget & goals", "Monthly limits and what you're saving for"],
     ["bills", "📅", "Bills & repeats", "Rent, EMIs, subscriptions"],
+    ["cardplan", "🎯", "Which card to use", "Get the longest time before you pay"],
+    ["perks", "🎁", "Card perks", "What each card gives you, and what is left"],
+    ["funds", "📈", "Mutual funds", "Your SIPs and what you have put in"],
+    ["saved", "🏛️", "Money set aside", "Fixed deposits and savings pots"],
     ["reports", "📈", "Reports", "Pick any dates and see the full picture"],
     ["settings", "⚙️", "Settings & backup", "Theme, PIN, export, import"]
   ];
@@ -1970,6 +2085,16 @@ function pageReports() {
     "</div></div></div>";
 
   /* breakdowns */
+  h += '<div class="sec"><h2>Everything you own</h2><div class="card"><table>' +
+    row2("In banks and cash", money(spendable())) +
+    row2("Set aside (FD and savings)", money(potsTotal())) +
+    row2("Invested in mutual funds", money(fundsTotal())) +
+    row2("Owed on credit cards", money(cardsOwed())) +
+    row2("Net worth", money(netWorth())) +
+    row2("Free to spend right now", money(safeToSpend())) +
+    '</table><p class="sub">Set-aside money and investments are yours, but they are kept out of ' +
+    "your spendable figure. Card debt is subtracted.</p></div></div>";
+
   h += '<div class="sec"><h2>What you spent it on</h2><div class="card">' + barList(R.cats, R.totals.out) +
     (R.cats.length ? '<table style="margin-block-start:10px"><tr><th scope="col">Category</th>' +
       '<th scope="col" class="n">Total</th><th scope="col" class="n">Share</th><th scope="col" class="n">Per day</th></tr>' +
@@ -1995,6 +2120,32 @@ function pageReports() {
       '<table style="margin-block-start:10px"><tr><th scope="col">Received into</th><th scope="col" class="n">Total</th></tr>' +
       R.incomeAcc.map(function (a) { return "<tr><td>" + esc(a.label) + '</td><td class="n">' + money(a.value) + "</td></tr>"; }).join("") +
       "</table></div></div>";
+  }
+
+  if (funds().length) {
+    var fRows = funds().slice().sort(function (x, y) { return (y.invested || 0) - (x.invested || 0); });
+    var fTotal = fundsTotal();
+    h += '<div class="sec"><h2>Mutual funds</h2><div class="card">' +
+      barList(fRows.map(function (f) { return { label: f.name, value: Math.round(f.invested || 0) }; }), fTotal) +
+      '<table style="margin-block-start:10px"><tr><th scope="col">Fund</th><th scope="col">Type</th>' +
+      '<th scope="col" class="n">Monthly SIP</th><th scope="col" class="n">Put in</th></tr>' +
+      fRows.map(function (f) {
+        return "<tr><td>" + esc(f.name) + "</td><td>" + esc(f.type) +
+          '</td><td class="n">' + (f.oneOff ? "one-time" : money(f.sip)) +
+          '</td><td class="n">' + money(f.invested) + "</td></tr>";
+      }).join("") +
+      '<tr><td><b>Total</b></td><td></td><td class="n"><b>' +
+      money(fRows.reduce(function (n, f) { return n + (f.oneOff ? 0 : Math.round(f.sip || 0)); }, 0)) +
+      '</b></td><td class="n"><b>' + money(fTotal) + "</b></td></tr></table></div></div>";
+  }
+  if (pots().length) {
+    h += '<div class="sec"><h2>Money set aside</h2><div class="card"><table>' +
+      '<tr><th scope="col">What</th><th scope="col">Where</th><th scope="col" class="n">Amount</th></tr>' +
+      pots().map(function (p2) {
+        return "<tr><td>" + esc(p2.name) + "</td><td>" + esc(p2.bank || "\u2014") +
+          '</td><td class="n">' + money(p2.amt) + "</td></tr>";
+      }).join("") +
+      '<tr><td><b>Total</b></td><td></td><td class="n"><b>' + money(potsTotal()) + "</b></td></tr></table></div></div>";
   }
 
   /* over time */
@@ -2426,6 +2577,17 @@ function pageCard() {
     "<h2>" + esc(card.name) + "</h2></div>";
 
   h += cardTile(card);
+  if (card.virtualOf) {
+    h += '<div class="note info"><span aria-hidden="true">\ud83d\udd17</span><div>This is a virtual card number ' +
+      "for <b>" + esc(accName(card.virtualOf)) + "</b>. In real life they share one limit and one bill. " +
+      "It is tracked separately here only so you can see which number you used.</div></div>";
+  }
+  var twinsOf = db.accounts.filter(function (x) { return x.virtualOf === card.id; });
+  if (twinsOf.length) {
+    h += '<div class="note info"><span aria-hidden="true">\ud83d\udd17</span><div>' +
+      esc(twinsOf.map(function (x) { return x.name; }).join(", ")) +
+      " is a virtual number on this same card.</div></div>";
+  }
 
   h += '<div class="sec"><h2>What you owe, split up</h2><div class="card"><table>' +
     row2("Current outstanding", money(m.outstanding)) +
@@ -2439,7 +2601,10 @@ function pageCard() {
     row2("Available credit", m.available === null ? "—" : money(m.available)) +
     row2("Credit utilisation", m.utilisation === null ? "—" : m.utilisation.toFixed(1) + "%") +
     '</table><p class="sub">These are different obligations. The statement is what the issuer billed for one cycle; ' +
-    "the outstanding figure also includes anything you have spent since.</p></div></div>";
+    "the outstanding figure also includes anything you have spent since.</p>" +
+    '<div class="note info" style="margin-block-start:10px"><span aria-hidden="true">\ud83c\udfe6</span><div>' +
+    "A generated bill never touches your bank balance on its own. Your savings only go down when you " +
+    "record the payment yourself with <b>Pay this card</b>.</div></div></div></div>";
 
   /* current cycle */
   var act2 = cardActivity(card.id, cycle.from, cycle.to);
@@ -2580,7 +2745,10 @@ function pageStatement() {
     '<button type="button" class="btn g s" data-act="confirmStmt" data-id="' + esc(st.cardId) +
       '" data-stmt="' + esc(st.id) + '">Edit these figures</button>' +
     '<button type="button" class="btn g s" data-act="stmtCsv" data-id="' + esc(st.id) + '">Download</button>' +
-    '<button type="button" class="btn d s" data-act="delStmt" data-id="' + esc(st.id) + '">Delete</button></div></div>';
+    '<button type="button" class="btn d s" data-act="delStmt" data-id="' + esc(st.id) + '">Delete</button></div>' +
+    '<div class="note info" style="margin-block-start:10px"><span aria-hidden="true">\ud83c\udfe6</span><div>' +
+    "This bill has not touched your bank balance. It will only come out of your account when you " +
+    "record the payment.</div></div></div>";
 
   /* what the issuer said vs what this app worked out */
   var calc = st.calc || {};
@@ -3559,54 +3727,121 @@ function signOut() {
 }
 
 /* =========================================================
-   STARTING DATA
-   Loaded once, on the very first run. Opening balances are set
-   so that after the September entries below, each account shows
-   the balance you actually have today.
+   STARTING DATA — your real accounts, cards, savings and funds.
+   Opening balances are back-calculated so that AFTER the
+   September entries below, each account shows today's figure.
    ========================================================= */
+
+/* Brand colours and short badges. These are colour-and-initial
+   badges drawn in the page, not the banks' own logo artwork. */
+var BANK_LOOK = {
+  "SBI":       { c:"#22409a", t:"SBI" },
+  "HDFC":      { c:"#00457e", t:"HDFC" },
+  "PNB":       { c:"#9c1b34", t:"PNB" },
+  "Axis":      { c:"#8e1444", t:"AXIS" },
+  "IDFC":      { c:"#9e1b32", t:"IDFC" },
+  "Yes Bank":  { c:"#0b5091", t:"YES" },
+  "Slice":     { c:"#5b2e9d", t:"SLICE" },
+  "Uni":       { c:"#0b5091", t:"UNI" },
+  "Cash":      { c:"#0b7a52", t:"CASH" },
+  "":          { c:"#5b6472", t:"BANK" }
+};
+function bankLook(a) {
+  if (!a) return BANK_LOOK[""];
+  if (a.kind === "cash") return BANK_LOOK.Cash;
+  var key = a.bank || "";
+  if (BANK_LOOK[key]) return BANK_LOOK[key];
+  var name = (a.name || "").toLowerCase();
+  var keys = Object.keys(BANK_LOOK);
+  for (var i = 0; i < keys.length; i++) {
+    if (keys[i] && name.indexOf(keys[i].toLowerCase()) > -1) return BANK_LOOK[keys[i]];
+  }
+  return BANK_LOOK[""];
+}
+/** A small round badge in the bank's colour. */
+function bankBadge(a, size) {
+  var look = bankLook(a), px = size || 38;
+  return '<span class="badge-bank" style="inline-size:' + px + "px;block-size:" + px +
+    "px;background:" + look.c + ';font-size:' + Math.max(8, Math.round(px / 4.2)) + 'px" aria-hidden="true">' +
+    esc(look.t) + "</span>";
+}
+
 function seedData() {
   var A = function (o) {
     return Object.assign({ bank:"", last4:"", open:0, include:true, primary:false, archived:false }, o);
   };
-  /* Bank, cash and wallet balances.
-     SBI and Cash openings are set before the 1–2 September entries below,
-     so the running balances land on today's real figures. */
+  /* Spending accounts. Openings undo the September entries below. */
   db.accounts = [
-    A({ id:"a_sbi",  name:"SBI Savings",  kind:"bank", bank:"SBI",  last4:"",
-        open: toMinor(6679.42) + toMinor(33500) + toMinor(1306.22), primary:true }),
-    A({ id:"a_cash", name:"Cash",         kind:"cash",
-        open: toMinor(650) + toMinor(30) + toMinor(30) + toMinor(49) }),
-    A({ id:"a_hdfc", name:"HDFC Savings", kind:"bank", bank:"HDFC", open: toMinor(2543.92) }),
-    A({ id:"a_pnb",  name:"PNB Savings",  kind:"bank", bank:"PNB",  open: toMinor(2434.20),
-        minBalance: toMinor(2000) })
+    A({ id:"a_sbi",  name:"SBI Savings",  kind:"bank", bank:"SBI", subtype:"savings",
+        open: toMinor(5680.42) + toMinor(33500) + toMinor(1306.22), primary:true }),
+    A({ id:"a_hdfc", name:"HDFC Savings", kind:"bank", bank:"HDFC", subtype:"savings",
+        open: toMinor(1943.92) }),
+    A({ id:"a_pnb",  name:"PNB Savings",  kind:"bank", bank:"PNB", subtype:"savings",
+        open: toMinor(2434.20), minBalance: toMinor(2000) }),
+    A({ id:"a_cash", name:"Cash", kind:"cash",
+        open: toMinor(650) + toMinor(30) + toMinor(30) + toMinor(49) })
   ];
 
-  /* Credit cards. All previous bills are paid, so each opening balance is
-     simply what is currently outstanding (unbilled) on that card. */
+  /* Money set aside by hand — not spending, not a daily deduction. */
+  db.pots = [
+    { id:"p_fd",    name:"Fixed deposit",  kind:"fd",      bank:"SBI",   amt: toMinor(1000),
+      openedOn: today(), note:"" },
+    { id:"p_slice", name:"Slice savings",  kind:"savings", bank:"Slice", amt: toMinor(100),
+      openedOn: today(), note:"" }
+  ];
+
+  /* Credit cards. All bills paid, so each opening is what is outstanding now. */
   var C = function (o) {
     return Object.assign({ kind:"card", bank:"", last4:"", limit:0, include:true,
       primary:false, archived:false, dueRule:"day" }, o);
   };
   db.accounts = db.accounts.concat([
-    C({ id:"c_hdfc1", name:"HDFC Credit Card",        bank:"HDFC", last4:"8256",
-        open: -toMinor(1185),    stmtDay:"13", dueDay:2 }),
-    C({ id:"c_hdfc2", name:"HDFC RuPay Credit Card",  bank:"HDFC", last4:"8486",
-        open: -toMinor(2089),    stmtDay:"13", dueDay:2 }),
-    C({ id:"c_axis1", name:"Axis My Zone",            bank:"Axis", last4:"7779",
-        open: -toMinor(475.20),  stmtDay:"7",  dueDay:27 }),
-    C({ id:"c_axis2", name:"Axis Neo",                bank:"Axis", last4:"",
-        open: -toMinor(857),     stmtDay:"7",  dueDay:27 }),
-    C({ id:"c_idfc",  name:"IDFC Credit Card",        bank:"IDFC", last4:"4314",
-        open: -toMinor(1450.64), stmtDay:"20", dueRule:"days", dueDays:20 }),
-    C({ id:"c_yes1",  name:"Yes Bank Uni Gold",       bank:"Yes Bank", last4:"7630",
-        open: -toMinor(2189.43), stmtDay:"17", dueDay:5 }),
-    C({ id:"c_yes2",  name:"Yes Bank Uni Gold UPI",   bank:"Yes Bank", last4:"8929",
-        open: -toMinor(2438.04), stmtDay:"17", dueDay:5 }),
-    C({ id:"c_sbi1",  name:"SBI Credit Card",         bank:"SBI",  last4:"7955",
-        open: 0, stmtDay:"13", dueDay:2 }),
-    C({ id:"c_sbi2",  name:"SBI RuPay Credit Card",   bank:"SBI",  last4:"7963",
-        open: 0, stmtDay:"13", dueDay:2 })
+    C({ id:"c_hdfc1", name:"Swiggy HDFC Credit Card", bank:"HDFC", last4:"8256",
+        open:-toMinor(1185),    stmtDay:"13", dueDay:2 }),
+    C({ id:"c_hdfc2", name:"Swiggy HDFC \u2014 virtual RuPay", bank:"HDFC", last4:"8486",
+        open:-toMinor(2089),    stmtDay:"13", dueDay:2, virtualOf:"c_hdfc1" }),
+    C({ id:"c_axis1", name:"Axis My Zone",           bank:"Axis", last4:"7779",
+        open:-toMinor(475.20),  stmtDay:"7",  dueDay:27 }),
+    C({ id:"c_axis2", name:"Axis Neo",               bank:"Axis", last4:"",
+        open:-toMinor(857),     stmtDay:"7",  dueDay:27 }),
+    C({ id:"c_idfc",  name:"IDFC Credit Card",       bank:"IDFC", last4:"4314",
+        open:-toMinor(1450.64), stmtDay:"20", dueRule:"days", dueDays:20 }),
+    C({ id:"c_yes1",  name:"Yes Bank Uni Gold",      bank:"Yes Bank", last4:"7630",
+        open:-toMinor(2189.43), stmtDay:"17", dueDay:5 }),
+    C({ id:"c_yes2",  name:"Yes Bank Uni Gold UPI",  bank:"Yes Bank", last4:"8929",
+        open:-toMinor(2438.04), stmtDay:"17", dueDay:5 }),
+    C({ id:"c_sbi1",  name:"Tata Neu Plus SBI Card", bank:"SBI",  last4:"7955",
+        open:0, stmtDay:"13", dueDay:2 }),
+    C({ id:"c_sbi2",  name:"Tata Neu Plus SBI \u2014 RuPay", bank:"SBI",  last4:"7963",
+        open:0, stmtDay:"13", dueDay:2, virtualOf:"c_sbi1" }),
+    C({ id:"c_slice", name:"Slice Credit Card",      bank:"Slice", last4:"",
+        open:0, limit: toMinor(93000), stmtDay:"21", dueDay:5 })
   ]);
+
+  /* Mutual funds. Amounts are what you have put in so far.
+     SIP days are reminders only — nothing is deducted automatically,
+     because you pay some months and skip others. */
+  var F = function (o) {
+    return Object.assign({ auto:false, paidThisMonth:false, type:"Mutual fund" }, o);
+  };
+  db.funds = [
+    F({ id:"f_ppfc",  name:"Parag Parikh Flexi Cap Fund Direct Growth", invested: toMinor(12000),
+        sip: toMinor(2000), day:5, acc:"a_sbi",  type:"Flexi cap" }),
+    F({ id:"f_icici", name:"ICICI Prudential Technology Fund Growth",   invested: toMinor(4500),
+        sip: toMinor(500),  day:8, acc:"a_sbi",  type:"Sector" }),
+    F({ id:"f_absl",  name:"Aditya Birla Sun Life Flexi Cap Fund Growth", invested: toMinor(3800),
+        sip: toMinor(500),  day:0, acc:"a_sbi",  type:"Flexi cap" }),
+    F({ id:"f_uti",   name:"UTI Nifty 50 Index Fund Direct Growth",     invested: toMinor(3500),
+        sip: toMinor(500),  day:5, acc:"a_sbi",  type:"Index" }),
+    F({ id:"f_hdfcf", name:"HDFC Flexi Cap Direct Plan Growth",         invested: toMinor(3000),
+        sip: toMinor(1000), day:5, acc:"a_sbi",  type:"Flexi cap" }),
+    F({ id:"f_hdfcs", name:"HDFC Small Cap Fund Growth",                invested: toMinor(1000),
+        sip: 0, day:0, acc:"a_sbi", type:"Small cap", oneOff:true }),
+    F({ id:"f_moti",  name:"Motilal Oswal Midcap Fund Direct Growth",   invested: toMinor(500),
+        sip: toMinor(500),  day:4, acc:"a_hdfc", type:"Midcap" }),
+    F({ id:"f_gold",  name:"Axis Gold Direct Plan Growth",              invested: toMinor(500),
+        sip: toMinor(500),  day:9, acc:"a_sbi",  type:"Gold" })
+  ];
 
   /* September so far. */
   var T = function (o) {
@@ -3616,19 +3851,22 @@ function seedData() {
   db.tx = [
     T({ id:"t_cardpay", type:"bill", amt: toMinor(33500), cat:"", acc:"a_sbi", to:"",
         how:"bank", date:"2026-09-01",
-        note:"Credit card payments — total paid, split across cards not recorded" }),
+        note:"Credit card payments \u2014 total paid, split across cards not recorded" }),
     T({ id:"t_train", amt: toMinor(1306.22), cat:"Travel", acc:"a_sbi", how:"app",
         date:"2026-09-01", note:"Train tickets Tirupati to Hyderabad" }),
-    T({ id:"t_bus",   amt: toMinor(30),      cat:"Travel", acc:"a_cash", how:"cash",
+    T({ id:"t_bus",  amt: toMinor(30), cat:"Travel", acc:"a_cash", how:"cash",
         date:"2026-09-01", note:"Bus, home to metro" }),
-    T({ id:"t_auto",  amt: toMinor(30),      cat:"Travel", acc:"a_cash", how:"cash",
+    T({ id:"t_auto", amt: toMinor(30), cat:"Travel", acc:"a_cash", how:"cash",
         date:"2026-09-01", note:"Auto, metro to Panama" }),
-    T({ id:"t_bike",  amt: toMinor(49),      cat:"Travel", acc:"a_cash", how:"cash",
+    T({ id:"t_bike", amt: toMinor(49), cat:"Travel", acc:"a_cash", how:"cash",
         date:"2026-09-02", note:"Bike ride, home to metro" })
   ];
 
   db.settings.setupDone = true;
   db.settings.currency = "INR";
+  db.sync = { user:"abhinaykumarbysani", repo:"money-tracker", branch:"main",
+    file:"data.json.enc", on:false, auto:true, lastPull:"", lastPush:"", lastSeen:"", sha:"" };
+  seedPerks();
   db.seeded = true;
   save();
 }
@@ -4188,10 +4426,14 @@ function syncSheet() {
     '<div class="note info"><span aria-hidden="true">🔒</span><div>Your data is encrypted before it leaves ' +
     "this device. GitHub only ever stores scrambled text.</div></div>" +
     '<form data-form="sync">' +
+    (ui.syncError ? '<div class="note bad" role="alert"><span aria-hidden="true">\u26a0\ufe0f</span><div>' +
+      esc(ui.syncError) + "</div></div>" : "") +
     '<div class="two"><div class="f"><label for="syUser">GitHub username</label>' +
-    '<input id="syUser" name="user" value="' + esc(c.user) + '" placeholder="abhinaykumarbysani"></div>' +
+    '<input id="syUser" name="user" autocapitalize="off" autocorrect="off" spellcheck="false" ' +
+    'value="' + esc(c.user) + '" placeholder="your-github-username"></div>' +
     '<div class="f"><label for="syRepo">Repository</label>' +
-    '<input id="syRepo" name="repo" value="' + esc(c.repo) + '" placeholder="money-tracker"></div></div>' +
+    '<input id="syRepo" name="repo" autocapitalize="off" autocorrect="off" spellcheck="false" ' +
+    'value="' + esc(c.repo) + '" placeholder="your-repo-name"></div></div>' +
     '<div class="two"><div class="f"><label for="syBranch">Branch</label>' +
     '<input id="syBranch" name="branch" value="' + esc(c.branch || "main") + '"></div>' +
     '<div class="f"><label for="syFile">File name</label>' +
@@ -4232,6 +4474,949 @@ function tokenHelpSheet() {
     '<button type="button" class="btn full" data-act="syncSetup">Back</button>';
 }
 
+/* =========================================================
+   WHAT YOU HAVE, WHAT YOU OWE, WHAT YOU CAN SPEND
+   ---------------------------------------------------------
+   Kept deliberately separate, because they answer different
+   questions:
+     spendable  — cash and bank money you can actually use
+     set aside  — FD and savings pots, yours but not for spending
+     invested   — mutual funds, not spending money at all
+     owed       — credit card outstanding, money you must pay back
+   ========================================================= */
+
+function pots() { db.pots = db.pots || []; return db.pots; }
+function funds() { db.funds = db.funds || []; return db.funds; }
+function pot(x) {
+  var list = pots();
+  for (var i = 0; i < list.length; i++) if (list[i].id === x) return list[i];
+  return null;
+}
+function fund(x) {
+  var list = funds();
+  for (var i = 0; i < list.length; i++) if (list[i].id === x) return list[i];
+  return null;
+}
+function spendAccounts() {
+  return db.accounts.filter(function (a) { return !a.archived && a.kind !== "card"; });
+}
+function bankAccounts() {
+  return db.accounts.filter(function (a) { return !a.archived && a.kind === "bank"; });
+}
+/** Money you can spend today: bank + cash + wallets. */
+function spendable() {
+  return spendAccounts().reduce(function (s, a) {
+    return a.include === false ? s : s + balance(a.id);
+  }, 0);
+}
+function potsTotal() { return pots().reduce(function (s, p) { return s + Math.round(p.amt || 0); }, 0); }
+function fundsTotal() { return funds().reduce(function (s, f) { return s + Math.round(f.invested || 0); }, 0); }
+function cardsOwed() {
+  return cards().reduce(function (s, c) { return s + cardOutstanding(c); }, 0);
+}
+/** Everything you own, minus what you owe on cards. */
+function netWorth() {
+  return spendable() + potsTotal() + fundsTotal() - cardsOwed();
+}
+/** Money kept aside as a floor you never want to dip below. */
+function bufferTotal() {
+  return spendAccounts().reduce(function (s, a) { return s + Math.round(a.minBalance || 0); }, 0);
+}
+/** Card money that is actually due — billed statements, not unbilled spending.
+    Unbilled spending is a real debt, but it is not due yet, so it does not
+    reduce what you can spend this month. */
+function cardsDueNow() {
+  var total = 0;
+  cards().forEach(function (c) {
+    unpaidStatements(c.id).forEach(function (st) { total += statementRemaining(st); });
+  });
+  return total;
+}
+/** What is genuinely free to spend: money you hold, minus bills that are
+    actually due, minus balances you must keep. */
+function safeToSpend() {
+  return spendable() - cardsDueNow() - bufferTotal();
+}
+/** Budget remaining, but never more than the money that actually exists. */
+function leftToSpend() {
+  var budget = budgetTotal();
+  var spentThisMonth = totalsFor(txIn(mKey(new Date()))).out;
+  var free = safeToSpend();
+  if (budget <= 0) return { amount: free, basis: "money", budget: 0, spent: spentThisMonth };
+  var byBudget = budget - spentThisMonth;
+  if (byBudget <= free) return { amount: byBudget, basis: "budget", budget: budget, spent: spentThisMonth };
+  return { amount: free, basis: "money", budget: budget, spent: spentThisMonth };
+}
+
+/* ---------- SIPs: reminders, never automatic ---------- */
+function sipDue() {
+  var out = [], td = new Date().getDate(), mk = mKey(new Date());
+  funds().forEach(function (f) {
+    if (!f.sip || !f.day || f.oneOff) return;
+    var paid = db.tx.some(function (t) {
+      return t.fundId === f.id && mOf(t.date) === mk;
+    });
+    var days = daysToDay(f.day);
+    out.push({ fund: f, paid: paid, days: days, due: !paid && days !== null && days <= 3 });
+  });
+  return out.sort(function (a, b) { return (a.days === null ? 99 : a.days) - (b.days === null ? 99 : b.days); });
+}
+/** Record a SIP payment. Money leaves the account and goes into the fund. */
+function payFund(f, amount, accId, dateIso) {
+  var amt = Math.round(amount || 0);
+  if (amt <= 0) return false;
+  db.tx.push({
+    id: id("t"), type: "move", amt: amt, cat: "", acc: accId || f.acc, to: "",
+    how: "bank", appId: "", channel: "", date: dateIso || today(), time: hm(new Date()),
+    noTime: false, note: "Invested in " + f.name, fundId: f.id,
+    status: "done", deducted: 0, refunds: [], createdAt: stamp(), updatedAt: stamp()
+  });
+  f.invested = Math.round(f.invested || 0) + amt;
+  f.lastPaid = dateIso || today();
+  save();
+  return true;
+}
+
+/* ---------- eye toggle ---------- */
+function hidden(id2) {
+  ui.shown = ui.shown || {};
+  return !ui.shown[id2];
+}
+function maskMoney(minor, id2) {
+  return hidden(id2) ? "\u2022\u2022\u2022\u2022\u2022\u2022" : money(minor);
+}
+function eyeBtn(id2, label) {
+  var open = !hidden(id2);
+  return '<button type="button" class="eye" data-act="peek" data-k="' + esc(id2) + '" aria-pressed="' +
+    (open ? "true" : "false") + '" aria-label="' + (open ? "Hide " : "Show ") + esc(label) + '">' +
+    (open ? "\ud83d\udc41" : "\ud83d\ude48") + "</button>";
+}
+
+/* ---------- account and card tiles for the home page ---------- */
+function accountTile(a) {
+  var look = bankLook(a);
+  var bal = balance(a.id);
+  var low = a.minBalance && bal < Math.round(a.minBalance);
+  return '<div class="wtile" style="--brand:' + look.c + '">' +
+    '<button type="button" class="wtile-main" data-act="openAcc" data-id="' + esc(a.id) + '">' +
+    bankBadge(a, 40) +
+    "<span class=\"wtile-txt\"><b>" + esc(a.name) + "</b>" +
+    '<span class="sub">' + esc(a.subtype ? a.subtype : a.kind === "cash" ? "in hand" : a.kind) +
+    (a.last4 ? " \u00b7 \u2022\u2022" + esc(a.last4) : "") + "</span></span>" +
+    '<span class="wtile-amt' + (low ? " out" : "") + '">' + maskMoney(bal, a.id) + "</span></button>" +
+    eyeBtn(a.id, a.name) +
+    (low ? '<span class="tag w" style="margin-inline-start:6px">below minimum</span>' : "") +
+    "</div>";
+}
+function cardTileSmall(c) {
+  var look = bankLook(c);
+  var m = cardMoney(c);
+  var st = cardState(c);
+  return '<div class="wtile" style="--brand:' + look.c + '">' +
+    '<button type="button" class="wtile-main" data-act="openCard" data-id="' + esc(c.id) + '">' +
+    bankBadge(c, 40) +
+    "<span class=\"wtile-txt\"><b>" + esc(c.name) + "</b>" +
+    '<span class="sub">' + (c.last4 ? "\u2022\u2022" + esc(c.last4) + " \u00b7 " : "") +
+    esc(stateWords(st.id)) + "</span></span>" +
+    '<span class="wtile-amt' + (m.outstanding > 0 ? " out" : "") + '">' +
+    maskMoney(m.outstanding, c.id) + "</span></button>" +
+    eyeBtn(c.id, c.name) + "</div>";
+}
+function potTile(p) {
+  var look = BANK_LOOK[p.bank] || BANK_LOOK[""];
+  return '<div class="wtile" style="--brand:' + look.c + '">' +
+    '<button type="button" class="wtile-main" data-act="editPot" data-id="' + esc(p.id) + '">' +
+    '<span class="badge-bank" style="inline-size:40px;block-size:40px;background:' + look.c +
+    ';font-size:9px" aria-hidden="true">' + esc(look.t) + "</span>" +
+    "<span class=\"wtile-txt\"><b>" + esc(p.name) + "</b>" +
+    '<span class="sub">' + (p.kind === "fd" ? "fixed deposit" : "savings") +
+    (p.openedOn ? " \u00b7 since " + esc(fDate(p.openedOn)) : "") + "</span></span>" +
+    '<span class="wtile-amt">' + maskMoney(p.amt, p.id) + "</span></button>" +
+    eyeBtn(p.id, p.name) + "</div>";
+}
+
+/* ---------- one account, in detail ---------- */
+function txForAccount(accId, from, to) {
+  return db.tx.filter(function (t) {
+    if (t.acc !== accId && t.to !== accId) return false;
+    if (from && t.date < from) return false;
+    if (to && t.date > to) return false;
+    return true;
+  });
+}
+function pageAccount() {
+  var a = acc(ui.accId);
+  if (!a) { ui.view = "home"; return pageHome(); }
+  if (a.kind === "card") { ui.cardId = a.id; ui.view = "card"; return pageCard(); }
+  var look = bankLook(a);
+  var r = ui.accRange || { id:"thismonth", from:"", to:"" };
+  var span = rangeDates(r);
+  var list = txForAccount(a.id, span.from, span.to);
+  var t = totalsFor(list);
+  var bal = balance(a.id);
+
+  var h = '<div class="sec" style="display:flex;align-items:center;gap:10px;margin-block:14px 6px">' +
+    '<button type="button" class="ib" data-act="go" data-view="home" aria-label="Back">\u2190</button>' +
+    "<h2>" + esc(a.name) + "</h2></div>";
+
+  h += '<div class="card" style="border-inline-start:5px solid ' + look.c + '">' +
+    '<div style="display:flex;align-items:center;gap:12px">' + bankBadge(a, 46) +
+    '<div style="flex:1"><span class="lbl">Available balance</span>' +
+    '<p class="big">' + maskMoney(bal, a.id) + "</p></div>" + eyeBtn(a.id, a.name) + "</div>" +
+    "<table style=\"margin-block-start:10px\">" +
+    row2("Kind", a.kind === "cash" ? "Cash in hand" : (a.subtype ? a.subtype : a.kind)) +
+    (a.bank ? row2("Bank", a.bank) : "") +
+    (a.last4 ? row2("Ending in", "\u2022\u2022" + a.last4) : "") +
+    (a.minBalance ? row2("Minimum to keep", money(a.minBalance)) : "") +
+    (a.minBalance ? row2("Free to use", money(Math.max(0, bal - Math.round(a.minBalance)))) : "") +
+    row2("Counted in your total", a.include === false ? "no" : "yes") +
+    "</table>" +
+    '<div class="btns" style="margin-block-start:10px">' +
+    '<button type="button" class="btn s" data-act="addFromAcc" data-id="' + esc(a.id) + '">Add an entry</button>' +
+    '<button type="button" class="btn g s" data-act="editAcc" data-id="' + esc(a.id) + '">Edit</button>' +
+    '<button type="button" class="btn g s" data-act="accCsv" data-id="' + esc(a.id) + '">Download</button>' +
+    "</div></div>";
+
+  /* period picker — works now, and keeps working as months build up */
+  h += '<div class="card"><span class="lbl">Which period?</span><div class="chips" style="margin-block:8px">' +
+    [["thismonth","This month"],["lastmonth","Last month"],["30","Last 30 days"],
+     ["thisyear","This year"],["all","Everything"],["custom","Pick dates"]].map(function (x) {
+      return chip("accRange", { r: x[0] }, x[1], "", r.id === x[0]);
+    }).join("") + "</div>" +
+    (r.id === "custom"
+      ? '<div class="two"><div class="f"><label for="arFrom">From</label>' +
+        '<input id="arFrom" type="date" max="' + today() + '" value="' + esc(span.from) + '" data-ar="from"></div>' +
+        '<div class="f"><label for="arTo">To</label>' +
+        '<input id="arTo" type="date" max="' + today() + '" value="' + esc(span.to) + '" data-ar="to"></div></div>'
+      : "") +
+    '<p class="sub">' + esc(fDateLong(span.from)) + " to " + esc(fDateLong(span.to)) + " \u00b7 " +
+    list.length + " entr" + (list.length === 1 ? "y" : "ies") + "</p>" +
+    '<div class="grid" style="margin-block-start:10px">' +
+    '<div><span class="lbl">Out</span><p class="mid out">' + money(t.out) + "</p></div>" +
+    '<div><span class="lbl">In</span><p class="mid in">' + money(t.in) + "</p></div>" +
+    '<div><span class="lbl">Difference</span><p class="mid ' + (t.net >= 0 ? "in" : "out") + '">' +
+      plus(t.net) + "</p></div></div></div>";
+
+  h += '<div class="sec"><h2>Entries</h2><div class="card">' +
+    (list.length ? sortTx(list).map(txRow).join("")
+      : '<p class="empty">Nothing in this period yet. Pick a wider range above.</p>') + "</div></div>";
+  return h;
+}
+
+/* ---------- mutual funds ---------- */
+function pageFunds() {
+  var list = funds();
+  var invested = fundsTotal();
+  var monthly = list.reduce(function (s, f) { return s + (f.oneOff ? 0 : Math.round(f.sip || 0)); }, 0);
+  var due = sipDue();
+  var mk = mKey(new Date());
+  var paidThisMonth = db.tx.filter(function (t) { return t.fundId && mOf(t.date) === mk; })
+    .reduce(function (s, t) { return s + Math.round(t.amt || 0); }, 0);
+
+  var h = '<div class="sec" style="display:flex;align-items:center;gap:10px;margin-block:14px 6px">' +
+    '<button type="button" class="ib" data-act="go" data-view="more" aria-label="Back">\u2190</button>' +
+    "<h2>Mutual funds</h2></div>";
+
+  h += '<div class="grid">' +
+    '<div class="card"><span class="lbl">Put in so far</span><p class="mid">' + maskMoney(invested, "funds") +
+      "</p>" + eyeBtn("funds", "total invested") + "</div>" +
+    '<div class="card"><span class="lbl">If you pay every SIP</span><p class="mid">' + money(monthly) +
+      '</p><p class="sub">a month across ' + list.filter(function (f) { return !f.oneOff && f.sip; }).length +
+      " funds</p></div>" +
+    '<div class="card"><span class="lbl">Paid this month</span><p class="mid ' +
+      (paidThisMonth > 0 ? "in" : "") + '">' + money(paidThisMonth) + "</p>" +
+      '<p class="sub">' + (paidThisMonth > 0 ? "recorded here" : "nothing recorded yet") + "</p></div></div>";
+
+  h += '<div class="note info"><span aria-hidden="true">\u2139\ufe0f</span><div>Nothing is deducted ' +
+    "automatically. Since you pay some months and skip others, these are reminders \u2014 " +
+    "tap <b>I paid this</b> when you actually do.</div></div>";
+
+  var soon = due.filter(function (x) { return !x.paid && x.days !== null && x.days <= 5; });
+  if (soon.length) {
+    h += '<div class="sec"><h2>Coming up</h2><div class="card"><table>' +
+      soon.map(function (x) {
+        return "<tr><td>" + esc(x.fund.name) + '<br><span class="sub">day ' + x.fund.day + " \u00b7 " +
+          (x.days === 0 ? "today" : x.days === 1 ? "tomorrow" : "in " + x.days + " days") +
+          " \u00b7 from " + esc(accName(x.fund.acc)) + '</span></td><td class="n">' + money(x.fund.sip) +
+          '</td><td class="n"><button type="button" class="btn s" data-act="payFund" data-id="' +
+          esc(x.fund.id) + '">I paid this</button></td></tr>';
+      }).join("") + "</table></div></div>";
+  }
+
+  h += '<div class="sec"><h2>Your funds</h2>' + list.map(function (f) {
+    var share = invested > 0 ? (Math.round(f.invested || 0) / invested) * 100 : 0;
+    var paid = db.tx.some(function (t) { return t.fundId === f.id && mOf(t.date) === mk; });
+    return '<div class="card"><div class="rowline"><b>' + esc(f.name) + "</b>" +
+      "<span>" + maskMoney(f.invested, "funds") + "</span></div>" +
+      '<div class="bar"><i style="inline-size:' + share.toFixed(1) + '%"></i></div>' +
+      '<div class="rowline sub"><span>' + esc(f.type) +
+      (f.oneOff ? " \u00b7 one-time, no SIP" : " \u00b7 " + money(f.sip) + " on day " + (f.day || "\u2014")) +
+      "</span><span>" + share.toFixed(0) + "% of your total</span></div>" +
+      '<p class="sub">Paid from ' + esc(accName(f.acc)) +
+      (paid ? ' \u00b7 <span class="in">paid this month</span>' : f.oneOff ? "" : " \u00b7 not paid this month yet") +
+      (f.lastPaid ? " \u00b7 last on " + esc(fDate(f.lastPaid)) : "") + "</p>" +
+      '<div class="btns" style="margin-block-start:8px">' +
+      (f.oneOff ? "" : '<button type="button" class="btn s" data-act="payFund" data-id="' + esc(f.id) +
+        '">I paid this</button>') +
+      '<button type="button" class="btn g s" data-act="editFund" data-id="' + esc(f.id) + '">Edit</button>' +
+      '<button type="button" class="btn g s" data-act="delFund" data-id="' + esc(f.id) + '">Remove</button>' +
+      "</div></div>";
+  }).join("") +
+  '<button type="button" class="btn g full" data-act="newFund">Add a fund</button></div>';
+  return h;
+}
+
+/* ---------- money set aside ---------- */
+function pageSaved() {
+  var list = pots();
+  var h = '<div class="sec" style="display:flex;align-items:center;gap:10px;margin-block:14px 6px">' +
+    '<button type="button" class="ib" data-act="go" data-view="more" aria-label="Back">\u2190</button>' +
+    "<h2>Money set aside</h2></div>";
+  h += '<div class="card"><span class="lbl">Total set aside</span>' +
+    '<p class="big">' + maskMoney(potsTotal(), "pots") + "</p>" + eyeBtn("pots", "money set aside") +
+    '<p class="sub">Fixed deposits and savings pots. Yours, but kept out of ' +
+    "your spendable money and never deducted automatically.</p></div>";
+  h += list.length
+    ? list.map(potTile).join("")
+    : '<div class="card"><p class="empty">Nothing set aside yet.</p></div>';
+  h += '<button type="button" class="btn g full" data-act="newPot">Add a deposit or savings pot</button>';
+  return h;
+}
+function potSheet(p) {
+  var banks = Object.keys(BANK_LOOK).filter(Boolean);
+  return '<div class="shd"><h2>' + (p ? "Edit" : "Add") + " money set aside</h2>" +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    '<form data-form="pot"><input type="hidden" name="id" value="' + esc(p ? p.id : "") + '">' +
+    '<div class="f"><label for="poName">What is it?</label>' +
+    '<input id="poName" name="name" required value="' + esc(p ? p.name : "") + '" placeholder="Fixed deposit"></div>' +
+    '<div class="two"><div class="f"><label for="poAmt">Amount</label>' +
+    '<input id="poAmt" name="amt" type="number" inputmode="decimal" step="0.01" min="0" required value="' +
+    (p ? toMajor(p.amt) : "") + '"></div>' +
+    '<div class="f"><label for="poKind">Kind</label><select id="poKind" name="kind">' +
+    options(["fd", "savings"], p ? p.kind : "fd",
+      { fd:"Fixed deposit", savings:"Savings pot" }) + "</select></div></div>" +
+    '<div class="two"><div class="f"><label for="poBank">Where is it held?</label>' +
+    '<select id="poBank" name="bank">' + options(banks, p ? p.bank : "SBI") + "</select></div>" +
+    '<div class="f"><label for="poDate">Started on</label>' +
+    '<input id="poDate" name="openedOn" type="date" max="' + today() + '" value="' +
+    esc(p ? p.openedOn || today() : today()) + '"></div></div>' +
+    '<div class="f"><label for="poNote">Note</label>' +
+    '<input id="poNote" name="note" value="' + esc(p ? p.note || "" : "") + '" placeholder="Optional"></div>' +
+    '<p class="hint">This is money you moved by hand. It is never treated as a monthly deduction ' +
+    "and never counted as spending.</p>" +
+    '<div class="btns"><button type="submit" class="btn" style="flex:1">Save</button>' +
+    (p ? '<button type="button" class="btn d" data-act="delPot" data-id="' + esc(p.id) + '">Remove</button>' : "") +
+    '<button type="button" class="btn g" data-act="closeSheet">Cancel</button></div></form>';
+}
+function fundSheet(f) {
+  return '<div class="shd"><h2>' + (f ? "Edit fund" : "Add a fund") + "</h2>" +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    '<form data-form="fund"><input type="hidden" name="id" value="' + esc(f ? f.id : "") + '">' +
+    '<div class="f"><label for="fuName">Fund name</label>' +
+    '<input id="fuName" name="name" required value="' + esc(f ? f.name : "") + '"></div>' +
+    '<div class="two"><div class="f"><label for="fuInv">Put in so far</label>' +
+    '<input id="fuInv" name="invested" type="number" inputmode="decimal" step="0.01" min="0" value="' +
+    (f ? toMajor(f.invested) : "0") + '"></div>' +
+    '<div class="f"><label for="fuType">Type</label>' +
+    '<input id="fuType" name="type" value="' + esc(f ? f.type : "") + '" placeholder="Flexi cap"></div></div>' +
+    '<div class="two"><div class="f"><label for="fuSip">Monthly SIP amount</label>' +
+    '<input id="fuSip" name="sip" type="number" inputmode="decimal" step="0.01" min="0" value="' +
+    (f ? toMajor(f.sip) : "") + '" placeholder="0 if one-time"></div>' +
+    '<div class="f"><label for="fuDay">SIP day of the month</label>' +
+    '<input id="fuDay" name="day" type="number" min="1" max="31" value="' +
+    esc(f && f.day ? f.day : "") + '"></div></div>' +
+    '<div class="f"><label for="fuAcc">Paid from</label>' +
+    '<select id="fuAcc" name="acc">' + accOptions(spendAccounts(), f ? f.acc : (firstBank() || {}).id) + "</select></div>" +
+    '<label style="display:flex;align-items:center;margin-block:10px">' +
+    '<input type="checkbox" name="oneOff"' + (f && f.oneOff ? " checked" : "") + "> One-time investment, not a SIP</label>" +
+    '<p class="hint">Nothing is deducted automatically. You record each payment yourself.</p>' +
+    '<div class="btns"><button type="submit" class="btn" style="flex:1">Save</button>' +
+    '<button type="button" class="btn g" data-act="closeSheet">Cancel</button></div></form>';
+}
+function payFundSheet(f) {
+  return '<div class="shd"><h2>Record a payment</h2>' +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    '<p class="sub">' + esc(f.name) + "</p>" +
+    '<form data-form="payFund"><input type="hidden" name="id" value="' + esc(f.id) + '">' +
+    '<div class="two"><div class="f"><label for="pfAmt">How much did you pay?</label>' +
+    '<input id="pfAmt" name="amt" type="number" inputmode="decimal" step="0.01" min="0" required value="' +
+    toMajor(f.sip || 0) + '"></div>' +
+    '<div class="f"><label for="pfDate">On which day?</label>' +
+    '<input id="pfDate" name="date" type="date" max="' + today() + '" value="' + today() + '"></div></div>' +
+    '<div class="f"><label for="pfAcc">Paid from</label>' +
+    '<select id="pfAcc" name="acc">' + accOptions(spendAccounts(), f.acc) + "</select></div>" +
+    '<p class="hint">This moves the money out of the account and adds it to what you have invested. ' +
+    "It is not counted as spending.</p>" +
+    '<div class="btns"><button type="submit" class="btn" style="flex:1">Save</button>' +
+    '<button type="button" class="btn g" data-act="closeSheet">Cancel</button></div></form>';
+}
+
+/* =========================================================
+   CARD TIMING — which card to use today, and why
+   ---------------------------------------------------------
+   The idea in one line: a purchase made the day AFTER a card's
+   statement closes sits on the next statement, so you get the
+   whole billing cycle plus the payment window before the money
+   actually leaves you. A purchase made the day BEFORE closing
+   lands on the bill that is about to be generated.
+
+   Nothing here is financial advice and nothing is automatic —
+   it is arithmetic on the dates you entered.
+   ========================================================= */
+
+/** Days you would hold on to your money if you spent on this card today. */
+function freeDays(card) {
+  if (!card.stmtDay) return null;
+  var close = nextClosing(card, today());
+  var due = expectedDue(card, close);
+  if (!due) return null;
+  return { close: close, due: due,
+    toClose: daysBetweenIso(today(), close),
+    total: daysBetweenIso(today(), due) };
+}
+/** A plain-words verdict for using this card right now. */
+function cardTiming(card) {
+  var f = freeDays(card);
+  var m = cardMoney(card);
+  var out = { card: card, free: f, money: m, rank: -1, tone: "", head: "", why: "", warn: "" };
+
+  if (m.limit > 0 && m.available !== null && m.available <= 0) {
+    out.tone = "r"; out.head = "No room left"; out.rank = -100;
+    out.why = "You have used the whole " + money(m.limit) + " limit.";
+    return out;
+  }
+  var overdue = unpaidStatements(card.id).filter(function (st) {
+    return st.dueDate && st.dueDate < today() && statementRemaining(st) > 0;
+  });
+  if (overdue.length) {
+    out.tone = "r"; out.head = "Pay this first"; out.rank = -50;
+    out.why = money(overdue.reduce(function (s, st) { return s + statementRemaining(st); }, 0)) +
+      " is past its due date. Using it now adds to a bill you are already late on.";
+    return out;
+  }
+  if (!f) {
+    out.tone = ""; out.head = "Dates not set"; out.rank = 0;
+    out.why = "Add this card's bill date and payment date to see how it compares.";
+    return out;
+  }
+
+  out.rank = f.total;
+  if (f.toClose === 0) {
+    out.tone = "w"; out.head = "Bill closes today";
+    out.why = "Anything you spend today probably lands on the bill generated tonight, due " +
+      fDateLong(f.due) + ".";
+    out.warn = "Wait until tomorrow and the same purchase moves to the next cycle.";
+  } else if (f.toClose <= 3) {
+    out.tone = "w"; out.head = "Bill closes in " + f.toClose + " day" + (f.toClose === 1 ? "" : "s");
+    out.why = "Spending now goes on the bill generated on " + fDateLong(f.close) +
+      ", due " + fDateLong(f.due) + " — about " + f.total + " days from today.";
+    out.warn = "Waiting until after " + fDateLong(f.close) + " would give you roughly a month longer to pay.";
+  } else {
+    out.tone = "g"; out.head = f.total + " days before you pay";
+    out.why = "The bill closes on " + fDateLong(f.close) + " and is due " + fDateLong(f.due) + ".";
+  }
+
+  if (m.limit > 0 && m.utilisation !== null && m.utilisation >= 70) {
+    out.tone = out.tone === "g" ? "w" : out.tone;
+    out.warn = (out.warn ? out.warn + " " : "") +
+      "You have already used " + Math.round(m.utilisation) + "% of this card's limit.";
+    out.rank -= 20;
+  }
+  return out;
+}
+/** Every card, best timing first. */
+function cardAdvice() {
+  return cards().map(cardTiming).sort(function (a, b) { return b.rank - a.rank; });
+}
+/** Cards whose bill just generated — the sweet spot. */
+function freshCards() {
+  return cardAdvice().filter(function (x) {
+    return x.free && x.free.toClose >= 20 && x.rank > 0;
+  });
+}
+/** Cards about to bill — spending now shortens your payment window. */
+function closingSoon() {
+  return cardAdvice().filter(function (x) {
+    return x.free && x.free.toClose <= 3 && x.rank > 0;
+  });
+}
+
+/* ---------- the page ---------- */
+function pageCardPlan() {
+  var list = cardAdvice();
+  var best = list.filter(function (x) { return x.rank > 0; })[0];
+  var h = '<div class="sec" style="display:flex;align-items:center;gap:10px;margin-block:14px 6px">' +
+    '<button type="button" class="ib" data-act="go" data-view="money" aria-label="Back">\u2190</button>' +
+    "<h2>Which card to use</h2></div>";
+
+  h += '<div class="note info"><span aria-hidden="true">\ud83d\udca1</span><div>' +
+    "A purchase made just after a card's bill closes sits on the <b>next</b> bill, " +
+    "so the money stays with you for the whole cycle plus the payment window. " +
+    "Made just before closing, the same purchase is due in a few days.</div></div>";
+
+  if (best) {
+    var f = best.free;
+    h += '<div class="card" style="border-inline-start:5px solid ' + bankLook(best.card).c + '">' +
+      '<span class="lbl">Best card to use today</span>' +
+      '<div style="display:flex;align-items:center;gap:12px;margin-block:8px">' +
+      bankBadge(best.card, 44) +
+      '<div style="flex:1"><b style="font-size:17px">' + esc(best.card.name) + "</b>" +
+      '<p class="sub">' + esc(best.head) + "</p></div></div>" +
+      "<table>" +
+      row2("You would pay on", f ? fDateLong(f.due) : "\u2014") +
+      row2("Money stays with you", f ? f.total + " days" : "\u2014") +
+      row2("Bill closes", f ? fDateLong(f.close) : "\u2014") +
+      row2("Room left on the card", best.money.available === null ? "limit not set" : money(best.money.available)) +
+      "</table>" +
+      '<p class="sub">' + esc(best.why) + "</p></div>";
+  }
+
+  var soon = closingSoon();
+  if (soon.length) {
+    h += '<div class="sec"><h2>Closing in the next few days</h2>' + soon.map(function (x) {
+      return '<div class="note"><span aria-hidden="true">\u26a0\ufe0f</span><div><b>' + esc(x.card.name) +
+        "</b> \u2014 " + esc(x.head) + ".<br>" + esc(x.warn || x.why) + "</div></div>";
+    }).join("") + "</div>";
+  }
+
+  h += '<div class="sec"><h2>All your cards, best timing first</h2>' + list.map(function (x) {
+    var f = x.free, m = x.money;
+    return '<div class="card" style="border-inline-start:5px solid ' + bankLook(x.card).c + '">' +
+      '<div style="display:flex;align-items:center;gap:11px">' + bankBadge(x.card, 38) +
+      '<div style="flex:1;min-inline-size:0"><b>' + esc(x.card.name) + "</b>" +
+      '<br><span class="sub">' + (x.card.last4 ? "\u2022\u2022" + esc(x.card.last4) + " \u00b7 " : "") +
+      (m.limit > 0 ? money(m.available) + " left of " + money(m.limit) : "no limit saved") + "</span></div>" +
+      '<span class="tag ' + x.tone + '">' + esc(x.head) + "</span></div>" +
+      (f ? '<table style="margin-block-start:8px">' +
+        row2("Bill closes", fDateLong(f.close) + " (" + dayPhrase("", f.toClose).trim() + ")") +
+        row2("Payment due", fDateLong(f.due)) +
+        row2("Interest-free days if used today", String(f.total)) +
+        "</table>" : "") +
+      '<p class="sub">' + esc(x.why) + (x.warn ? " " + esc(x.warn) : "") + "</p>" +
+      '<div class="btns" style="margin-block-start:8px">' +
+      '<button type="button" class="btn g s" data-act="openCard" data-id="' + esc(x.card.id) + '">Open card</button>' +
+      '<button type="button" class="btn g s" data-act="addOnCard" data-id="' + esc(x.card.id) + '">Spend on this</button>' +
+      "</div></div>";
+  }).join("") + "</div>";
+
+  h += '<div class="card"><h3>How to use several cards well</h3>' +
+    "<ul style=\"padding-inline-start:20px;line-height:1.8\">" +
+    "<li><b>Use the one that just billed.</b> Its next bill is furthest away, so your money stays with you longest.</li>" +
+    "<li><b>Avoid a card closing in a day or two</b> for anything large — you would owe it almost immediately.</li>" +
+    "<li><b>Keep each card under 30% of its limit</b> where you can. Spreading spending across cards keeps every one of them low.</li>" +
+    "<li><b>Pay the full bill, not the minimum.</b> The minimum keeps the account in order but interest starts on the rest.</li>" +
+    "<li><b>A card is not extra money.</b> Everything you put on it comes out of a bank account later.</li>" +
+    "</ul><p class=\"hint\">These are date calculations on what you entered, not financial advice. " +
+    "Your card's own terms always come first.</p></div>";
+  return h;
+}
+
+/* =========================================================
+   CARD PERKS
+   ---------------------------------------------------------
+   A perk is a benefit with a cap: so many uses per month,
+   quarter or year. Once you have used it up, the suggestion
+   disappears until the next period.
+
+   Only perks you can verify go in here. Card terms change
+   often and vary by variant, so anything not confirmed is
+   left for you to add from your own card's terms rather than
+   guessed at.
+   ========================================================= */
+
+var PERK_CATS = ["Food", "Groceries", "Travel", "Fuel", "Shopping", "Fun", "Bills", "Subscriptions", "Health", "Other"];
+var PERK_PERIODS = [
+  { id:"month",   label:"per month" },
+  { id:"quarter", label:"per quarter" },
+  { id:"year",    label:"per year" },
+  { id:"once",    label:"once ever" },
+  { id:"always",  label:"no limit" }
+];
+
+/* Verified from the card issuer's own published page.
+   Everything else is left blank on purpose. */
+var KNOWN_PERKS = {
+  c_axis1: {
+    source: "Axis Bank \u2014 My Zone card page (value chart)",
+    checked: "September 2026",
+    perks: [
+      { id:"az_movie",  name:"Movie spends at District",        cat:"Fun",
+        note:"Listed as a monthly benefit in the value chart", cap:1, period:"month" },
+      { id:"az_swiggy", name:"Food ordering on Swiggy",         cat:"Food",
+        note:"Monthly benefit in the value chart", cap:1, period:"month" },
+      { id:"az_dining", name:"Dining discount via EazyDiner",   cat:"Food",
+        note:"Up to 15% off dining bills", cap:4, period:"month" },
+      { id:"az_fuel",   name:"Fuel spends benefit",             cat:"Fuel",
+        note:"Monthly fuel benefit in the value chart", cap:1, period:"month" },
+      { id:"az_lounge", name:"Domestic airport lounge",         cat:"Travel",
+        note:"Up to 4 free domestic lounge visits a year", cap:4, period:"year" },
+      { id:"az_sony",   name:"SonyLIV subscription",            cat:"Subscriptions",
+        note:"Complimentary on activation within 30 days, first year", cap:1, period:"once" }
+    ]
+  },
+  c_axis2: {
+    source: "Axis Bank \u2014 Neo card page (value chart)",
+    checked: "September 2026",
+    perks: [
+      { id:"neo_zomato",  name:"Food ordering on Zomato",       cat:"Food",
+        note:"Flat discount, listed as a monthly benefit", cap:1, period:"month" },
+      { id:"neo_blinkit", name:"Grocery shopping on Blinkit",   cat:"Groceries",
+        note:"Highest monthly benefit on this card", cap:1, period:"month" },
+      { id:"neo_bms",     name:"Movie tickets on BookMyShow",   cat:"Fun",
+        note:"Up to 15% off, monthly benefit", cap:1, period:"month" },
+      { id:"neo_paytm",   name:"Utility bills via Paytm",       cat:"Bills",
+        note:"5% off on Paytm recharges and utility payments", cap:1, period:"month" },
+      { id:"neo_myntra",  name:"Shopping on Myntra",            cat:"Shopping",
+        note:"Up to 15% off", cap:1, period:"month" }
+    ]
+  },
+  c_idfc: {
+    source: "IDFC FIRST Millennia \u2014 published card summaries",
+    checked: "September 2026",
+    note: "Confirm the exact variant on your own card terms.",
+    perks: [
+      { id:"idfc_movie",  name:"Movie ticket discount",         cat:"Fun",
+        note:"Up to 25% off on movies", cap:2, period:"month" },
+      { id:"idfc_dining", name:"Dining discount",               cat:"Food",
+        note:"Up to 20% off dining", cap:4, period:"month" },
+      { id:"idfc_rail",   name:"Railway lounge access",         cat:"Travel",
+        note:"Four complimentary railway lounge visits a quarter", cap:4, period:"quarter" },
+      { id:"idfc_10x",    name:"10x points on dining and travel", cat:"Travel",
+        note:"Higher reward rate on dining, travel and birthday spends", cap:1, period:"always" }
+    ]
+  },
+  c_yes1: {
+    source: "Uni GoldX (Yes Bank) \u2014 published card summaries",
+    checked: "September 2026",
+    note: "Both your Uni cards share the same benefit set.",
+    perks: [
+      { id:"uni_gold",  name:"1% back as 24K digital gold",     cat:"Other",
+        note:"Earned on every eligible spend, no cap", cap:1, period:"always" },
+      { id:"uni_forex", name:"No foreign exchange markup",      cat:"Travel",
+        note:"Zero forex fee on international spends", cap:1, period:"always" },
+      { id:"uni_store", name:"Up to 5x rewards via Uni Store",  cat:"Shopping",
+        note:"Higher gold rewards on brands bought through the Uni store", cap:1, period:"always" }
+    ]
+  },
+  c_yes2: {
+    source: "Uni GoldX (Yes Bank) \u2014 published card summaries",
+    checked: "September 2026",
+    note: "Same card family as your other Uni card.",
+    perks: [
+      { id:"uni2_gold",  name:"1% back as 24K digital gold",    cat:"Other",
+        note:"Earned on every eligible spend, no cap", cap:1, period:"always" },
+      { id:"uni2_forex", name:"No foreign exchange markup",     cat:"Travel",
+        note:"Zero forex fee on international spends", cap:1, period:"always" },
+      { id:"uni2_upi",   name:"RuPay card on UPI",              cat:"Other",
+        note:"Pay any UPI QR straight from this card", cap:1, period:"always" }
+    ]
+  },
+  c_hdfc1: {
+    source: "HDFC Bank \u2014 Swiggy HDFC Bank Credit Card page (original single variant)",
+    checked: "September 2026",
+    note: "The original Swiggy HDFC card, issued before the BLCK and Ornge split. " +
+      "Cashback is credited as Swiggy Money, usable only in the Swiggy app.",
+    perks: [
+      { id:"sw_swiggy", name:"10% cashback on the Swiggy app",      cat:"Food",
+        note:"Food ordering, Instamart, Dineout and Genie \u2014 monthly cap applies", cap:1, period:"always" },
+      { id:"sw_online", name:"5% cashback on online spending",      cat:"Shopping",
+        note:"Across eligible online merchant categories", cap:1, period:"always" },
+      { id:"sw_other",  name:"1% cashback on everything else",      cat:"Other",
+        note:"Other categories, with exclusions and caps", cap:1, period:"always" },
+      { id:"sw_one",    name:"Swiggy One membership, 3 months",     cat:"Subscriptions",
+        note:"Complimentary on card activation", cap:1, period:"once" }
+    ]
+  },
+  c_sbi1: {
+    source: "SBI Card \u2014 Tata Neu Plus card page",
+    checked: "September 2026",
+    note: "Rewards are NeuCoins; 1 NeuCoin is worth about \u20b91 on Tata Neu.",
+    perks: [
+      { id:"tn_neu",   name:"2% NeuCoins on Tata Neu and Tata brands", cat:"Shopping",
+        note:"On non-EMI spends at Tata Neu and partner Tata brands", cap:1, period:"always" },
+      { id:"tn_extra", name:"Up to 5% NeuCoins on select categories",  cat:"Shopping",
+        note:"On chosen category spends in the Tata Neu app", cap:1, period:"always" },
+      { id:"tn_other", name:"1% NeuCoins on everything else",          cat:"Other",
+        note:"Including UPI transactions", cap:1, period:"always" },
+      { id:"tn_lounge", name:"Domestic airport lounge",                cat:"Travel",
+        note:"1 per quarter, after \u20b950,000 spend in the previous quarter", cap:1, period:"quarter" },
+      { id:"tn_fuel",  name:"Fuel surcharge waiver",                   cat:"Fuel",
+        note:"1% waiver on fuel between \u20b9500 and \u20b94,000, up to \u20b9250 a statement", cap:1, period:"month" }
+    ]
+  },
+  c_slice: {
+    source: "slice \u2014 official card page",
+    checked: "September 2026",
+    perks: [
+      { id:"sl_cash", name:"Up to 3% cashback",                 cat:"Other",
+        note:"Rate varies by transaction; the top rate is not guaranteed on every spend", cap:1, period:"always" },
+      { id:"sl_upi",  name:"Works on any UPI QR",               cat:"Other",
+        note:"RuPay card linked in UPI apps, usable at small merchants", cap:1, period:"always" },
+      { id:"sl_forex", name:"No forex fee",                     cat:"Travel",
+        note:"Zero joining, annual and forex fees", cap:1, period:"always" }
+    ]
+  }
+};
+/* Cards where the exact product is unclear from what you told me.
+   Better to ask than to invent benefits that may not be on your card. */
+var PERK_UNKNOWN = {
+  c_hdfc2: "This is a virtual number on your Swiggy HDFC card, so it shares that card's benefits.",
+  c_sbi2:  "This is the RuPay form of your Tata Neu Plus SBI card and shares its benefits."
+};
+
+function cardPerks(cardId) {
+  db.perks = db.perks || {};
+  if (db.perks[cardId]) return db.perks[cardId];
+  /* a virtual card shares the physical card's benefits */
+  var c = acc(cardId);
+  if (c && c.virtualOf && db.perks[c.virtualOf]) return db.perks[c.virtualOf];
+  return [];
+}
+/** A virtual card and its physical parent are ONE card: one limit, one bill,
+    one set of perks. The virtual number is just another way to pay. */
+function perkOwner(cardId) {
+  var c = acc(cardId);
+  return (c && c.virtualOf) ? c.virtualOf : cardId;
+}
+function setCardPerks(cardId, list) {
+  db.perks = db.perks || {};
+  db.perks[cardId] = list;
+}
+function seedPerks() {
+  db.perks = db.perks || {};
+  Object.keys(KNOWN_PERKS).forEach(function (cardId) {
+    if (db.perks[cardId]) return;
+    db.perks[cardId] = KNOWN_PERKS[cardId].perks.map(function (p) {
+      return Object.assign({}, p, { verified: true });
+    });
+  });
+}
+function perkSourceNote(cardId) {
+  var k = KNOWN_PERKS[cardId];
+  return k ? k.source : "";
+}
+
+/* ---------- how many times you have used a perk ---------- */
+function periodStart(period) {
+  var now = new Date();
+  if (period === "month") return mKey(now) + "-01";
+  if (period === "quarter") {
+    var q = Math.floor(now.getMonth() / 3) * 3;
+    return now.getFullYear() + "-" + p2(q + 1) + "-01";
+  }
+  if (period === "year") return now.getFullYear() + "-01-01";
+  return "";
+}
+function periodWords(period) {
+  return { month:"this month", quarter:"this quarter", year:"this year",
+           once:"ever", always:"" }[period] || "";
+}
+/** Times this perk has been marked used in its current period. */
+function perkUsed(cardId, perk) {
+  var from = periodStart(perk.period);
+  var owner = perkOwner(cardId);
+  var family = db.accounts.filter(function (a) {
+    return a.id === owner || a.virtualOf === owner;
+  }).map(function (a) { return a.id; });
+  return db.tx.filter(function (t) {
+    if (family.indexOf(t.acc) === -1) return false;
+    if (!t.perkId || t.perkId !== perk.id) return false;
+    if (from && t.date < from) return false;
+    return true;
+  }).length;
+}
+function perkLeft(cardId, perk) {
+  if (perk.period === "always") return null;
+  return Math.max(0, (perk.cap || 1) - perkUsed(cardId, perk));
+}
+function perkAvailable(cardId, perk) {
+  var left = perkLeft(cardId, perk);
+  return left === null || left > 0;
+}
+
+/* ---------- what to use for what ---------- */
+/** For a category, which cards still have an unused perk. */
+function suggestFor(cat) {
+  var out = [], seenPerk = {};
+  cards().forEach(function (c) {
+    if (c.virtualOf) return; /* the physical card already covers it */
+    cardPerks(c.id).forEach(function (p) {
+      if (p.cat !== cat) return;
+      if (!perkAvailable(c.id, p)) return;
+      var timing = cardTiming(c);
+      out.push({ card: c, perk: p, left: perkLeft(c.id, p),
+        days: timing.free ? timing.free.total : 0, tone: timing.tone });
+    });
+  });
+  return out.sort(function (a, b) { return b.days - a.days; });
+}
+/** Everything still available, grouped by what you would buy. */
+function perkBoard() {
+  var board = {};
+  PERK_CATS.forEach(function (cat) {
+    var list = suggestFor(cat);
+    if (list.length) board[cat] = list;
+  });
+  return board;
+}
+/** Perks used up in this period — shown so you know why they vanished. */
+function usedUpPerks() {
+  var out = [];
+  cards().forEach(function (c) {
+    cardPerks(c.id).forEach(function (p) {
+      if (perkAvailable(c.id, p)) return;
+      out.push({ card: c, perk: p, used: perkUsed(c.id, p) });
+    });
+  });
+  return out;
+}
+
+/* ---------- the page ---------- */
+function pagePerks() {
+  var board = perkBoard();
+  var usedUp = usedUpPerks();
+  var withPerks = cards().filter(function (c) { return cardPerks(c.id).length; });
+  var without = cards().filter(function (c) { return !cardPerks(c.id).length; });
+
+  var h = '<div class="sec" style="display:flex;align-items:center;gap:10px;margin-block:14px 6px">' +
+    '<button type="button" class="ib" data-act="go" data-view="money" aria-label="Back">\u2190</button>' +
+    "<h2>Card perks</h2></div>";
+
+  h += '<div class="note info"><span aria-hidden="true">\u2139\ufe0f</span><div>' +
+    "A perk disappears from the suggestions once you have used it up, and comes back " +
+    "when the next month, quarter or year starts.</div></div>";
+
+  var cats = Object.keys(board);
+  if (cats.length) {
+    h += '<div class="sec"><h2>What to use for what</h2>' + cats.map(function (cat) {
+      var best = board[cat][0];
+      return '<div class="card"><div class="rowline"><b>' + esc(catIcon(cat) + " " + cat) + "</b>" +
+        '<span class="tag ' + (best.tone || "") + '">' + best.days + " days to pay</span></div>" +
+        '<div style="display:flex;align-items:center;gap:11px;margin-block:8px">' +
+        bankBadge(best.card, 38) +
+        '<div style="flex:1;min-inline-size:0"><b>' + esc(best.card.name) + "</b>" +
+        '<br><span class="sub">' + esc(best.perk.name) +
+        (best.left !== null ? " \u00b7 " + best.left + " left " + periodWords(best.perk.period) : "") +
+        "</span></div></div>" +
+        (best.perk.note ? '<p class="sub">' + esc(best.perk.note) + "</p>" : "") +
+        '<div class="btns" style="margin-block-start:8px">' +
+        '<button type="button" class="btn s" data-act="usePerk" data-card="' + esc(best.card.id) +
+        '" data-perk="' + esc(best.perk.id) + '">Spend using this</button>' +
+        (board[cat].length > 1
+          ? '<button type="button" class="btn g s" data-act="perkAlt" data-cat="' + esc(cat) + '">' +
+            (board[cat].length - 1) + " other option" + (board[cat].length > 2 ? "s" : "") + "</button>"
+          : "") + "</div></div>";
+    }).join("") + "</div>";
+  } else {
+    h += '<div class="card"><p class="empty">No perks recorded yet.<br>' +
+      "Add what each of your cards actually offers, from the card's own terms.</p></div>";
+  }
+
+  if (usedUp.length) {
+    h += '<div class="sec"><h2>Already used up</h2><div class="card"><table>' +
+      usedUp.map(function (x) {
+        return "<tr><td>" + esc(x.perk.name) + '<br><span class="sub">' + esc(x.card.name) +
+          '</span></td><td class="n"><span class="tag">' + x.used + " of " + (x.perk.cap || 1) +
+          " used " + esc(periodWords(x.perk.period)) + "</span></td></tr>";
+      }).join("") + "</table>" +
+      '<p class="sub">These come back automatically when the period resets.</p></div></div>';
+  }
+
+  h += '<div class="sec"><h2>Perks by card</h2>' + withPerks.map(function (c) {
+    var list = cardPerks(c.id);
+    var src = perkSourceNote(c.id);
+    return '<div class="card" style="border-inline-start:5px solid ' + bankLook(c).c + '">' +
+      '<div style="display:flex;align-items:center;gap:11px"><span>' + bankBadge(c, 36) + "</span>" +
+      "<b>" + esc(c.name) + "</b></div><table style=\"margin-block-start:8px\">" +
+      list.map(function (p) {
+        var left = perkLeft(c.id, p);
+        var okNow = perkAvailable(c.id, p);
+        return "<tr><td>" + esc(p.name) + '<br><span class="sub">' + esc(p.cat) +
+          (p.note ? " \u00b7 " + esc(p.note) : "") + '</span></td><td class="n">' +
+          '<span class="tag ' + (okNow ? "g" : "") + '">' +
+          (left === null ? "no limit" : okNow ? left + " left" : "used up") + "</span>" +
+          '<br><span class="sub">' + (p.cap || 1) + " " + esc((PERK_PERIODS.filter(function (x) {
+            return x.id === p.period; })[0] || {}).label || "") + "</span></td>" +
+          '<td class="n"><button type="button" class="btn g s" data-act="delPerk" data-card="' +
+          esc(c.id) + '" data-perk="' + esc(p.id) + '">\u2715</button></td></tr>';
+      }).join("") + "</table>" +
+      (KNOWN_PERKS[c.id] && KNOWN_PERKS[c.id].note
+        ? '<p class="sub">' + esc(KNOWN_PERKS[c.id].note) + "</p>" : "") +
+      (src ? '<p class="hint">From ' + esc(src) + ", checked " + esc(KNOWN_PERKS[c.id].checked) +
+        ". Card terms change \u2014 check your own statement or the bank's site before relying on it.</p>" : "") +
+      '<button type="button" class="btn g s" style="margin-block-start:8px" data-act="newPerk" data-card="' +
+      esc(c.id) + '">Add a perk</button></div>';
+  }).join("") + "</div>";
+
+  var twins = cards().filter(function (c) { return c.virtualOf; });
+  if (twins.length) {
+    h += '<div class="sec"><h2>Virtual cards</h2><div class="card">' +
+      twins.map(function (c) {
+        return "<p><b>" + esc(c.name) + "</b><br><span class=\"sub\">Shares the limit, the bill and " +
+          "the perks of <b>" + esc(accName(c.virtualOf)) + "</b>. Using it is the same as using that card, " +
+          "so its benefits are not counted twice.</span></p>";
+      }).join("") + "</div></div>";
+  }
+
+  if (without.length) {
+    h += '<div class="sec"><h2>Cards with nothing recorded</h2><div class="card">' +
+      '<p class="sub">I have not filled these in, because card benefits differ by variant and change ' +
+      "often \u2014 guessing would be worse than leaving them blank. Add what your card actually offers " +
+      "from its terms page or your welcome kit.</p><table>" +
+      without.map(function (c) {
+        return "<tr><td>" + esc(c.name) + (c.last4 ? ' <span class="sub">\u2022\u2022' + esc(c.last4) + "</span>" : "") +
+          (PERK_UNKNOWN[c.id] ? '<br><span class="sub">' + esc(PERK_UNKNOWN[c.id]) + "</span>" : "") +
+          '</td><td class="n"><button type="button" class="btn g s" data-act="newPerk" data-card="' +
+          esc(c.id) + '">Add perks</button></td></tr>';
+      }).join("") + "</table></div></div>";
+  }
+  return h;
+}
+function perkSheet(cardId, perk) {
+  var c = acc(cardId);
+  return '<div class="shd"><h2>' + (perk ? "Edit perk" : "Add a perk") + "</h2>" +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    '<p class="sub">' + esc(c ? c.name : "Card") + "</p>" +
+    '<form data-form="perk"><input type="hidden" name="card" value="' + esc(cardId) + '">' +
+    '<input type="hidden" name="id" value="' + esc(perk ? perk.id : "") + '">' +
+    '<div class="f"><label for="pkName">What is the benefit?</label>' +
+    '<input id="pkName" name="name" required value="' + esc(perk ? perk.name : "") +
+    '" placeholder="e.g. 1 free movie ticket"></div>' +
+    '<div class="two"><div class="f"><label for="pkCat">When would you use it?</label>' +
+    '<select id="pkCat" name="cat">' + options(PERK_CATS, perk ? perk.cat : "Fun") + "</select></div>" +
+    '<div class="f"><label for="pkCap">How many times?</label>' +
+    '<input id="pkCap" name="cap" type="number" min="1" max="99" value="' +
+    esc(perk ? perk.cap || 1 : 1) + '"></div></div>' +
+    '<div class="f"><label for="pkPeriod">How often does it reset?</label>' +
+    '<select id="pkPeriod" name="period">' +
+    options(PERK_PERIODS.map(function (x) { return x.id; }), perk ? perk.period : "month",
+      (function () { var m = {}; PERK_PERIODS.forEach(function (x) { m[x.id] = x.label; }); return m; })()) +
+    "</select></div>" +
+    '<div class="f"><label for="pkNote">Note</label>' +
+    '<input id="pkNote" name="note" value="' + esc(perk ? perk.note || "" : "") +
+    '" placeholder="Optional \u2014 conditions, minimum spend"></div>' +
+    '<p class="hint">Copy this from your card\'s own terms. Once you use it the agreed number of times, ' +
+    "the suggestion disappears until the next period.</p>" +
+    '<div class="btns"><button type="submit" class="btn" style="flex:1">Save</button>' +
+    '<button type="button" class="btn g" data-act="closeSheet">Cancel</button></div></form>';
+}
+function perkAltSheet(cat) {
+  var list = suggestFor(cat);
+  return '<div class="shd"><h2>' + esc(catIcon(cat) + " " + cat) + "</h2>" +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    '<p class="sub">Cards that still have a perk available for this.</p>' +
+    list.map(function (x) {
+      return '<div class="wtile" style="--brand:' + bankLook(x.card).c + '">' +
+        '<button type="button" class="wtile-main" data-act="usePerk" data-card="' + esc(x.card.id) +
+        '" data-perk="' + esc(x.perk.id) + '">' + bankBadge(x.card, 36) +
+        '<span class="wtile-txt"><b>' + esc(x.card.name) + "</b>" +
+        '<span class="sub">' + esc(x.perk.name) +
+        (x.left !== null ? " \u00b7 " + x.left + " left" : "") + "</span></span>" +
+        '<span class="wtile-amt">' + x.days + "d</span></button></div>";
+    }).join("") +
+    '<button type="button" class="btn g full" data-act="closeSheet">Close</button>';
+}
+
 /* ---------- Accounts & cards ---------- */
 function pageMoney() {
   var normal = db.accounts.filter(function (a) { return a.kind !== "card" && !a.archived; });
@@ -4253,7 +5438,9 @@ function pageMoney() {
     '<button type="button" class="btn" data-act="newAcc">Add an account</button>' +
     '<button type="button" class="btn g" data-act="addMove">Move money</button></div></div></div>';
 
-  h += '<div class="sec"><h2>Credit cards</h2>';
+  h += '<div class="sec"><div class="rowline"><h2>Credit cards</h2>' +
+    '<span><button type="button" class="btn g s" data-act="go" data-view="perks">Perks</button> ' +
+    '<button type="button" class="btn g s" data-act="go" data-view="cardplan">Which to use</button></span></div>';
   var cardList = cards();
   if (!cardList.length) {
     h += '<div class="card"><p class="empty">No credit cards added.</p>' +
@@ -5047,6 +6234,28 @@ function reportCsv() {
   lines.push("");
   lines.push([q("SUMMARY"), q("Amount")].join(","));
   D.summary.forEach(function (r) { lines.push([q(r[0]), q(r[1])].join(",")); });
+  lines.push("");
+  lines.push([q("WHAT YOU OWN"), q("Amount")].join(","));
+  [["In banks and cash", spendable()], ["Set aside (FD and savings)", potsTotal()],
+   ["Invested in mutual funds", fundsTotal()], ["Owed on credit cards", cardsOwed()],
+   ["Net worth", netWorth()], ["Free to spend right now", safeToSpend()]
+  ].forEach(function (r) { lines.push([q(r[0]), q(plainMoney(r[1]))].join(",")); });
+  if (funds().length) {
+    lines.push("");
+    lines.push([q("MUTUAL FUNDS"), q("Type"), q("Monthly SIP"), q("Put in"), q("Paid from")].join(","));
+    funds().forEach(function (f) {
+      lines.push([q(f.name), q(f.type), q(f.oneOff ? "one-time" : plainMoney(f.sip)),
+        q(plainMoney(f.invested)), q(accName(f.acc))].join(","));
+    });
+  }
+  if (pots().length) {
+    lines.push("");
+    lines.push([q("MONEY SET ASIDE"), q("Kind"), q("Where"), q("Amount"), q("Since")].join(","));
+    pots().forEach(function (p2) {
+      lines.push([q(p2.name), q(p2.kind === "fd" ? "Fixed deposit" : "Savings"),
+        q(p2.bank), q(plainMoney(p2.amt)), q(p2.openedOn || "")].join(","));
+    });
+  }
   lines.push("");
   lines.push([q("ACCOUNTS"), q("Kind"), q("Balance now"), q("Spent in period")].join(","));
   D.accounts.forEach(function (r) { lines.push(r.map(q).join(",")); });
@@ -6090,7 +7299,87 @@ function act(name, d) {
     case "setTheme": db.settings.theme = d.theme; save(); applyTheme(); render(); return;
     case "clearPin": db.settings.pin = ""; save(); render(); toast("PIN removed"); return;
     case "signOut": signOut(); return;
-    case "syncSetup": openSheet(syncSheet()); return;
+    case "peek":
+      ui.shown = ui.shown || {};
+      ui.shown[d.k] = !ui.shown[d.k];
+      render(); return;
+    case "openAcc":
+      ui.accId = d.id; ui.accRange = { id:"thismonth", from:"", to:"" };
+      ui.view = "account"; render(); return;
+    case "accRange":
+      ui.accRange = ui.accRange || { id:"thismonth", from:"", to:"" };
+      if (d.r === "custom" && ui.accRange.id !== "custom") {
+        var cur2 = rangeDates(ui.accRange);
+        ui.accRange.from = cur2.from; ui.accRange.to = cur2.to;
+      }
+      ui.accRange.id = d.r; render(); return;
+    case "addFromAcc": {
+      var fromA = acc(d.id);
+      openAdd("out");
+      if (fromA && ui.draft) {
+        ui.draft.acc = fromA.id;
+        ui.draft.how = fromA.kind === "cash" ? "cash" : "bank";
+        openSheet(addSheet());
+      }
+      return;
+    }
+    case "accCsv": {
+      var accX = acc(d.id);
+      if (!accX) return;
+      var spanX = rangeDates(ui.accRange || { id:"thismonth" });
+      var rowsX = txForAccount(accX.id, spanX.from, spanX.to);
+      if (download("account_" + safeSlug(accX.name) + "_" + spanX.from + "_to_" + spanX.to + ".csv",
+        csvOf(sortTx(rowsX)), "text/csv;charset=utf-8")) toast("Downloaded");
+      return;
+    }
+    case "addOnCard": {
+      var cardT = acc(d.id);
+      openAdd("out");
+      if (cardT && ui.draft) {
+        ui.draft.how = "card";
+        ui.draft.acc = cardT.id;
+        ui.draft.channel = "swipe";
+        openSheet(addSheet());
+      }
+      return;
+    }
+    case "newPerk": openSheet(perkSheet(d.card, null)); return;
+    case "delPerk": {
+      var listP = cardPerks(d.card).filter(function (x) { return x.id !== d.perk; });
+      setCardPerks(d.card, listP);
+      save(); render(); toast("Perk removed"); return;
+    }
+    case "perkAlt": openSheet(perkAltSheet(d.cat)); return;
+    case "usePerk": {
+      var cardU = acc(d.card);
+      var perkU = cardPerks(d.card).filter(function (x) { return x.id === d.perk; })[0];
+      if (!cardU || !perkU) return;
+      closeSheet();
+      openAdd("out");
+      if (ui.draft) {
+        ui.draft.how = "card";
+        ui.draft.acc = cardU.id;
+        ui.draft.cat = perkU.cat;
+        ui.draft.channel = "swipe";
+        ui.draft.perkId = perkU.id;
+        ui.draft.note = perkU.name;
+        openSheet(addSheet());
+        toast("Using " + esc(perkU.name) + " \u2014 it will be marked as used when you save");
+      }
+      return;
+    }
+    case "newPot": openSheet(potSheet(null)); return;
+    case "editPot": { var pX = pot(d.id); if (pX) openSheet(potSheet(pX)); return; }
+    case "delPot":
+      db.pots = pots().filter(function (x) { return x.id !== d.id; });
+      save(); closeSheet(); render(); toast("Removed"); return;
+    case "newFund": openSheet(fundSheet(null)); return;
+    case "editFund": { var fX = fund(d.id); if (fX) openSheet(fundSheet(fX)); return; }
+    case "delFund":
+      db.funds = funds().filter(function (x) { return x.id !== d.id; });
+      save(); render(); toast("Fund removed"); return;
+    case "payFund": { var fY = fund(d.id); if (fY) openSheet(payFundSheet(fY)); return; }
+    case "syncSetup": ui.syncError = ""; openSheet(syncSheet()); return;
     case "tokenHelp": openSheet(tokenHelpSheet()); return;
     case "syncForgetToken":
       setToken("");
@@ -6322,16 +7611,38 @@ function submitForm(kind, form) {
     }
     case "sync": {
       var c = syncCfg();
-      c.user = String(f.user || "").trim();
-      c.repo = String(f.repo || "").trim();
+      /* be forgiving: accept a pasted URL or "user/repo" in either box */
+      var typedUser = String(f.user || "").trim();
+      var typedRepo = String(f.repo || "").trim();
+      var fromUrl = (typedUser + " " + typedRepo).match(/github\.(?:com|io)\/([^\/\s]+)\/?([^\/\s]*)/i);
+      if (fromUrl) {
+        typedUser = fromUrl[1];
+        if (fromUrl[2]) typedRepo = fromUrl[2];
+      }
+      if (typedUser.indexOf("/") > -1) {
+        var halves = typedUser.split("/").filter(Boolean);
+        typedUser = halves[0] || "";
+        if (halves[1] && !typedRepo) typedRepo = halves[1];
+      }
+      c.user = typedUser.replace(/[^A-Za-z0-9._-]/g, "");
+      c.repo = typedRepo.replace(/\.git$/i, "").replace(/[^A-Za-z0-9._-]/g, "");
       c.branch = String(f.branch || "main").trim() || "main";
       c.file = String(f.file || "data.json.enc").trim() || "data.json.enc";
       c.on = !!f.on;
       c.auto = !!f.auto;
       if (String(f.token || "").trim()) setToken(String(f.token).trim());
       var phrase = String(f.phrase || "").trim();
-      if (c.on && (!c.user || !c.repo)) { toast("Enter your username and repository"); return; }
-      if (c.on && !phrase) { toast("Choose a passphrase so your data can be encrypted"); return; }
+      if (c.on && (!c.user || !c.repo)) {
+        ui.syncError = "Type your GitHub username and repository name. The grey text is only an example.";
+        openSheet(syncSheet());
+        return;
+      }
+      if (c.on && !phrase) {
+        ui.syncError = "Choose a passphrase so your data can be encrypted before it leaves this device.";
+        openSheet(syncSheet());
+        return;
+      }
+      ui.syncError = "";
       if (c.auto && !savedToken()) { toast("Automatic saving needs a token — added it under 'How do I get a token?'"); }
       if (phrase !== savedPhrase()) { setPhrase(phrase); lockUp(); }
       save(); closeSheet();
@@ -6359,6 +7670,52 @@ function submitForm(kind, form) {
         });
       });
       return;
+    }
+    case "perk": {
+      var nameP = String(f.name || "").trim();
+      if (!nameP) { toast("Give the perk a name"); return; }
+      var recPk = { id: f.id || id("pk"), name: nameP, cat: f.cat || "Other",
+        cap: Math.max(1, parseInt(f.cap, 10) || 1), period: f.period || "month",
+        note: String(f.note || "").trim(), verified: false };
+      var listPk = cardPerks(f.card).slice();
+      var atPk = -1;
+      listPk.forEach(function (x, i2) { if (x.id === f.id) atPk = i2; });
+      if (atPk > -1) listPk[atPk] = recPk; else listPk.push(recPk);
+      setCardPerks(f.card, listPk);
+      save(); closeSheet(); render(); toast("Perk saved"); return;
+    }
+    case "pot": {
+      var amtP = toMinor(f.amt);
+      if (amtP < 0) { toast("Enter an amount"); return; }
+      var recP = { id: f.id || id("p"), name: String(f.name || "").trim() || "Set aside",
+        kind: f.kind || "fd", bank: f.bank || "", amt: amtP,
+        openedOn: f.openedOn || today(), note: String(f.note || "").trim() };
+      if (pot(f.id)) db.pots = pots().map(function (x) { return x.id === f.id ? Object.assign({}, x, recP) : x; });
+      else pots().push(recP);
+      save(); closeSheet(); render(); toast("Saved"); return;
+    }
+    case "fund": {
+      var recF = { id: f.id || id("f"), name: String(f.name || "").trim() || "Fund",
+        invested: toMinor(f.invested), sip: toMinor(f.sip),
+        day: f.day ? Math.min(31, Math.max(1, parseInt(f.day, 10))) : 0,
+        acc: f.acc || (firstBank() || {}).id || "", type: String(f.type || "").trim() || "Mutual fund",
+        oneOff: !!f.oneOff, auto: false };
+      if (fund(f.id)) db.funds = funds().map(function (x) { return x.id === f.id ? Object.assign({}, x, recF) : x; });
+      else funds().push(recF);
+      save(); closeSheet(); render(); toast("Saved"); return;
+    }
+    case "payFund": {
+      var fZ = fund(f.id);
+      if (!fZ) return;
+      var payAmt = toMinor(f.amt);
+      if (payAmt <= 0) { toast("Enter how much you paid"); return; }
+      if (f.date && f.date > today()) { toast("That date hasn't happened yet"); return; }
+      var already = db.tx.some(function (t) {
+        return t.fundId === fZ.id && t.date === (f.date || today()) && Math.round(t.amt) === payAmt;
+      });
+      if (already) { toast("That payment is already recorded"); return; }
+      payFund(fZ, payAmt, f.acc, f.date || today());
+      closeSheet(); render(); toast(money(payAmt) + " invested in " + esc(fZ.name)); return;
     }
     case "profile":
       db.profile.name = String(f.name || "").trim();
@@ -6539,6 +7896,13 @@ function onInput(e) {
     }, key === "q" ? 300 : 0);
     return;
   }
+  if (t.getAttribute && t.getAttribute("data-ar")) {
+    ui.accRange = ui.accRange || { id:"custom", from:"", to:"" };
+    ui.accRange[t.getAttribute("data-ar")] = t.value;
+    ui.accRange.id = "custom";
+    render();
+    return;
+  }
   if (t.getAttribute && t.getAttribute("data-rf")) {
     ui.report = ui.report || defaultReport();
     ui.report.f[t.getAttribute("data-rf")] = t.value;
@@ -6667,6 +8031,17 @@ return {
              readReceipt: readReceipt, chooseDate: chooseDate, findDates: findDates,
              findTimeNear: findTimeNear, receipt: function () { return ui.receipt; },
              saveReceipt: saveReceipt,
+             pots: pots, funds: funds, pot: pot, fund: fund, spendable: spendable,
+             potsTotal: potsTotal, fundsTotal: fundsTotal, cardsOwed: cardsOwed,
+             safeToSpend: safeToSpend, leftToSpend: leftToSpend, bufferTotal: bufferTotal,
+             cardsDueNow: cardsDueNow,
+             cardPerks: cardPerks, setCardPerks: setCardPerks, perkUsed: perkUsed,
+             perkLeft: perkLeft, perkAvailable: perkAvailable, suggestFor: suggestFor,
+             perkBoard: perkBoard, usedUpPerks: usedUpPerks, seedPerks: seedPerks,
+             cardTiming: cardTiming, cardAdvice: cardAdvice, freshCards: freshCards,
+             closingSoon: closingSoon, freeDays: freeDays,
+             sipDue: sipDue, payFund: payFund, bankLook: bankLook, txForAccount: txForAccount,
+             spendAccounts: spendAccounts, setAcc: function (x) { ui.accId = x; },
              cards: cards, cardMoney: cardMoney, cardState: cardState, currentCycle: currentCycle,
              nextClosing: nextClosing, lastExpectedClosing: lastExpectedClosing, expectedDue: expectedDue,
              closingDateFor: closingDateFor, cardActivity: cardActivity, unbilled: unbilled,
