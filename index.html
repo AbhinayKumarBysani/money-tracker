@@ -196,12 +196,14 @@ nav.bottom button.plus{color:var(--accent)}
   </div>
 </div>
 
+<div class="screen hidden" id="authScreen"></div>
 <div class="screen hidden" id="setupScreen"></div>
 
 <header class="top">
   <div class="wrap">
     <span class="brand">💰 Money Tracker</span>
     <span class="grow"></span>
+    <span id="syncPill" class="hidden" style="margin-inline-end:4px"></span>
     <button class="ib" id="themeBtn" title="Switch light or dark theme" aria-label="Switch light or dark theme">🌗</button>
     <button class="ib" data-act="go" data-view="more" title="Settings" aria-label="Settings">⚙️</button>
   </div>
@@ -274,6 +276,10 @@ function blank() {
     bills: [],
     views: [],
     statements: [],
+    auth: { user:"", pwHash:"", dob:"", gender:"", createdAt:"", lastSignIn:"" },
+    seeded: false,
+    sync: { user:"", repo:"", branch:"main", file:"data.json.enc", on:false,
+            lastPull:"", lastPush:"", lastSeen:"" },
     settings: { theme:"auto", currency:"INR", pin:"", setupDone:false, lastHow:"", lastApp:"", demo:false }
   };
 }
@@ -293,6 +299,11 @@ var ui = {
   cycle: null,
   cardCheck: null,
   receipt: null,
+  auth: null,
+  syncState: "",
+  syncTimer: null,
+  recovery: "",
+  authed: false,
   undo: null,
   saving: false,
   pin: ""
@@ -369,9 +380,14 @@ function el(x) { return document.getElementById(x); }
 /* =========================================================
    3. SAVE / LOAD
    ========================================================= */
-function save() {
+function saveLocalOnly() {
   try { localStorage.setItem(KEY, JSON.stringify(db)); return true; }
   catch (e) { toast("Couldn't save — this device's storage may be full"); return false; }
+}
+function save() {
+  var ok = saveLocalOnly();
+  if (typeof markDirty === "function") markDirty();
+  return ok;
 }
 function load() {
   var raw;
@@ -379,6 +395,10 @@ function load() {
   if (!raw) return;
   var parsed;
   try { parsed = JSON.parse(raw); } catch (e) { toast("Saved data looked damaged, starting fresh"); return; }
+  applyLoaded(parsed);
+}
+/** Take a plain data object (from storage, a backup, or GitHub) and make it live. */
+function applyLoaded(parsed) {
   if (!parsed || typeof parsed !== "object") return;
   var base = blank();
   Object.keys(base).forEach(function (k) {
@@ -386,6 +406,7 @@ function load() {
   });
   base.settings = Object.assign(blank().settings, parsed.settings || {});
   base.profile = Object.assign({ name: "" }, parsed.profile || {});
+  base.auth = Object.assign(blank().auth, parsed.auth || {});
   if (!Array.isArray(base.cats) || !base.cats.length) base.cats = DEFAULT_CATS.slice();
   ["accounts", "apps", "tx", "goals", "bills", "views", "statements"].forEach(function (k) {
     if (!Array.isArray(base[k])) base[k] = [];
@@ -3230,6 +3251,987 @@ function saveReceipt() {
   });
 }
 
+/* =========================================================
+   SIGN IN
+   ---------------------------------------------------------
+   Honest note: this runs entirely in your browser. It keeps
+   casual eyes out of the app on this device. It is NOT real
+   security — anyone with the device and some know-how can read
+   the stored data. The password is stored as a scrambled value,
+   never as plain text, but that is still not encryption.
+   ========================================================= */
+
+var GENDERS = ["Male", "Female", "Other", "Prefer not to say"];
+
+/** Scramble a password so it is never stored as readable text. */
+function scramble(pw) {
+  var str = "moneytracker:" + String(pw || "");
+  var a = 5381, b = 7919, i;
+  for (i = 0; i < str.length; i++) a = ((a * 33) ^ str.charCodeAt(i)) >>> 0;
+  for (i = str.length - 1; i >= 0; i--) b = (((b * 31) >>> 0) + str.charCodeAt(i)) >>> 0;
+  return a.toString(36) + "-" + b.toString(36) + "-" + str.length;
+}
+function passwordProblem(pw) {
+  var p = String(pw || "");
+  if (p.length < 8) return "Use at least 8 characters.";
+  if (!/[A-Za-z]/.test(p)) return "Include at least one letter.";
+  if (!/[0-9]/.test(p)) return "Include at least one number.";
+  return "";
+}
+function usernameProblem(u) {
+  var v = String(u || "").trim();
+  if (v.length < 3) return "Username needs at least 3 characters.";
+  if (v.length > 24) return "Username is too long.";
+  if (!/^[A-Za-z0-9._-]+$/.test(v)) return "Use letters, numbers, dot, underscore or hyphen only.";
+  return "";
+}
+function dobProblem(iso) {
+  if (!iso) return "Enter your date of birth.";
+  var d = dateFrom(iso), now = new Date();
+  if (isNaN(d.getTime())) return "That date doesn't look right.";
+  if (iso > today()) return "That date is in the future.";
+  var years = (now - d) / (365.25 * 86400000);
+  if (years > 120) return "That date doesn't look right.";
+  if (years < 13) return "You need to be at least 13.";
+  return "";
+}
+function hasAccount() { return !!(db.auth && db.auth.user); }
+function sameUser(a, b) {
+  return String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
+}
+
+/* ---------- screens ---------- */
+function showAuth(view) {
+  ui.auth = { view: view || (hasAccount() ? "signin" : "create"), error: "", info: "", show: false, stage: "ask" };
+  drawAuth();
+  el("authScreen").classList.remove("hidden");
+}
+function hideAuth() {
+  ui.authed = true;
+  el("authScreen").classList.add("hidden");
+  el("authScreen").innerHTML = "";
+}
+function grabAuth() {
+  var box = el("authScreen");
+  if (!box || !ui.auth) return {};
+  var out = {};
+  box.querySelectorAll("[data-au]").forEach(function (node) {
+    out[node.getAttribute("data-au")] = node.value;
+  });
+  ui.auth.values = Object.assign(ui.auth.values || {}, out);
+  return ui.auth.values;
+}
+function drawAuth() {
+  var a = ui.auth, v = a.values || {};
+  var h = '<div class="box">';
+  h += '<div style="text-align:center;margin-block-end:14px"><div style="font-size:34px">💰</div>' +
+    "<h2>Money Tracker</h2></div>";
+
+  if (a.error) h += '<div class="note bad" role="alert"><span aria-hidden="true">⚠️</span><div>' + esc(a.error) + "</div></div>";
+  if (a.info) h += '<div class="note ok" role="status"><span aria-hidden="true">✅</span><div>' + esc(a.info) + "</div></div>";
+
+  if (a.view === "signin") {
+    h += '<div class="card"><h3>Sign in</h3>' +
+      '<div class="f"><label for="auUser">Username</label>' +
+      '<input id="auUser" data-au="user" autocomplete="username" value="' + esc(v.user || "") + '"></div>' +
+      '<div class="f"><label for="auPw">Password</label>' +
+      '<input id="auPw" data-au="pw" type="' + (a.show ? "text" : "password") +
+      '" autocomplete="current-password" value="' + esc(v.pw || "") + '"></div>' +
+      '<button type="button" class="btn g s" data-act="auShow">' + (a.show ? "Hide password" : "Show password") + "</button>" +
+      '<div class="btns" style="margin-block-start:12px">' +
+      '<button type="button" class="btn" style="flex:1" data-act="auSignIn">Sign in</button></div>' +
+      '<div class="btns" style="margin-block-start:8px">' +
+      '<button type="button" class="btn g s" data-act="auGoForgot">Forgot password</button>' +
+      (hasAccount() ? "" : '<button type="button" class="btn g s" data-act="auGoCreate">Create an account</button>') +
+      "</div></div>";
+  } else if (a.view === "create") {
+    h += '<div class="card"><h3>Create your account</h3>' +
+      '<div class="f"><label for="auUser">Username</label>' +
+      '<input id="auUser" data-au="user" autocomplete="username" value="' + esc(v.user || "") + '"></div>' +
+      '<div class="f"><label for="auPw">Password</label>' +
+      '<input id="auPw" data-au="pw" type="' + (a.show ? "text" : "password") +
+      '" autocomplete="new-password" value="' + esc(v.pw || "") + '"></div>' +
+      '<div class="f"><label for="auPw2">Confirm password</label>' +
+      '<input id="auPw2" data-au="pw2" type="' + (a.show ? "text" : "password") +
+      '" autocomplete="new-password" value="' + esc(v.pw2 || "") + '"></div>' +
+      '<button type="button" class="btn g s" data-act="auShow">' + (a.show ? "Hide passwords" : "Show passwords") + "</button>" +
+      '<div class="two" style="margin-block-start:12px">' +
+      '<div class="f"><label for="auDob">Date of birth</label>' +
+      '<input id="auDob" data-au="dob" type="date" max="' + today() + '" value="' + esc(v.dob || "") + '"></div>' +
+      '<div class="f"><label for="auGender">Gender</label>' +
+      '<select id="auGender" data-au="gender">' + options(GENDERS, v.gender || "Prefer not to say") + "</select></div></div>" +
+      '<p class="hint">Your date of birth is used only to let you reset your own password on this device.</p>' +
+      '<div class="btns" style="margin-block-start:10px">' +
+      '<button type="button" class="btn" style="flex:1" data-act="auCreate">Create account</button>' +
+      (hasAccount() ? '<button type="button" class="btn g" data-act="auGoSignIn">Back to sign in</button>' : "") +
+      "</div></div>";
+  } else {
+    /* forgot password */
+    if (a.stage === "ask") {
+      h += '<div class="card"><h3>Forgot your password</h3>' +
+        '<p class="sub">Confirm who you are, then choose a new password.</p>' +
+        '<div class="f" style="margin-block-start:10px"><label for="auUser">Username</label>' +
+        '<input id="auUser" data-au="user" autocomplete="username" value="' + esc(v.user || "") + '"></div>' +
+        '<div class="f"><label for="auDob">Date of birth</label>' +
+        '<input id="auDob" data-au="dob" type="date" max="' + today() + '" value="' + esc(v.dob || "") + '"></div>' +
+        '<div class="btns"><button type="button" class="btn" style="flex:1" data-act="auCheck">Continue</button>' +
+        '<button type="button" class="btn g" data-act="auGoSignIn">Back</button></div></div>';
+    } else if (a.stage === "recovery") {
+      h += '<div class="card"><h3>Use your recovery key</h3>' +
+        '<p class="sub">The 15-character key you wrote down when you created the account.</p>' +
+        '<div class="f" style="margin-block-start:10px"><label for="auRec">Recovery key</label>' +
+        '<input id="auRec" data-au="recovery" placeholder="ABCDE-FGHJK-LMNPQ" value="' + esc(v.recovery || "") + '"></div>' +
+        '<div class="btns"><button type="button" class="btn" style="flex:1" data-act="auRecover">Continue</button>' +
+        '<button type="button" class="btn g" data-act="auGoSignIn">Back</button></div>' +
+        '<p class="hint">Without the password or this key, the data cannot be decrypted by anyone. ' +
+        "That is what encryption means.</p></div>";
+    } else {
+      h += '<div class="card"><h3>Choose a new password</h3>' +
+        '<div class="f"><label for="auPw">New password</label>' +
+        '<input id="auPw" data-au="pw" type="' + (a.show ? "text" : "password") +
+        '" autocomplete="new-password" value="' + esc(v.pw || "") + '"></div>' +
+        '<div class="f"><label for="auPw2">Confirm new password</label>' +
+        '<input id="auPw2" data-au="pw2" type="' + (a.show ? "text" : "password") +
+        '" autocomplete="new-password" value="' + esc(v.pw2 || "") + '"></div>' +
+        '<button type="button" class="btn g s" data-act="auShow">' + (a.show ? "Hide passwords" : "Show passwords") + "</button>" +
+        '<div class="btns" style="margin-block-start:12px">' +
+        '<button type="button" class="btn" style="flex:1" data-act="auReset">Save new password</button>' +
+        '<button type="button" class="btn g" data-act="auGoSignIn">Cancel</button></div></div>';
+    }
+  }
+
+  h += '<p class="sub" style="text-align:center">This sign-in keeps casual eyes out on this device. ' +
+    "It is not encryption, and nothing is sent anywhere.</p></div>";
+  el("authScreen").innerHTML = h;
+}
+
+/* ---------- actions ---------- */
+function authAct(name) {
+  var v = grabAuth(), a = ui.auth;
+  a.error = ""; a.info = "";
+
+  if (name === "auShow") { a.show = !a.show; drawAuth(); return true; }
+  if (name === "auGoSignIn") { a.view = "signin"; a.stage = "ask"; drawAuth(); return true; }
+  if (name === "auGoCreate") { a.view = "create"; drawAuth(); return true; }
+  if (name === "auGoForgot") {
+    a.view = "forgot"; a.stage = "ask";
+    a.values = Object.assign(a.values || {}, { user: v.user || "" });
+    drawAuth(); return true;
+  }
+
+  if (name === "auSignIn") {
+    if (!sameUser(v.user, db.auth.user)) {
+      a.error = "That username and password don't match.";
+      a.values.pw = "";
+      drawAuth(); return true;
+    }
+    if (isEncrypted()) {
+      a.info = "Unlocking…";
+      drawAuth();
+      unlockWith(v.pw).then(function (okNow) {
+        if (!okNow) {
+          a.info = "";
+          a.error = "That username and password don't match.";
+          a.values.pw = "";
+          drawAuth();
+          return;
+        }
+        db.auth.lastSignIn = stamp();
+        saveLocalOnly();
+        hideAuth();
+        afterSignIn();
+      });
+      return true;
+    }
+    if (scramble(v.pw) !== db.auth.pwHash) {
+      a.error = "That username and password don't match.";
+      a.values.pw = "";
+      drawAuth(); return true;
+    }
+    db.auth.lastSignIn = stamp();
+    save();
+    hideAuth();
+    afterSignIn();
+    return true;
+  }
+
+  if (name === "auCreate") {
+    var p1 = usernameProblem(v.user) || passwordProblem(v.pw) || dobProblem(v.dob);
+    if (!p1 && v.pw !== v.pw2) p1 = "The two passwords don't match.";
+    if (p1) { a.error = p1; drawAuth(); return true; }
+    db.auth = {
+      user: String(v.user).trim(), pwHash: "", dob: v.dob,
+      gender: v.gender || "Prefer not to say", createdAt: stamp(), lastSignIn: stamp()
+    };
+    db.profile.name = String(v.user).trim();
+    if (cryptoAvailable()) {
+      a.info = "Setting up encryption…";
+      drawAuth();
+      setupEncryption(v.pw).then(function (recovery) {
+        ui.recovery = recovery;
+        return saveEncrypted();
+      }).then(function () {
+        hideAuth();
+        afterSignIn();
+        openSheet(recoverySheet(ui.recovery));
+      });
+      return true;
+    }
+    db.auth.pwHash = scramble(v.pw);
+    save();
+    hideAuth();
+    afterSignIn();
+    return true;
+  }
+
+  if (name === "auRecover") {
+    a.info = "Checking…";
+    drawAuth();
+    unlockWithRecovery(String(v.recovery || "").trim().toUpperCase()).then(function (okNow) {
+      a.info = "";
+      if (!okNow) { a.error = "That recovery key doesn't match."; drawAuth(); return; }
+      a.stage = "reset";
+      a.values.pw = ""; a.values.pw2 = "";
+      a.info = "Recovery key accepted. Choose a new password.";
+      drawAuth();
+    });
+    return true;
+  }
+  if (name === "auCheck") {
+    if (isEncrypted()) {
+      a.error = "Your data is encrypted, so a birthday cannot unlock it. Use your recovery key below.";
+      a.stage = "recovery";
+      drawAuth(); return true;
+    }
+    if (!sameUser(v.user, db.auth.user) || String(v.dob) !== String(db.auth.dob)) {
+      a.error = "Those details don't match the account on this device.";
+      drawAuth(); return true;
+    }
+    a.stage = "reset";
+    a.values.pw = ""; a.values.pw2 = "";
+    drawAuth(); return true;
+  }
+
+  if (name === "auReset") {
+    var p2 = passwordProblem(v.pw);
+    if (!p2 && v.pw !== v.pw2) p2 = "The two passwords don't match.";
+    if (p2) { a.error = p2; drawAuth(); return true; }
+    if (isEncrypted() && isUnlocked()) {
+      a.info = "Re-encrypting with your new password…";
+      drawAuth();
+      setupEncryption(v.pw).then(function (recovery) {
+        ui.recovery = recovery;
+        db.auth.pwHash = "";
+        db.auth.changedAt = stamp();
+        return saveEncrypted();
+      }).then(function () {
+        a.view = "signin"; a.stage = "ask";
+        a.values = { user: db.auth.user, pw: "" };
+        a.info = "Password changed. Write down your NEW recovery key after signing in.";
+        drawAuth();
+      });
+      return true;
+    }
+    db.auth.pwHash = scramble(v.pw);
+    db.auth.changedAt = stamp();
+    save();
+    a.view = "signin"; a.stage = "ask";
+    a.values = { user: db.auth.user, pw: "" };
+    a.info = "Password changed. Sign in with your new password.";
+    drawAuth(); return true;
+  }
+  return false;
+}
+function afterSignIn() {
+  runBills(true);
+  if (syncReady()) { pullFromGithub(true); startSyncTimer(); }
+  paintSync();
+  render();
+  if (db.settings.pin) showLock();
+  if (!db.settings.setupDone) startSetup();
+}
+function signOut() {
+  lockUp();
+  ui.authed = false;
+  ui.auth = null;
+  closeSheet();
+  showAuth("signin");
+}
+
+/* =========================================================
+   STARTING DATA
+   Loaded once, on the very first run. Opening balances are set
+   so that after the September entries below, each account shows
+   the balance you actually have today.
+   ========================================================= */
+function seedData() {
+  var A = function (o) {
+    return Object.assign({ bank:"", last4:"", open:0, include:true, primary:false, archived:false }, o);
+  };
+  /* Bank, cash and wallet balances.
+     SBI and Cash openings are set before the 1–2 September entries below,
+     so the running balances land on today's real figures. */
+  db.accounts = [
+    A({ id:"a_sbi",  name:"SBI Savings",  kind:"bank", bank:"SBI",  last4:"",
+        open: toMinor(6679.42) + toMinor(33500) + toMinor(1306.22), primary:true }),
+    A({ id:"a_cash", name:"Cash",         kind:"cash",
+        open: toMinor(650) + toMinor(30) + toMinor(30) + toMinor(49) }),
+    A({ id:"a_hdfc", name:"HDFC Savings", kind:"bank", bank:"HDFC", open: toMinor(2543.92) }),
+    A({ id:"a_pnb",  name:"PNB Savings",  kind:"bank", bank:"PNB",  open: toMinor(2434.20),
+        minBalance: toMinor(2000) })
+  ];
+
+  /* Credit cards. All previous bills are paid, so each opening balance is
+     simply what is currently outstanding (unbilled) on that card. */
+  var C = function (o) {
+    return Object.assign({ kind:"card", bank:"", last4:"", limit:0, include:true,
+      primary:false, archived:false, dueRule:"day" }, o);
+  };
+  db.accounts = db.accounts.concat([
+    C({ id:"c_hdfc1", name:"HDFC Credit Card",        bank:"HDFC", last4:"8256",
+        open: -toMinor(1185),    stmtDay:"13", dueDay:2 }),
+    C({ id:"c_hdfc2", name:"HDFC RuPay Credit Card",  bank:"HDFC", last4:"8486",
+        open: -toMinor(2089),    stmtDay:"13", dueDay:2 }),
+    C({ id:"c_axis1", name:"Axis My Zone",            bank:"Axis", last4:"7779",
+        open: -toMinor(475.20),  stmtDay:"7",  dueDay:27 }),
+    C({ id:"c_axis2", name:"Axis Neo",                bank:"Axis", last4:"",
+        open: -toMinor(857),     stmtDay:"7",  dueDay:27 }),
+    C({ id:"c_idfc",  name:"IDFC Credit Card",        bank:"IDFC", last4:"4314",
+        open: -toMinor(1450.64), stmtDay:"20", dueRule:"days", dueDays:20 }),
+    C({ id:"c_yes1",  name:"Yes Bank Uni Gold",       bank:"Yes Bank", last4:"7630",
+        open: -toMinor(2189.43), stmtDay:"17", dueDay:5 }),
+    C({ id:"c_yes2",  name:"Yes Bank Uni Gold UPI",   bank:"Yes Bank", last4:"8929",
+        open: -toMinor(2438.04), stmtDay:"17", dueDay:5 }),
+    C({ id:"c_sbi1",  name:"SBI Credit Card",         bank:"SBI",  last4:"7955",
+        open: 0, stmtDay:"13", dueDay:2 }),
+    C({ id:"c_sbi2",  name:"SBI RuPay Credit Card",   bank:"SBI",  last4:"7963",
+        open: 0, stmtDay:"13", dueDay:2 })
+  ]);
+
+  /* September so far. */
+  var T = function (o) {
+    return Object.assign({ type:"out", to:"", appId:"", channel:"", noTime:true, time:"",
+      status:"done", deducted:0, refunds:[], createdAt: stamp(), updatedAt: stamp() }, o);
+  };
+  db.tx = [
+    T({ id:"t_cardpay", type:"bill", amt: toMinor(33500), cat:"", acc:"a_sbi", to:"",
+        how:"bank", date:"2026-09-01",
+        note:"Credit card payments — total paid, split across cards not recorded" }),
+    T({ id:"t_train", amt: toMinor(1306.22), cat:"Travel", acc:"a_sbi", how:"app",
+        date:"2026-09-01", note:"Train tickets Tirupati to Hyderabad" }),
+    T({ id:"t_bus",   amt: toMinor(30),      cat:"Travel", acc:"a_cash", how:"cash",
+        date:"2026-09-01", note:"Bus, home to metro" }),
+    T({ id:"t_auto",  amt: toMinor(30),      cat:"Travel", acc:"a_cash", how:"cash",
+        date:"2026-09-01", note:"Auto, metro to Panama" }),
+    T({ id:"t_bike",  amt: toMinor(49),      cat:"Travel", acc:"a_cash", how:"cash",
+        date:"2026-09-02", note:"Bike ride, home to metro" })
+  ];
+
+  db.settings.setupDone = true;
+  db.settings.currency = "INR";
+  db.seeded = true;
+  save();
+}
+
+/* =========================================================
+   ENCRYPTION
+   ---------------------------------------------------------
+   Real encryption, using the browser's own Web Crypto API.
+     - your password is stretched into a key with PBKDF2
+       (310,000 rounds, deliberately slow to guess)
+     - everything is then encrypted with AES-GCM, 256-bit
+     - a fresh random salt per install, fresh random IV per save
+   The password itself is NEVER stored, anywhere.
+   Without it, the saved data is unreadable — including by me,
+   by GitHub, and by anyone who picks up your phone.
+   ========================================================= */
+
+var CRYPTO_KEY = "moneytracker.enc";   /* the encrypted blob */
+var CRYPTO_META = "moneytracker.meta"; /* salt + settings, not secret */
+var PBKDF2_ROUNDS = 310000;
+
+var cryptoKey = null;      /* the derived key, held only while signed in */
+var cryptoMaster = null;   /* raw master key bytes, memory only */
+var cryptoSalt = null;
+
+function webCrypto() {
+  return (typeof crypto !== "undefined" && crypto.subtle) ? crypto : null;
+}
+function cryptoAvailable() { return !!webCrypto(); }
+
+function randomBytes(n) {
+  var a = new Uint8Array(n);
+  webCrypto().getRandomValues(a);
+  return a;
+}
+function bytesToB64(bytes) {
+  var s = "", i;
+  for (i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+function b64ToBytes(b64) {
+  var s = atob(b64), a = new Uint8Array(s.length), i;
+  for (i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+  return a;
+}
+function textBytes(str) {
+  if (typeof TextEncoder !== "undefined") return new TextEncoder().encode(str);
+  var utf = unescape(encodeURIComponent(str)), a = new Uint8Array(utf.length), i;
+  for (i = 0; i < utf.length; i++) a[i] = utf.charCodeAt(i);
+  return a;
+}
+function bytesText(bytes) {
+  if (typeof TextDecoder !== "undefined") return new TextDecoder().decode(bytes);
+  var s = "", i;
+  for (i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return decodeURIComponent(escape(s));
+}
+
+/** Stretch a password into an AES key. Slow on purpose. */
+function deriveKey(password, salt) {
+  var c = webCrypto();
+  return c.subtle.importKey("raw", textBytes(password), { name: "PBKDF2" }, false, ["deriveKey"])
+    .then(function (base) {
+      return c.subtle.deriveKey(
+        { name: "PBKDF2", salt: salt, iterations: PBKDF2_ROUNDS, hash: "SHA-256" },
+        base,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+    });
+}
+function encryptWith(key, plainText) {
+  var c = webCrypto(), iv = randomBytes(12);
+  return c.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, textBytes(plainText))
+    .then(function (buf) {
+      return { v: 1, alg: "AES-GCM", kdf: "PBKDF2-SHA256", rounds: PBKDF2_ROUNDS,
+        iv: bytesToB64(iv), data: bytesToB64(new Uint8Array(buf)) };
+    });
+}
+function decryptWith(key, blob) {
+  var c = webCrypto();
+  return c.subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(blob.iv) }, key, b64ToBytes(blob.data))
+    .then(function (buf) { return bytesText(new Uint8Array(buf)); });
+}
+
+/* ---------- what the app calls ---------- */
+function readMeta() {
+  try {
+    var raw = localStorage.getItem(CRYPTO_META);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+function writeMeta(meta) {
+  try { localStorage.setItem(CRYPTO_META, JSON.stringify(meta)); } catch (e) {}
+}
+function isEncrypted() {
+  var m = readMeta();
+  return !!(m && m.salt);
+}
+/** First-time setup.
+    A random master key encrypts the data. That master key is then wrapped
+    twice: once with your password, once with the recovery key. Either one
+    opens the same vault — and changing the password only re-wraps the key. */
+function setupEncryption(password) {
+  if (!cryptoAvailable()) return Promise.reject(new Error("This browser has no encryption support"));
+  var meta = readMeta();
+  var salt = meta && meta.salt ? b64ToBytes(meta.salt) : randomBytes(16);
+  var master = cryptoMaster || randomBytes(32);
+  var recovery = makeRecoveryKey();
+  var out = { salt: bytesToB64(salt), rounds: PBKDF2_ROUNDS, alg: "AES-GCM", createdAt: stamp() };
+  return deriveKey(password, salt).then(function (pk) {
+    return encryptWith(pk, bytesToB64(master));
+  }).then(function (wrapped) {
+    out.byPassword = wrapped;
+    return deriveKey(recovery, salt);
+  }).then(function (rk) {
+    return encryptWith(rk, bytesToB64(master));
+  }).then(function (wrapped2) {
+    out.byRecovery = wrapped2;
+    return importMaster(master);
+  }).then(function (key) {
+    cryptoKey = key;
+    cryptoMaster = master;
+    cryptoSalt = salt;
+    writeMeta(out);
+    return recovery;
+  });
+}
+function importMaster(masterBytes) {
+  return webCrypto().subtle.importKey("raw", masterBytes, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+}
+/** Open the vault with either the password or the recovery key. */
+function unwrapWith(secret, which) {
+  var meta = readMeta();
+  if (!meta || !meta.salt || !meta[which]) return Promise.resolve(false);
+  var salt = b64ToBytes(meta.salt);
+  return deriveKey(secret, salt).then(function (k) {
+    return decryptWith(k, meta[which]);
+  }).then(function (masterB64) {
+    var master = b64ToBytes(masterB64);
+    return importMaster(master).then(function (key) {
+      cryptoKey = key;
+      cryptoMaster = master;
+      cryptoSalt = salt;
+      var raw;
+      try { raw = localStorage.getItem(CRYPTO_KEY); } catch (e) { raw = null; }
+      if (!raw) return true;
+      var blob;
+      try { blob = JSON.parse(raw); } catch (e) { return true; }
+      return decryptWith(key, blob).then(function (text) {
+        applyLoaded(JSON.parse(text));
+        return true;
+      }).catch(function () {
+        cryptoKey = null; cryptoMaster = null;
+        return false;
+      });
+    });
+  }).catch(function () { return false; });
+}
+function unlockWith(password) {
+  if (!cryptoAvailable()) return Promise.resolve(false);
+  return unwrapWith(password, "byPassword");
+}
+function unlockWithRecovery(recovery) {
+  if (!cryptoAvailable()) return Promise.resolve(false);
+  return unwrapWith(String(recovery || "").trim().toUpperCase(), "byRecovery");
+}
+function makeRecoveryKey() {
+  var bytes = randomBytes(15), out = [], i;
+  var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; /* no look-alikes */
+  for (i = 0; i < bytes.length; i++) out.push(chars[bytes[i] % chars.length]);
+  return out.join("").replace(/(.{5})(?=.)/g, "$1-");
+}
+function lockUp() { cryptoKey = null; cryptoMaster = null; cryptoSalt = null; }
+function isUnlocked() { return !!cryptoKey; }
+
+/** Encrypt and store. Called after every change. */
+function saveEncrypted() {
+  if (!cryptoKey) return Promise.resolve(false);
+  var text = JSON.stringify(db);
+  return encryptWith(cryptoKey, text).then(function (blob) {
+    try {
+      localStorage.setItem(CRYPTO_KEY, JSON.stringify(blob));
+      localStorage.removeItem(KEY); /* remove any old readable copy */
+      return true;
+    } catch (e) { return false; }
+  });
+}
+/** Produce the blob to put in GitHub — encrypted, safe to publish. */
+function encryptedBlob() {
+  if (!cryptoKey) return Promise.reject(new Error("locked"));
+  var meta = readMeta() || {};
+  return encryptWith(cryptoKey, JSON.stringify(db)).then(function (blob) {
+    return JSON.stringify({
+      app: "money-tracker",
+      note: "Encrypted with AES-GCM. Unreadable without the key that unlocks it.",
+      salt: meta.salt, rounds: meta.rounds || PBKDF2_ROUNDS,
+      byPassword: meta.byPassword, byRecovery: meta.byRecovery,
+      updatedAt: stamp(), device: deviceName(),
+      payload: blob
+    }, null, 2);
+  });
+}
+/** Read a blob that came from GitHub. */
+function openBlob(text, password) {
+  var outer;
+  try { outer = JSON.parse(text); } catch (e) { return Promise.resolve(null); }
+  if (!outer || !outer.payload || !outer.salt) return Promise.resolve(null);
+  var salt = b64ToBytes(outer.salt);
+  var getKey;
+  if (password && outer.byPassword) {
+    getKey = deriveKey(password, salt)
+      .then(function (pk) { return decryptWith(pk, outer.byPassword); })
+      .then(function (b64) { return importMaster(b64ToBytes(b64)); });
+  } else if (cryptoKey) {
+    getKey = Promise.resolve(cryptoKey);
+  } else {
+    return Promise.resolve(null);
+  }
+  return getKey.then(function (key) {
+    return decryptWith(key, outer.payload).then(function (plain) {
+      return { data: JSON.parse(plain), updatedAt: outer.updatedAt, device: outer.device };
+    });
+  }).catch(function () { return null; });
+}
+function deviceName() {
+  var ua = (typeof navigator !== "undefined" && navigator.userAgent) || "";
+  if (/android/i.test(ua)) return "Android phone";
+  if (/iphone|ipad/i.test(ua)) return "iPhone or iPad";
+  if (/mac/i.test(ua)) return "Mac";
+  if (/windows/i.test(ua)) return "Windows PC";
+  return "this device";
+}
+
+/* =========================================================
+   GITHUB SYNC
+   ---------------------------------------------------------
+   Your data lives in GitHub as an encrypted file.
+     READING is automatic — the app fetches it on open and every
+     few minutes. No token, no login, nothing to leak.
+     WRITING is three clicks — copy, paste, commit. That is
+     deliberate: writing automatically would need an access token
+     inside this page, which anyone could read from the source,
+     and which GitHub would auto-revoke anyway.
+   Everything sent to GitHub is already encrypted. GitHub only
+   ever holds ciphertext.
+   ========================================================= */
+
+function syncCfg() {
+  db.sync = db.sync || { user:"", repo:"", branch:"main", file:"data.json.enc",
+    on:false, auto:false, lastPull:"", lastPush:"", lastSeen:"", sha:"" };
+  if (db.sync.auto === undefined) db.sync.auto = false;
+  return db.sync;
+}
+function syncReady() {
+  var c = syncCfg();
+  return !!(c.on && c.user && c.repo && c.file);
+}
+/* The token and passphrase live only in this browser's storage.
+   They are NEVER part of the published page and never leave the device
+   except as an Authorization header to github.com. */
+var TOKEN_KEY = "moneytracker.token";
+var PHRASE_KEY = "moneytracker.phrase";
+function savedToken() {
+  try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; }
+}
+function setToken(v) {
+  try {
+    if (v) localStorage.setItem(TOKEN_KEY, v);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch (e) {}
+}
+function savedPhrase() {
+  try { return localStorage.getItem(PHRASE_KEY) || ""; } catch (e) { return ""; }
+}
+function setPhrase(v) {
+  try {
+    if (v) localStorage.setItem(PHRASE_KEY, v);
+    else localStorage.removeItem(PHRASE_KEY);
+  } catch (e) {}
+}
+function canWrite() { return !!(savedToken() && syncReady()); }
+/** Derive the encryption key from the saved passphrase. Runs on open. */
+function unlockSync() {
+  var phrase = savedPhrase();
+  if (!phrase || !cryptoAvailable()) return Promise.resolve(false);
+  if (isUnlocked()) return Promise.resolve(true);
+  if (!isEncrypted()) {
+    return setupEncryption(phrase).then(function () { return true; })
+      .catch(function () { return false; });
+  }
+  return unlockWith(phrase).then(function (okNow) {
+    if (okNow) return true;
+    /* the local vault is from a different phrase — rebuild it from this one */
+    return setupEncryption(phrase).then(function () { return true; })
+      .catch(function () { return false; });
+  });
+}
+function rawUrl() {
+  var c = syncCfg();
+  return "https://raw.githubusercontent.com/" + encodeURIComponent(c.user) + "/" +
+    encodeURIComponent(c.repo) + "/" + encodeURIComponent(c.branch || "main") + "/" + c.file;
+}
+function apiUrl() {
+  var c = syncCfg();
+  return "https://api.github.com/repos/" + encodeURIComponent(c.user) + "/" +
+    encodeURIComponent(c.repo) + "/contents/" + c.file;
+}
+function editUrl() {
+  var c = syncCfg();
+  return "https://github.com/" + encodeURIComponent(c.user) + "/" +
+    encodeURIComponent(c.repo) + "/edit/" + encodeURIComponent(c.branch || "main") + "/" + c.file;
+}
+function newFileUrl() {
+  var c = syncCfg();
+  return "https://github.com/" + encodeURIComponent(c.user) + "/" +
+    encodeURIComponent(c.repo) + "/new/" + encodeURIComponent(c.branch || "main");
+}
+function b64encode(text) {
+  var bytes = textBytes(text), bin = "", i;
+  for (i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+/** Write the encrypted file straight to GitHub. Needs the saved token. */
+function autoPush() {
+  var c = syncCfg();
+  if (!canWrite() || !isUnlocked()) return Promise.resolve("noauth");
+  if (ui.pushing) { ui.pushAgain = true; return Promise.resolve("busy"); }
+  ui.pushing = true;
+  ui.syncState = "saving";
+  paintSync();
+  return encryptedBlob().then(function (text) {
+    var body = {
+      message: "Update tracker data (" + deviceName() + ")",
+      content: b64encode(text),
+      branch: c.branch || "main"
+    };
+    if (c.sha) body.sha = c.sha;
+    return fetch(apiUrl(), {
+      method: "PUT",
+      headers: { "Authorization": "Bearer " + savedToken(),
+                 "Accept": "application/vnd.github+json",
+                 "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+  }).then(function (res) {
+    if (res.status === 409 || res.status === 422) {
+      /* someone else wrote first — refresh the file id and retry once */
+      return refreshSha().then(function () {
+        ui.pushing = false;
+        return autoPush();
+      });
+    }
+    if (!res.ok) throw new Error("http " + res.status);
+    return res.json().then(function (out) {
+      c.sha = out && out.content ? out.content.sha : c.sha;
+      c.lastPush = stamp();
+      c.lastSeen = c.lastPush;
+      saveLocalOnly();
+      ui.pushing = false;
+      ui.syncState = "ok";
+      paintSync();
+      if (ui.pushAgain) { ui.pushAgain = false; autoPush(); }
+      return "saved";
+    });
+  }).catch(function (e) {
+    ui.pushing = false;
+    ui.syncState = String(e.message).indexOf("401") > -1 ? "badtoken" : "offline";
+    paintSync();
+    return "failed";
+  });
+}
+function refreshSha() {
+  var c = syncCfg();
+  if (!savedToken()) return Promise.resolve();
+  return fetch(apiUrl() + "?ref=" + encodeURIComponent(c.branch || "main"), {
+    headers: { "Authorization": "Bearer " + savedToken(), "Accept": "application/vnd.github+json" },
+    cache: "no-store"
+  }).then(function (res) {
+    if (!res.ok) return null;
+    return res.json();
+  }).then(function (out) {
+    if (out && out.sha) { c.sha = out.sha; saveLocalOnly(); }
+  }).catch(function () {});
+}
+/** Save automatically, a moment after you stop making changes. */
+function scheduleAutoPush() {
+  var c = syncCfg();
+  if (!c.auto || !canWrite()) return;
+  if (typeof setTimeout !== "function") return;
+  clearTimeout(ui.pushTimer);
+  ui.syncState = "ahead";
+  paintSync();
+  ui.pushTimer = setTimeout(function () {
+    if (isUnlocked()) autoPush();
+  }, 2500);
+}
+
+/** Fetch the encrypted file from GitHub and merge it in if it is newer. */
+function pullFromGithub(quiet) {
+  if (!syncReady()) return Promise.resolve("off");
+  if (!isUnlocked()) return Promise.resolve("locked");
+  if (typeof fetch !== "function") return Promise.resolve("nofetch");
+  ui.syncState = "checking";
+  paintSync();
+  /* cache-buster so the browser never serves a stale copy */
+  return fetch(rawUrl() + "?t=" + Date.now(), { cache: "no-store" })
+    .then(function (res) {
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error("http " + res.status);
+      return res.text();
+    })
+    .then(function (text) {
+      if (!text) { ui.syncState = "empty"; paintSync(); return "empty"; }
+      return openBlob(text).then(function (opened) {
+        if (!opened) { ui.syncState = "badkey"; paintSync(); return "badkey"; }
+        var c = syncCfg();
+        var mine = c.lastPush || "";
+        var theirs = opened.updatedAt || "";
+        if (theirs && theirs <= (c.lastSeen || "")) {
+          ui.syncState = "ok"; c.lastPull = stamp(); paintSync(); return "same";
+        }
+        /* the copy in GitHub is newer than anything this device has sent */
+        if (!mine || theirs > mine) {
+          var keepSync = JSON.parse(JSON.stringify(c));
+          applyLoaded(opened.data);
+          db.sync = keepSync;
+          c = db.sync;
+          c.lastSeen = theirs;
+          c.lastPull = stamp();
+          saveLocalOnly();
+          ui.syncState = "ok";
+          render();
+          paintSync();
+          toast("Updated from GitHub" + (opened.device ? " (saved on " + opened.device + ")" : ""));
+          return "pulled";
+        }
+        ui.syncState = "ahead";
+        c.lastPull = stamp();
+        paintSync();
+        return "ahead";
+      });
+    })
+    .catch(function () { ui.syncState = "offline"; paintSync(); return "offline"; });
+}
+
+/** Put the encrypted blob on the clipboard and open GitHub's editor. */
+function pushToGithub() {
+  if (!syncReady()) { toast("Set up GitHub sync first"); return Promise.resolve(false); }
+  if (!isUnlocked()) { toast("Unlock the app first"); return Promise.resolve(false); }
+  return encryptedBlob().then(function (text) {
+    var c = syncCfg();
+    c.lastPush = stamp();
+    c.lastSeen = c.lastPush;
+    saveLocalOnly();
+    return copyText(text).then(function (copied) {
+      openSheet(pushSheet(copied, text.length));
+      return true;
+    });
+  });
+}
+function copyText(text) {
+  try {
+    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true; })
+        .catch(function () { return false; });
+    }
+  } catch (e) {}
+  return Promise.resolve(false);
+}
+function pushSheet(copied, size) {
+  var c = syncCfg();
+  return '<div class="shd"><h2>Save to GitHub</h2>' +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">✕</button></div>' +
+    (copied
+      ? '<div class="note ok"><span aria-hidden="true">✅</span><div>Your encrypted data is on the clipboard (' +
+        Math.round(size / 1024) + " KB). It is already encrypted — safe to paste anywhere.</div></div>"
+      : '<div class="note"><span aria-hidden="true">📋</span><div>Your browser blocked the clipboard. ' +
+        'Use <b>Download instead</b> below, then upload that file to GitHub.</div></div>') +
+    "<ol style=\"padding-inline-start:20px;line-height:1.9\">" +
+    "<li>Open the file on GitHub (button below)</li>" +
+    "<li>Select everything in the editor and paste over it</li>" +
+    "<li>Press <b>Commit changes</b></li>" +
+    "</ol>" +
+    '<div class="btns">' +
+    '<button type="button" class="btn" data-act="syncOpenEdit">Open the file on GitHub</button>' +
+    '<button type="button" class="btn g" data-act="syncCopyAgain">Copy again</button>' +
+    '<button type="button" class="btn g" data-act="syncDownload">Download instead</button>' +
+    "</div>" +
+    '<p class="hint">First time? The file <b>' + esc(c.file) + '</b> may not exist yet — ' +
+    'use <b>Create the file</b> below, name it exactly <b>' + esc(c.file) + "</b>, then paste.</p>" +
+    '<div class="btns"><button type="button" class="btn g s" data-act="syncOpenNew">Create the file</button>' +
+    '<button type="button" class="btn g s" data-act="closeSheet">Done</button></div>';
+}
+
+/* ---------- the little status pill ---------- */
+function syncWords() {
+  var c = syncCfg();
+  if (!c.on) return { text:"Sync off", tone:"" };
+  switch (ui.syncState) {
+    case "checking": return { text:"Checking…", tone:"" };
+    case "saving":   return { text:"Saving…", tone:"" };
+    case "pulled":
+    case "same":
+    case "ok":       return { text:"Live", tone:"g" };
+    case "ahead":    return { text: canWrite() ? "Saving…" : "Not saved yet", tone:"w" };
+    case "empty":    return { text:"Nothing saved yet", tone:"w" };
+    case "badkey":   return { text:"Different passphrase", tone:"r" };
+    case "badtoken": return { text:"Token rejected", tone:"r" };
+    case "offline":  return { text:"Offline", tone:"" };
+    default:         return { text:"Ready", tone:"" };
+  }
+}
+function paintSync() {
+  var pill = el("syncPill");
+  if (!pill) return;
+  var c = syncCfg();
+  if (!c.on) { pill.classList.add("hidden"); return; }
+  pill.classList.remove("hidden");
+  var w = syncWords();
+  pill.innerHTML = '<span class="tag ' + w.tone + '">' + esc(w.text) + "</span>";
+}
+function markDirty() {
+  if (!syncReady()) return;
+  ui.syncState = "ahead";
+  paintSync();
+  scheduleAutoPush();
+}
+function startSyncTimer() {
+  if (ui.syncTimer) return;
+  if (typeof setInterval !== "function") return;
+  ui.syncTimer = setInterval(function () {
+    if (syncReady() && isUnlocked() && !ui.pushing) pullFromGithub(true);
+  }, 20000); /* every 20 seconds */
+}
+
+/* ---------- setup screen ---------- */
+function recoverySheet(keyText) {
+  return '<div class="shd"><h2>Write this down now</h2></div>' +
+    '<div class="note bad"><span aria-hidden="true">🔑</span><div>This is the <b>only</b> way back in if you ' +
+    "forget your password. It is not stored anywhere we can recover it. Take a photo or write it on paper.</div></div>" +
+    '<p style="font-size:22px;font-weight:750;letter-spacing:.06em;text-align:center;' +
+    'background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px 8px">' +
+    esc(keyText) + "</p>" +
+    '<div class="btns"><button type="button" class="btn g" data-act="copyRecovery">Copy it</button>' +
+    '<button type="button" class="btn g" data-act="downloadRecovery">Save as a file</button></div>' +
+    '<label style="display:flex;align-items:center;margin-block:14px">' +
+    '<input type="checkbox" id="recSaved" data-act="recAck"> I have written it down</label>' +
+    '<button type="button" class="btn full" data-act="recDone" disabled id="recDoneBtn">Continue</button>';
+}
+function syncSheet() {
+  var c = syncCfg(), hasTok = !!savedToken();
+  return '<div class="shd"><h2>Live sync</h2>' +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">✕</button></div>' +
+    '<div class="note info"><span aria-hidden="true">🔒</span><div>Your data is encrypted before it leaves ' +
+    "this device. GitHub only ever stores scrambled text.</div></div>" +
+    '<form data-form="sync">' +
+    '<div class="two"><div class="f"><label for="syUser">GitHub username</label>' +
+    '<input id="syUser" name="user" value="' + esc(c.user) + '" placeholder="abhinaykumarbysani"></div>' +
+    '<div class="f"><label for="syRepo">Repository</label>' +
+    '<input id="syRepo" name="repo" value="' + esc(c.repo) + '" placeholder="money-tracker"></div></div>' +
+    '<div class="two"><div class="f"><label for="syBranch">Branch</label>' +
+    '<input id="syBranch" name="branch" value="' + esc(c.branch || "main") + '"></div>' +
+    '<div class="f"><label for="syFile">File name</label>' +
+    '<input id="syFile" name="file" value="' + esc(c.file || "data.json.enc") + '"></div></div>' +
+    '<div class="f"><label for="syPhrase">Passphrase that locks your data</label>' +
+    '<input id="syPhrase" name="phrase" type="password" value="' + esc(savedPhrase()) + '" ' +
+    'placeholder="Use the same one on every device"></div>' +
+    '<p class="hint">Type the <b>same passphrase</b> on your phone and laptop, or they will not be able to ' +
+    "read each other's data. It is stored only on each device, never in the published page.</p>" +
+    '<div class="f" style="margin-block-start:12px"><label for="syToken">GitHub token — for saving automatically</label>' +
+    '<input id="syToken" name="token" type="password" value="' + (hasTok ? "" : "") + '" ' +
+    'placeholder="' + (hasTok ? "saved — leave blank to keep it" : "ghp_… or github_pat_…") + '"></div>' +
+    '<p class="hint">Stored only in this browser. It is never written into the page on GitHub, so nobody ' +
+    "visiting your site can see it. Without a token the app still <b>reads</b> automatically; " +
+    "you would just save manually.</p>" +
+    '<label style="display:flex;align-items:center;margin-block:10px">' +
+    '<input type="checkbox" name="auto"' + (c.auto ? " checked" : "") + "> Save automatically as I type</label>" +
+    '<label style="display:flex;align-items:center;margin-block-end:10px">' +
+    '<input type="checkbox" name="on"' + (c.on ? " checked" : "") + "> Turn sync on</label>" +
+    '<div class="btns"><button type="submit" class="btn" style="flex:1">Save</button>' +
+    (hasTok ? '<button type="button" class="btn g" data-act="syncForgetToken">Forget the token</button>' : "") +
+    '<button type="button" class="btn g" data-act="tokenHelp">How do I get a token?</button></div></form>';
+}
+function tokenHelpSheet() {
+  return '<div class="shd"><h2>Making a GitHub token</h2>' +
+    '<button type="button" class="ib grow" data-act="syncSetup" aria-label="Back">✕</button></div>' +
+    "<ol style=\"padding-inline-start:20px;line-height:1.9\">" +
+    "<li>On GitHub: <b>Settings → Developer settings</b></li>" +
+    "<li><b>Personal access tokens → Fine-grained tokens → Generate new token</b></li>" +
+    "<li><b>Repository access:</b> choose <i>Only select repositories</i> and pick <b>" +
+      esc(syncCfg().repo || "money-tracker") + "</b></li>" +
+    "<li><b>Permissions → Repository permissions → Contents: Read and write</b></li>" +
+    "<li>Set an expiry, generate it, and copy the token</li>" +
+    "<li>Paste it into the box on the previous screen</li></ol>" +
+    '<div class="note"><span aria-hidden="true">⚠️</span><div>Give it access to <b>this one repository only</b>. ' +
+    "Then even in the worst case, nothing else of yours can be touched. " +
+    "Never paste the token into a file you commit.</div></div>" +
+    '<button type="button" class="btn full" data-act="syncSetup">Back</button>';
+}
+
 /* ---------- Accounts & cards ---------- */
 function pageMoney() {
   var normal = db.accounts.filter(function (a) { return a.kind !== "card" && !a.archived; });
@@ -3351,6 +4353,17 @@ function pageBills() {
 function pageSettings() {
   var h = backBar(TITLES.settings);
 
+  h += '<div class="card"><h3>Your account</h3><table>' +
+    row2("Username", db.auth.user || "not set") +
+    row2("Gender", db.auth.gender || "not set") +
+    row2("Date of birth", db.auth.dob ? fDateLong(db.auth.dob) : "not set") +
+    (db.auth.lastSignIn ? row2("Last signed in", fStamp(db.auth.lastSignIn)) : "") +
+    '</table><div class="btns" style="margin-block-start:10px">' +
+    '<button type="button" class="btn g s" data-act="changePw">Change password</button>' +
+    '<button type="button" class="btn g s" data-act="signOut">Sign out</button></div>' +
+    '<p class="hint">Signing in keeps casual eyes out on this device. It is not encryption, ' +
+    "and nothing is ever sent anywhere.</p></div>";
+
   h += '<div class="card"><h3>Your name</h3><form data-form="profile"><div class="two">' +
     '<div class="f"><label for="pn">Shown on the home screen</label>' +
     '<input id="pn" name="name" value="' + esc(db.profile.name) + '" placeholder="Optional"></div>' +
@@ -3384,6 +4397,38 @@ function pageSettings() {
     '<input id="pinIn" name="pin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••"></div>' +
     '<div class="f"><label>&nbsp;</label><button type="submit" class="btn full">Save PIN</button></div></div></form>' +
     (db.settings.pin ? '<button type="button" class="btn g s" data-act="clearPin">Remove the PIN</button>' : "") + "</div>";
+
+  var enc = isEncrypted();
+  h += '<div class="card"><h3>Encryption</h3>' +
+    (enc
+      ? '<div class="note ok"><span aria-hidden="true">🔒</span><div><b>Your data is encrypted</b> on this device ' +
+        'with AES-GCM, using a key stretched from your password. Without the password it cannot be read — ' +
+        "not by anyone who takes this device, and not by GitHub.</div></div>"
+      : '<div class="note"><span aria-hidden="true">⚠️</span><div>This browser has no encryption support, ' +
+        "so the data is stored as ordinary text on this device.</div></div>") +
+    (enc ? '<button type="button" class="btn g s" data-act="newRecovery">Get a new recovery key</button>' : "") +
+    '<p class="hint">Encryption protects the data while it is stored. It cannot protect you from someone ' +
+    "using this device while you are signed in.</p></div>";
+
+  var sc = syncCfg();
+  h += '<div class="card"><h3>Live sync</h3>' +
+    (sc.on
+      ? "<table>" + row2("Repository", sc.user + "/" + sc.repo) + row2("File", sc.file) +
+        row2("Saving", canWrite() ? (sc.auto ? "automatic" : "one tap") : "manual (no token)") +
+        row2("Last read", sc.lastPull ? fStamp(sc.lastPull) : "not yet") +
+        row2("Last saved", sc.lastPush ? fStamp(sc.lastPush) : "not yet") +
+        row2("Status", syncWords().text) + "</table>"
+      : '<p class="sub">Off. Turn it on to keep the same data on your phone and laptop.</p>') +
+    '<div class="btns" style="margin-block-start:10px">' +
+    '<button type="button" class="btn g s" data-act="syncSetup">' + (sc.on ? "Settings" : "Set it up") + "</button>" +
+    (sc.on ? '<button type="button" class="btn s" data-act="syncNow">Save now</button>' +
+      '<button type="button" class="btn g s" data-act="syncPull">Check for updates</button>' : "") +
+    "</div>" +
+    '<p class="hint">' +
+    (canWrite()
+      ? "Changes save by themselves a couple of seconds after you stop typing, and other devices pick them up within about 20 seconds."
+      : "Reading is automatic on every device. Add a GitHub token in Settings to make saving automatic too.") +
+    " Everything is encrypted before it leaves this device.</p></div>";
 
   h += '<div class="card"><h3>Your data</h3>' +
     '<div class="note"><span aria-hidden="true">⚠️</span><div>Everything lives in this browser only. ' +
@@ -5044,6 +6089,96 @@ function act(name, d) {
     /* --- settings --- */
     case "setTheme": db.settings.theme = d.theme; save(); applyTheme(); render(); return;
     case "clearPin": db.settings.pin = ""; save(); render(); toast("PIN removed"); return;
+    case "signOut": signOut(); return;
+    case "syncSetup": openSheet(syncSheet()); return;
+    case "tokenHelp": openSheet(tokenHelpSheet()); return;
+    case "syncForgetToken":
+      setToken("");
+      syncCfg().auto = false;
+      save(); closeSheet(); render(); paintSync();
+      toast("Token removed from this device"); return;
+    case "syncNow":
+      if (canWrite()) {
+        autoPush().then(function (r) {
+          toast(r === "saved" ? "Saved to GitHub"
+            : r === "noauth" ? "Add a token to save automatically" : "Could not reach GitHub");
+          render();
+        });
+      } else {
+        pushToGithub();
+      }
+      return;
+    case "syncPush": pushToGithub(); return;
+    case "syncPull":
+      pullFromGithub(false).then(function (r) {
+        if (r === "empty") toast("Nothing saved in GitHub yet");
+        else if (r === "same") toast("Already up to date");
+        else if (r === "ahead") toast("This device has newer changes — save them to GitHub");
+        else if (r === "offline") toast("Could not reach GitHub");
+        else if (r === "badkey") toast("That file was encrypted with a different password");
+      });
+      return;
+    case "syncOpenEdit":
+      if (typeof window !== "undefined" && window.open) window.open(editUrl(), "_blank");
+      return;
+    case "syncOpenNew":
+      if (typeof window !== "undefined" && window.open) window.open(newFileUrl(), "_blank");
+      return;
+    case "syncCopyAgain":
+      encryptedBlob().then(copyText).then(function (okc) {
+        toast(okc ? "Copied again" : "Your browser blocked the clipboard");
+      });
+      return;
+    case "syncDownload":
+      encryptedBlob().then(function (txt) {
+        if (download(syncCfg().file || "data.json.enc", txt, "application/json")) toast("Downloaded");
+      });
+      return;
+    case "newRecovery":
+      openSheet(confirmSheet("Get a new recovery key?",
+        "Your old recovery key will stop working. You will need to write the new one down.",
+        "newRecoveryYes", {}, false));
+      return;
+    case "newRecoveryYes": {
+      var pwPrompt = '<div class="shd"><h2>Confirm your password</h2>' +
+        '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+        '<form data-form="reRecover"><div class="f"><label for="rrPw">Password</label>' +
+        '<input id="rrPw" name="pw" type="password" autocomplete="current-password"></div>' +
+        '<div class="btns"><button type="submit" class="btn" style="flex:1">Continue</button>' +
+        '<button type="button" class="btn g" data-act="closeSheet">Cancel</button></div></form>';
+      openSheet(pwPrompt);
+      return;
+    }
+    case "copyRecovery":
+      copyText(ui.recovery).then(function (okc) { toast(okc ? "Copied" : "Your browser blocked the clipboard"); });
+      return;
+    case "downloadRecovery":
+      download("money-tracker-recovery-key.txt",
+        "Money Tracker recovery key\n\n" + ui.recovery +
+        "\n\nKeep this safe. Without your password or this key, your data cannot be decrypted by anyone.\n",
+        "text/plain");
+      return;
+    case "recAck": {
+      var box = el("recSaved"), btn = el("recDoneBtn");
+      if (box && btn) btn.disabled = !box.checked;
+      return;
+    }
+    case "recDone":
+      ui.recovery = "";
+      closeSheet();
+      return;
+    case "changePw":
+      openSheet('<div class="shd"><h2>Change password</h2>' +
+        '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+        '<form data-form="changePw"><div class="f"><label for="cpOld">Current password</label>' +
+        '<input id="cpOld" name="old" type="password" autocomplete="current-password"></div>' +
+        '<div class="f"><label for="cpNew">New password</label>' +
+        '<input id="cpNew" name="pw" type="password" autocomplete="new-password"></div>' +
+        '<div class="f"><label for="cpNew2">Confirm new password</label>' +
+        '<input id="cpNew2" name="pw2" type="password" autocomplete="new-password"></div>' +
+        '<div class="btns"><button type="submit" class="btn" style="flex:1">Save</button>' +
+        '<button type="button" class="btn g" data-act="closeSheet">Cancel</button></div></form>');
+      return;
     case "forgotPin":
       el("lockMsg").innerHTML = "There is no way to recover a forgotten PIN. " +
         "You can clear this device's data and start over, or restore a backup file.";
@@ -5175,6 +6310,55 @@ function submitForm(kind, form) {
       if (f.back && ui.draft) { ui.draft.cat = name; refreshSheet(); }
       else { closeSheet(); render(); }
       toast("Category added"); return;
+    }
+    case "changePw": {
+      if (scramble(f.old) !== db.auth.pwHash) { toast("That is not your current password"); return; }
+      var problem = passwordProblem(f.pw);
+      if (!problem && f.pw !== f.pw2) problem = "The two passwords don't match";
+      if (problem) { toast(problem); return; }
+      db.auth.pwHash = scramble(f.pw);
+      db.auth.changedAt = stamp();
+      save(); closeSheet(); render(); toast("Password changed"); return;
+    }
+    case "sync": {
+      var c = syncCfg();
+      c.user = String(f.user || "").trim();
+      c.repo = String(f.repo || "").trim();
+      c.branch = String(f.branch || "main").trim() || "main";
+      c.file = String(f.file || "data.json.enc").trim() || "data.json.enc";
+      c.on = !!f.on;
+      c.auto = !!f.auto;
+      if (String(f.token || "").trim()) setToken(String(f.token).trim());
+      var phrase = String(f.phrase || "").trim();
+      if (c.on && (!c.user || !c.repo)) { toast("Enter your username and repository"); return; }
+      if (c.on && !phrase) { toast("Choose a passphrase so your data can be encrypted"); return; }
+      if (c.auto && !savedToken()) { toast("Automatic saving needs a token — added it under 'How do I get a token?'"); }
+      if (phrase !== savedPhrase()) { setPhrase(phrase); lockUp(); }
+      save(); closeSheet();
+      if (!c.on) { render(); paintSync(); toast("Sync is off"); return; }
+      unlockSync().then(function (okNow) {
+        if (!okNow) { toast("Could not set up encryption in this browser"); return; }
+        startSyncTimer();
+        return refreshSha().then(function () {
+          return pullFromGithub(false);
+        }).then(function (r) {
+          render(); paintSync();
+          if (r === "empty" && canWrite()) return autoPush().then(function () { toast("Sync is on — first copy saved"); });
+          toast(canWrite() ? "Sync is on — saving happens by itself" : "Sync is on — reading is automatic");
+        });
+      });
+      return;
+    }
+    case "reRecover": {
+      if (!isUnlocked()) { toast("Sign in again first"); return; }
+      setupEncryption(f.pw).then(function (recovery) {
+        return unlockWith(f.pw).then(function (okNow) {
+          if (!okNow) { toast("That is not your password"); return; }
+          ui.recovery = recovery;
+          return saveEncrypted().then(function () { openSheet(recoverySheet(recovery)); });
+        });
+      });
+      return;
     }
     case "profile":
       db.profile.name = String(f.name || "").trim();
@@ -5326,6 +6510,7 @@ function onClick(e) {
     var actName = hit.getAttribute("data-act");
     if (actName === "setCurrency") return;
     e.preventDefault();
+    if (actName.indexOf("au") === 0 && ui.auth && authAct(actName)) return;
     act(actName, hit.dataset || {});
     return;
   }
@@ -5390,6 +6575,7 @@ function onInput(e) {
 }
 function onChange(e) {
   var t = e.target;
+  if (t.id === "recSaved") { act("recAck", {}); return; }
   if (t.getAttribute && t.getAttribute("data-act") === "setCurrency") {
     db.settings.currency = t.value; save(); render();
     toast("Showing amounts in " + t.value + " — nothing was converted");
@@ -5423,7 +6609,21 @@ function boot() {
     if (ui.view === "settings") render();
   });
 
+  var testing = typeof window !== "undefined" && window.__MT_TEST__;
+  if (!db.seeded && !testing) {
+    db.auth = { user:"Abhinay", pwHash:"", dob:"2003-05-29", gender:"Male",
+      createdAt: stamp(), lastSignIn:"" };
+    db.profile.name = "Abhinay";
+    seedData();
+  }
+
+  /* opens straight to your money — no sign-in screen */
+  ui.authed = true;
+  paintSync();
   render();
+  if (db.settings.pin) showLock();
+  if (!db.settings.setupDone) startSetup();
+  if (syncReady()) { unlockSync().then(function () { pullFromGithub(true); }); startSyncTimer(); }
   if (db.settings.pin) showLock();
   if (!db.settings.setupDone) startSetup();
 }
@@ -5452,6 +6652,18 @@ return {
              downloadPdf: downloadPdf, downloadExcel: downloadExcel, zip: zip, crc32: crc32, rangeDates: rangeDates,
              setReport: function (r) { ui.report = Object.assign(defaultReport(), r || {}); if (r && r.f) ui.report.f = Object.assign(blankReportFilters(), r.f); },
              getReport: function () { return ui.report; },
+             setupEncryption: setupEncryption, unlockWith: unlockWith, isEncrypted: isEncrypted,
+             isUnlocked: isUnlocked, saveEncrypted: saveEncrypted, encryptedBlob: encryptedBlob,
+             openBlob: openBlob, lockUp: lockUp, unlockWithRecovery: unlockWithRecovery,
+             cryptoAvailable: cryptoAvailable, applyLoaded: applyLoaded, saveLocalOnly: saveLocalOnly,
+             syncCfg: syncCfg, syncReady: syncReady, rawUrl: rawUrl, editUrl: editUrl,
+             apiUrl: apiUrl, autoPush: autoPush, canWrite: canWrite, setToken: setToken,
+             savedToken: savedToken, setPhrase: setPhrase, savedPhrase: savedPhrase,
+             unlockSync: unlockSync, scheduleAutoPush: scheduleAutoPush, refreshSha: refreshSha,
+             pullFromGithub: pullFromGithub, pushToGithub: pushToGithub, syncWords: syncWords,
+             showAuth: showAuth, authAct: authAct, scramble: scramble, seedData: seedData,
+             hasAccount: hasAccount, signOut: signOut, authState: function () { return ui.auth; },
+             passwordProblem: passwordProblem, usernameProblem: usernameProblem, dobProblem: dobProblem,
              readReceipt: readReceipt, chooseDate: chooseDate, findDates: findDates,
              findTimeNear: findTimeNear, receipt: function () { return ui.receipt; },
              saveReceipt: saveReceipt,
