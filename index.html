@@ -10,20 +10,23 @@
 :root{
   --bg:#f4f6f8; --surface:#fff; --surface-2:#eef1f5; --border:#e0e4ea;
   --text:#14181d; --muted:#69707c; --accent:#0f766e; --accent-soft:#d8f0ec;
-  --in:#0b8a5f; --out:#d92d20; --move:#5b5bd6; --warn:#b45309;
+  --in:#15803d; --out:#b3261e; --move:#4f5bd5; --warn:#b45309; --info:#1d4ed8;
+  --spend:#14181d;
   --shadow:0 1px 2px rgba(16,24,40,.05),0 8px 22px rgba(16,24,40,.06);
   --r:14px; --r2:10px;
 }
 [data-theme="dark"]{
   --bg:#15181d; --surface:#1d2127; --surface-2:#252a32; --border:#333944;
   --text:#dde1e7; --muted:#98a1af; --accent:#5fb6ab; --accent-soft:#1f3431;
-  --in:#6fc49c; --out:#e0908b; --move:#9a9ddd; --warn:#d3a468;
+  --in:#6fc49c; --out:#e59a95; --move:#9a9ddd; --warn:#d3a468; --info:#8fa9f0;
+  --spend:#dde1e7;
   --shadow:0 1px 2px rgba(0,0,0,.32),0 8px 22px rgba(0,0,0,.24);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#15181d; --surface:#1d2127; --surface-2:#252a32; --border:#333944;
   --text:#dde1e7; --muted:#98a1af; --accent:#5fb6ab; --accent-soft:#1f3431;
-  --in:#6fc49c; --out:#e0908b; --move:#9a9ddd; --warn:#d3a468;
+  --in:#6fc49c; --out:#e59a95; --move:#9a9ddd; --warn:#d3a468; --info:#8fa9f0;
+  --spend:#dde1e7;
   --shadow:0 1px 2px rgba(0,0,0,.32),0 8px 22px rgba(0,0,0,.24);
 }}
 *{box-sizing:border-box}
@@ -104,6 +107,69 @@ input[type=checkbox]{inline-size:20px;block-size:20px;min-block-size:20px;margin
 .txmain b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .txmain span{display:block;font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .txamt{font-weight:700;white-space:nowrap;text-align:end}
+.hello{font-size:1.15rem;font-weight:700;margin-block:14px 8px;display:flex;
+  align-items:baseline;gap:8px;flex-wrap:wrap}
+.hello .sub{font-size:.82rem;font-weight:500}
+.feed{display:flex;gap:0;background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;margin-block-end:8px;overflow:hidden}
+.feed::before{content:"";inline-size:4px;flex:none;background:var(--muted)}
+.feed.red::before{background:var(--out)}
+.feed.amber::before{background:var(--warn)}
+.feed.green::before{background:var(--in)}
+.feed.blue::before{background:var(--move)}
+.feedbody{flex:1;padding:12px 14px}
+.feedbody b{display:block;font-size:.97rem;line-height:1.35}
+.feedbody .sub{margin-block:4px 8px}
+.waygrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px}
+.way{display:flex;flex-direction:column;align-items:center;gap:3px;padding:14px 8px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:14px;
+  color:var(--fg);font:inherit;cursor:pointer;text-align:center;transition:transform .1s ease,background .12s ease}
+.way:hover{background:var(--surface-3);transform:translateY(-1px)}
+.way:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.way b{font-size:23px;font-weight:400;line-height:1}
+.way span{font-weight:650;font-size:.9rem}
+.way small{color:var(--muted);font-size:.72rem;line-height:1.25}
+.poolcards{display:flex;flex-wrap:wrap;gap:6px;margin-block-start:10px}
+.poolcard{flex:1 1 130px;display:flex;flex-direction:column;gap:1px;padding:9px 11px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:11px;
+  color:var(--fg);font:inherit;cursor:pointer;text-align:start}
+.poolcard:hover{background:var(--surface-3)}
+.poolcard b{font-size:.86rem;font-weight:650}
+.poolcard small{color:var(--muted);font-size:.72rem}
+/* Spending is not a warning. Red is kept for things that need attention:
+   an overdue bill, a shortfall, a failure. An ordinary purchase reads neutral. */
+.mid.out,.big.out,.huge.out{color:var(--spend)}
+.txamt.out{color:var(--spend)}
+.note.bad .mid,.feed.red .mid{color:var(--out)}
+.huge{font-size:clamp(2.3rem,10vw,3.2rem);font-weight:800;letter-spacing:-.02em;
+  line-height:1.05;margin-block:6px}
+/* Motion: small, purposeful, and switched off if the system asks. */
+@media(prefers-reduced-motion:no-preference){
+  .card,.feed,.wtile{animation:rise .18s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .sheet{animation:sheetUp .2s cubic-bezier(.2,.8,.3,1) both}
+  @keyframes sheetUp{from{transform:translateY(14px);opacity:.4}to{transform:none;opacity:1}}
+  .toast{transition:opacity .18s ease,transform .18s ease}
+  .bar i{transition:inline-size .28s cubic-bezier(.2,.8,.3,1)}
+  .eye,.bang,.chev{transition:transform .14s ease}
+  .eye:active,.bang:active{transform:scale(.9)}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+.fold{margin-block:14px}
+.foldhead{inline-size:100%;display:flex;align-items:center;gap:10px;background:var(--surface);
+  border:1px solid var(--border);border-radius:14px;padding:12px 14px;cursor:pointer;
+  color:var(--fg);font:inherit;text-align:start;transition:background .12s ease}
+.foldhead:hover{background:var(--surface-2)}
+.foldhead:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fold.open .foldhead{border-end-start-radius:0;border-end-end-radius:0;border-block-end:0}
+.foldtitle{flex:1;display:flex;flex-direction:column;gap:1px}
+.foldtitle b{font-size:1rem}
+.chev{font-size:1.1rem;color:var(--muted);line-height:1}
+.foldbody{border:1px solid var(--border);border-block-start:0;border-end-start-radius:14px;
+  border-end-end-radius:14px;padding:12px 14px 14px;background:var(--surface)}
+.foldbody > .card:first-child,.foldbody > .wtile:first-child{margin-block-start:0}
 .cd.we{border-color:color-mix(in srgb,var(--move) 25%,var(--border))}
 .cd.hol{outline:1px dashed var(--warn);outline-offset:-2px}
 .cd.marked{box-shadow:inset 0 -3px 0 var(--accent)}
@@ -177,15 +243,54 @@ svg{display:block;inline-size:100%;block-size:auto}
 .eye[aria-pressed=true]{border-color:var(--accent)}
 .empty{text-align:center;color:var(--muted);padding:22px 8px;font-size:14.5px}
 
+.side{display:none}
+@media(min-width:900px){
+  .side{display:flex;flex-direction:column;gap:2px;position:fixed;inset-block:0;inset-inline-start:0;
+    inline-size:232px;padding:16px 12px;background:var(--surface);border-inline-end:1px solid var(--border);
+    overflow:auto;z-index:30}
+  .sidebrand{font-weight:800;font-size:1.05rem;padding:6px 10px 14px;color:var(--accent)}
+  .sidelink{display:flex;align-items:center;gap:10px;inline-size:100%;background:none;border:0;
+    padding:11px 12px;border-radius:11px;color:var(--muted);font:inherit;font-weight:600;
+    cursor:pointer;text-align:start}
+  .sidelink b{font-size:19px;font-weight:400}
+  .sidelink:hover{background:var(--surface-2);color:var(--fg)}
+  .sidelink.on{background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
+  .sidekids{display:flex;flex-direction:column;gap:1px;margin:2px 0 8px 14px;
+    border-inline-start:2px solid var(--border);padding-inline-start:8px}
+  .sidekid{background:none;border:0;padding:7px 10px;border-radius:8px;color:var(--muted);
+    font:inherit;font-size:.86rem;cursor:pointer;text-align:start}
+  .sidekid:hover{background:var(--surface-2);color:var(--fg)}
+  .sidekid.on{color:var(--accent);font-weight:600}
+  body{padding-inline-start:232px}
+  nav.bottom{display:none}
+  header{padding-inline-start:232px}
+}
 nav.bottom{position:fixed;inset-inline:0;inset-block-end:0;z-index:40;background:var(--surface);
   border-block-start:1px solid var(--border);display:flex;padding-block-end:env(safe-area-inset-bottom)}
 nav.bottom button{flex:1;background:none;border:0;padding:8px 2px;color:var(--muted);
-  display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;min-block-size:58px}
+  display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;min-block-size:58px;
+  cursor:pointer;transition:color .12s ease}
 nav.bottom button b{font-size:19px;font-weight:400;line-height:1.1}
 nav.bottom button[aria-current=page]{color:var(--accent)}
 nav.bottom button.plus b{background:var(--accent);color:#fff;border-radius:50%;inline-size:38px;block-size:38px;
   display:grid;place-items:center;margin-block-start:-14px;box-shadow:0 4px 14px rgba(15,118,110,.4);font-size:22px}
 nav.bottom button.plus{color:var(--accent)}
+nav.bottom button:hover{color:var(--fg)}
+/* On a laptop the bar is stretched wide, so the icons look lost.
+   Keep it centred at a comfortable width and scale everything up. */
+@media(min-width:700px){
+  nav.bottom{justify-content:center;gap:6px;padding-inline:12px}
+  nav.bottom button{flex:0 1 132px;min-block-size:68px;font-size:13px;gap:4px;border-radius:12px}
+  nav.bottom button b{font-size:26px}
+  nav.bottom button.plus b{inline-size:50px;block-size:50px;font-size:30px;margin-block-start:-16px}
+  nav.bottom button:hover{background:var(--surface-2)}
+  nav.bottom button[aria-current=page]{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+}
+@media(min-width:1100px){
+  nav.bottom button{flex:0 1 152px;min-block-size:72px;font-size:14px}
+  nav.bottom button b{font-size:29px}
+  nav.bottom button.plus b{inline-size:56px;block-size:56px;font-size:33px}
+}
 
 .scrim{position:fixed;inset:0;z-index:60;background:rgba(10,13,18,.55);display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:700px){.scrim{align-items:center}}
@@ -236,6 +341,8 @@ nav.bottom button.plus{color:var(--accent)}
     <span class="brand">💰 Money Tracker</span>
     <span class="grow"></span>
     <span id="syncPill" class="hidden" style="margin-inline-end:4px"></span>
+    <button class="ib" data-act="openSearch" title="Search" aria-label="Search everything">🔍</button>
+    <button class="ib" id="privBtn" data-act="privacyToggle" title="Hide every amount" aria-label="Hide every amount" aria-pressed="false">👁</button>
     <button class="ib" id="themeBtn" title="Switch light or dark theme" aria-label="Switch light or dark theme">🌗</button>
     <button class="ib" data-act="go" data-view="more" title="Settings" aria-label="Settings">⚙️</button>
   </div>
@@ -245,6 +352,7 @@ nav.bottom button.plus{color:var(--accent)}
 <div class="wrap" id="installBar" hidden></div>
 <div class="wrap" id="saveWarn" hidden></div>
 <div id="live" class="sr" role="status" aria-live="polite"></div>
+<nav class="side" id="side" aria-label="Sections"></nav>
 <main class="wrap" id="app" tabindex="-1"></main>
 
 <nav class="bottom" id="nav" aria-label="Main"></nav>
@@ -258,7 +366,7 @@ var MT = (function () {
    1. BASICS
    ========================================================= */
 var KEY = "moneytracker";
-var BUILD = "2026-09-04.8";  /* shown in Settings so you can tell which copy you are running */
+var BUILD = "2026-09-04.12";  /* shown in Settings so you can tell which copy you are running */
 var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 var DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 var COLORS = ["#0f766e","#f59e0b","#5b5bd6","#d92d20","#0ea5e9","#0b8a5f","#db2777","#65a30d","#ea580c","#64748b"];
@@ -332,7 +440,7 @@ function blank() {
     sync: { user:"", repo:"", branch:"main", file:"data.json.enc", on:false,
             lastPull:"", lastPush:"", lastSeen:"" },
     settings: { theme:"auto", currency:"INR", pin:"", setupDone:false, lastHow:"", lastApp:"", demo:false,
-                privacy:false, lockAfter:0 }
+                privacy:false, lockAfter:0, folds:{}, recentSearch:[] }
   };
 }
 
@@ -357,6 +465,8 @@ var ui = {
   accId: "",
   fundId: "",
   insMonth: "",
+  searchQ: "",
+  revMonth: "",
   foreDays: 30,
   wiCat: "",
   wiPct: 20,
@@ -366,6 +476,8 @@ var ui = {
   installer: null,
   installed: false,
   lastSeen: 0,
+  lastView: "",
+  keepScroll: false,
   idleWatch: false,
   newBuild: "",
   quickFor: "",
@@ -1427,48 +1539,111 @@ function markSheet(t, to) {
    10. PAGES
    ========================================================= */
 var NAV = [
-  { v:"home",    label:"Home",    icon:"🏠" },
-  { v:"history", label:"History", icon:"🧾" },
-  { v:"add",     label:"Add",     icon:"＋" },
-  { v:"stats",   label:"Stats",   icon:"📊" },
-  { v:"more",    label:"More",    icon:"☰" }
+  { v:"home",     label:"Home",     icon:"🏠" },
+  { v:"history",  label:"Activity", icon:"🧾" },
+  { v:"add",      label:"Add",      icon:"＋" },
+  { v:"insights", label:"Insights", icon:"📊" },
+  { v:"more",     label:"More",     icon:"☰" }
 ];
+/* which top-level item a page belongs under */
+var NAV_HOME = {
+  history: ["history"],
+  insights: ["insights", "stats", "reports", "merch", "repeats", "health", "moneyback", "review"],
+  more: ["more", "money", "accounts", "account", "card", "cycle", "stmt", "funds", "fund",
+         "saved", "worth", "cardplan", "perks", "debt", "budget", "bills", "settings",
+         "recovery", "plan", "search", "review"]
+};
+function navHomeOf(view) {
+  var keys = Object.keys(NAV_HOME);
+  for (var i = 0; i < keys.length; i++) {
+    if (NAV_HOME[keys[i]].indexOf(view) > -1) return keys[i];
+  }
+  return view;
+}
 var TITLES = {
-  home:"Home", history:"History", stats:"Stats", more:"More",
-  money:"Accounts & cards", budget:"Budget & goals", bills:"Bills",
+  home:"Home", history:"Activity", stats:"Stats", more:"More",
+  money:"Your money", accounts:"Accounts & cards", budget:"Budget & goals", bills:"Bills",
   reports:"Reports", settings:"Settings", card:"Credit card", cycle:"Billing cycle", stmt:"Statement",
   account:"Account", funds:"Mutual funds", fund:"Fund", insights:"Insights", merch:"Where you shop", plan:"Plan ahead", repeats:"Repeats & small charges",
   health:"Money health", worth:"What you are worth", debt:"Getting clear of debt",
-  recovery:"Keeping your data safe", moneyback:"Money back, fees and failures", saved:"Money set aside", cardplan:"Which card to use", perks:"Card perks"
+  recovery:"Keeping your data safe", moneyback:"Money back, fees and failures", search:"Search", review:"Your month", saved:"Money set aside", cardplan:"Which card to use", perks:"Card perks"
 };
 
 function drawNav() {
-  el("nav").innerHTML = NAV.map(function (x) {
-    var current = ui.view === x.v ||
-      (x.v === "more" && ["money", "budget", "bills", "reports", "settings", "card", "cycle",
-        "stmt", "account", "funds", "fund", "saved", "cardplan", "perks", "insights",
-        "merch", "plan", "repeats", "health", "worth", "debt", "recovery", "moneyback"].indexOf(ui.view) > -1);
+  var here = navHomeOf(ui.view);
+  var html = NAV.map(function (x) {
+    var current = here === x.v;
     return '<button type="button" class="' + (x.v === "add" ? "plus" : "") + '" data-act="' +
-      (x.v === "add" ? "add" : "go") + '" data-view="' + x.v + '"' +
-      (x.v === "add" ? "" : ' aria-current="' + (current ? "page" : "false") + '"') +
+      (x.v === "add" ? "addAny" : "go") + '" data-view="' + x.v + '"' +
+      (x.v === "add" ? ' aria-label="Add something"' : ' aria-current="' + (current ? "page" : "false") + '"') +
       '><b aria-hidden="true">' + x.icon + "</b>" + x.label + "</button>";
   }).join("");
+  el("nav").innerHTML = html;
+  var side = el("side");
+  if (side) side.innerHTML = sidebarHtml(here);
+}
+/* On a laptop the same five live in a sidebar, with their sections listed. */
+function sidebarHtml(here) {
+  var groups = [
+    { v:"home", label:"Home", icon:"🏠", kids: [] },
+    { v:"history", label:"Activity", icon:"🧾", kids: [] },
+    { v:"insights", label:"Insights", icon:"📊", kids: [
+      ["insights", "What changed"], ["stats", "Stats & calendar"],
+      ["merch", "Where you shop"], ["repeats", "Repeats & charges"],
+      ["health", "Money health"], ["moneyback", "Refunds & fees"],
+      ["review", "Your month"], ["reports", "Reports"]] },
+    { v:"more", label:"More", icon:"☰", kids: [
+      ["money", "Your money"], ["accounts", "Accounts, cards & apps"],
+      ["worth", "What you are worth"], ["funds", "Mutual funds"],
+      ["saved", "Money set aside"], ["cardplan", "Which card to use"],
+      ["debt", "Getting clear of debt"], ["plan", "Plan ahead"],
+      ["budget", "Budget & goals"], ["bills", "Bills"],
+      ["recovery", "Keeping data safe"], ["settings", "Settings"]] }
+  ];
+  return '<div class="sidebrand">Money Tracker</div>' +
+    groups.map(function (g) {
+      var on = here === g.v;
+      return '<button type="button" class="sidelink' + (on ? " on" : "") +
+        '" data-act="go" data-view="' + g.v + '"' +
+        ' aria-current="' + (on ? "page" : "false") + '">' +
+        '<b aria-hidden="true">' + g.icon + "</b>" + esc(g.label) + "</button>" +
+        (on && g.kids.length
+          ? '<div class="sidekids">' + g.kids.map(function (k) {
+              return '<button type="button" class="sidekid' +
+                (ui.view === k[0] ? " on" : "") + '" data-act="go" data-view="' +
+                k[0] + '">' + esc(k[1]) + "</button>";
+            }).join("") + "</div>"
+          : "");
+    }).join("") +
+    '<button type="button" class="btn full" data-act="addAny" ' +
+    'style="margin-block-start:12px">＋ Add something</button>';
 }
 function render() {
   drawNav();
+  paintPrivacy();
   if (typeof paintInstall === "function") paintInstall();
   var fn = {
     home: pageHome, history: pageHistory, stats: pageStats, more: pageMore,
-    money: pageMoney, budget: pageBudget, bills: pageBills,
+    money: pageMoneyHub, accounts: pageMoney, budget: pageBudget, bills: pageBills,
     reports: pageReports, settings: pageSettings,
     card: pageCard, cycle: pageCycle, stmt: pageStatement,
     account: pageAccount, funds: pageFunds, fund: pageFund,
     insights: pageInsights, merch: pageMerchants, plan: pagePlan, repeats: pageRepeats,
     health: pageHealth, worth: pageWorth, debt: pageDebt, recovery: pageRecovery,
-    moneyback: pageMoneyBack, saved: pageSaved, cardplan: pageCardPlan, perks: pagePerks
+    moneyback: pageMoneyBack, search: pageSearch, review: pageReview, saved: pageSaved, cardplan: pageCardPlan, perks: pagePerks
   }[ui.view] || pageHome;
   el("app").innerHTML = fn();
-  if (window.scrollTo) window.scrollTo(0, 0);
+  /* Only jump to the top when you have actually moved to a different page.
+     Toggling an eye or opening a section must leave you where you were. */
+  var movedPage = ui.view !== ui.lastView;
+  ui.lastView = ui.view;
+  if (movedPage && !ui.keepScroll && window.scrollTo) window.scrollTo(0, 0);
+  ui.keepScroll = false;
+}
+/** Redraw without moving the page. */
+function reRender() {
+  ui.keepScroll = true;
+  render();
 }
 function backBar(title) {
   return '<div class="sec" style="display:flex;align-items:center;gap:10px;margin-block:14px 6px">' +
@@ -1480,247 +1655,144 @@ function backBar(title) {
 function pageHome() {
   var td = today(), mk = mKey(new Date());
   var tToday = totalsFor(txOn(td)), tMonth = totalsFor(txIn(mk));
-  var left = leftToSpend();
-  var owed = cardsOwed();
-  var stuckAll = db.tx.reduce(function (s, t) { return s + stuck(t); }, 0);
+  var plan = safeSpendPlan();
   var h = "";
 
   if (!db.tx.length && db.accounts.length <= 1 && !pots().length && !funds().length) {
     return '<div class="sec"><div class="card"><h2>Welcome \ud83d\udc4b</h2>' +
       '<p class="sub">Nothing recorded yet. Tap the big \uff0b button below.</p>' +
       '<div class="btns" style="margin-block-start:12px">' +
-      '<button type="button" class="btn" data-act="add">Add my first entry</button>' +
-      '<button type="button" class="btn g" data-act="go" data-view="money">Set up accounts</button>' +
+      '<button type="button" class="btn" data-act="addAny">Add my first entry</button>' +
+      '<button type="button" class="btn g" data-act="go" data-view="accounts">Set up accounts</button>' +
       '<button type="button" class="btn g" data-act="demo">Show me an example</button>' +
       "</div></div></div>";
   }
 
-  /* headline: spendable money, then what it is made of */
-  h += '<div class="sec"><div class="card hero">' +
+  /* the one number that matters, and what of it is really free */
+  h += '<div class="sec"><p class="hello">' + esc(greeting()) +
+    ' \ud83d\udc4b<span class="sub">' + esc(fDateLong(td)) + "</span></p>" +
+    '<div class="card hero">' +
     '<div style="display:flex;align-items:center;gap:10px">' +
     '<div style="flex:1"><span class="lbl">Money you can spend</span>' +
     '<p class="big">' + maskMoney(spendable(), "total") + "</p></div>" +
-    eyeBtn("total", "your total") + "</div>" +
-    '<p class="sub">In your banks and cash' +
-    (owed ? " \u00b7 " + money(owed) + " on cards (" +
-      (cardsDueNow() ? money(cardsDueNow()) + " due now" : "none due yet") + ")" : "") + "</p></div>";
+    eyeBtn("total", "your spendable money") + "</div>";
+  if (plan.essential > 0 || plan.buffer > 0) {
+    h += '<div class="rowline sub" style="margin-block-start:8px">' +
+      "<span>" + money(plan.essential + plan.buffer) + " already promised</span>" +
+      "<span><b class=\"" + (plan.free >= 0 ? "in" : "out") + "\">" + money(plan.free) +
+      "</b> safe to spend</span></div>";
+  }
+  if (plan.knowsPayday) {
+    h += '<p class="sub">' +
+      (plan.days === 0 ? "Payday is today" : plan.days + " days until payday") +
+      (plan.perDay !== null && plan.days > 0
+        ? " \u00b7 about " + money(Math.max(0, plan.perDay)) + " a day" : "") + "</p>";
+  }
+  h += "</div></div>";
 
+  /* today and this month, side by side */
+  var todayCount = txOn(td).length;
+  var cmp = compare(mk, "", "prev");
   h += '<div class="grid">' +
-    '<div class="card"><span class="lbl">Spent today</span><p class="mid out">' + money(tToday.out) + "</p></div>" +
-    '<div class="card"><span class="lbl">Received today</span><p class="mid in">' + money(tToday.in) + "</p></div>" +
-    '<div class="card"><span class="lbl">Money out this month</span><p class="mid out">' +
-      money(tMonth.out) + "</p>" +
-      (tMonth.saved > 0
-        ? '<p class="sub">' + money(tMonth.spend) + " spent \u00b7 " + money(tMonth.saved) + " into savings</p>"
-        : "") + "</div>" +
-    '<div class="card"><span class="lbl">Left to spend</span><p class="mid ' +
-      (left.amount >= 0 ? "in" : "out") + '">' + money(left.amount) + "</p>" +
-      '<p class="sub">' + (left.basis === "budget"
-        ? "of your " + money(left.budget) + " budget"
-        : (cardsDueNow() ? "after " + money(cardsDueNow()) + " of card bills due" : "money you hold") +
-          (bufferTotal() ? " and the " + money(bufferTotal()) + " you keep aside" : "")) +
-      "</p></div></div></div>";
+    '<div class="card"><span class="lbl">Today</span><p class="mid out">' +
+      money(tToday.spend) + "</p>" +
+      '<p class="sub">' + todayCount + (todayCount === 1 ? " entry" : " entries") +
+      (tToday.in > 0 ? " \u00b7 " + money(tToday.in) + " in" : "") + "</p></div>" +
+    '<div class="card"><span class="lbl">This month</span><p class="mid out">' +
+      money(tMonth.spend) + "</p>" +
+      '<p class="sub">' + (cmp.ok && cmp.pct !== null
+        ? (cmp.diff <= 0 ? "\u2193 " : "\u2191 ") + Math.abs(Math.round(cmp.pct)) +
+          "% against last month"
+        : "spent on things") + "</p></div></div>";
 
-  (function () {
-    var f = freedMoney();
-    if (f.freed > 0) {
-      h += '<div class="sec"><div class="note ok"><span aria-hidden="true">\ud83c\udf89</span>' +
-        "<div><b>" + money(f.freed) + " a month is yours again.</b><br>" +
-        f.done.map(function (x) { return esc(x.what); }).join(", ") +
-        " finished. That money simply stops leaving \u2014 nothing was added anywhere.</div></div></div>";
-    } else if (f.coming > 0) {
-      var next = f.soon[0];
-      h += '<div class="sec"><p class="sub">\u23f3 ' + money(f.coming) +
-        " a month frees up after " + esc(fDate(next.date)) + ".</p></div>";
+  /* where money went, by what it was for */
+  if (tMonth.out > 0) {
+    var roles = byRole(txIn(mk));
+    var rows = [
+      ["\ud83d\uded2", "Spending", tMonth.spend],
+      ["\ud83c\udfe6", "Savings", roles.savings],
+      ["\ud83d\udcc8", "Investments", roles.investment]
+    ].filter(function (r) { return r[2] > 0; });
+    if (rows.length > 1) {
+      h += '<div class="sec"><div class="card"><span class="lbl">Money out this month</span>' +
+        '<p class="mid out">' + money(tMonth.out) + "</p><table>" +
+        rows.map(function (r) {
+          return "<tr><td>" + r[0] + " " + esc(r[1]) + '</td><td class="n">' +
+            money(r[2]) + "</td></tr>";
+        }).join("") + "</table></div></div>";
     }
-  })();
-  h += quickBox();
-  h += sipBlock();
-
-  /* savings accounts */
-  var banks = spendAccounts();
-  h += '<div class="sec"><div class="rowline"><h2>Savings accounts</h2>' +
-    '<button type="button" class="btn g s" data-act="go" data-view="money">Manage</button></div>' +
-    (banks.length ? banks.map(accountTile).join("")
-      : '<div class="card"><p class="empty">No accounts yet.</p></div>') + "</div>";
-
-  /* credit cards */
-  var cardList = cards();
-  if (cardList.length) {
-    h += '<div class="sec"><div class="rowline"><h2>Credit cards</h2>' +
-      "<span class=\"sub\">" + money(owed) + " owed</span></div>" +
-      cardList.map(cardTileSmall).join("") + "</div>";
   }
 
-  /* bills generated but not yet paid */
-  var dueNow = cardsDueNow();
-  if (dueNow > 0) {
-    var dueCards = [];
-    cards().forEach(function (c) {
-      var left2 = unpaidStatements(c.id).reduce(function (n, st) { return n + statementRemaining(st); }, 0);
-      if (left2 > 0) dueCards.push({ card: c, left: left2 });
-    });
-    h += '<div class="sec"><h2>Bills to pay</h2><div class="card">' +
-      '<p class="sub">' + money(dueNow) + " has been billed and is waiting. Your bank balance " +
-      "does not change until you record the payment.</p><table style=\"margin-block-start:8px\">" +
-      dueCards.map(function (x) {
-        return "<tr><td>" + esc(x.card.name) + '</td><td class="n">' + money(x.left) +
-          '</td><td class="n"><button type="button" class="btn s" data-act="payCard" data-id="' +
-          esc(x.card.id) + '">Pay</button></td></tr>';
+  h += quickBox();
+  h += feedBlock(5);
+
+  /* what is coming */
+  var cal = moneyCalendar(21).slice(0, 4);
+  if (cal.length) {
+    h += '<div class="sec"><div class="rowline"><h2>Coming up</h2>' +
+      '<button type="button" class="btn g s" data-act="go" data-view="health">Full calendar</button>' +
+      "</div><div class=\"card\"><table>" +
+      cal.map(function (g) {
+        return "<tr><td>" + esc(fDate(g.date)) + '<br><span class="sub">' +
+          (g.away === 0 ? "today" : g.away === 1 ? "tomorrow" : "in " + g.away + " days") +
+          "</span></td><td>" + g.items.map(function (x) {
+            return esc(x.what) + (x.amt ? " \u00b7 " +
+              (x.dir === "in" ? '<span class="in">+' : '<span class="out">') +
+              money(x.amt) + "</span>" : "");
+          }).join("<br>") + "</td></tr>";
       }).join("") + "</table></div></div>";
   }
 
-  /* all cards together — a shared pool counts ONCE, not once per card */
-  if (cardList.length) {
-    var pools = {}, noLim = [];
-    cardList.forEach(function (c) {
-      var lim = sharedLimitOf(c);
-      if (!lim) { if (!c.virtualOf) noLim.push(c); return; }
-      var key = c.sharedLimit ? "s:" + c.sharedLimit : (c.virtualOf || c.id);
-      if (!pools[key]) pools[key] = { limit: lim, used: familyUsed(c), cards: [] };
-      pools[key].cards.push(c);
-    });
-    var keys = Object.keys(pools);
-    var limTotal = keys.reduce(function (n, k) { return n + pools[k].limit; }, 0);
-    var usedTotal = keys.reduce(function (n, k) { return n + pools[k].used; }, 0);
-    h += '<div class="sec"><div class="card"><span class="lbl">All your cards together</span>' +
-      (keys.length
-        ? '<div class="grid" style="margin-block:8px">' +
-          '<div><span class="lbl">Total limit</span><p class="mid">' + maskMoney(limTotal, "cardsum") + "</p></div>" +
-          '<div><span class="lbl">Used</span><p class="mid out">' + maskMoney(usedTotal, "cardsum") + "</p></div>" +
-          '<div><span class="lbl">Left to use</span><p class="mid in">' +
-            maskMoney(limTotal - usedTotal, "cardsum") + "</p></div></div>" +
-          '<div class="bar"><i class="' + (limTotal > 0 && usedTotal / limTotal > 0.3 ? "w" : "") +
-          '" style="inline-size:' + (limTotal > 0 ? Math.min(100, (usedTotal / limTotal) * 100).toFixed(1) : 0) +
-          '%"></i></div><p class="sub">' +
-          (limTotal > 0 ? ((usedTotal / limTotal) * 100).toFixed(1) + "% of your total limit used" : "") +
-          " \u00b7 across " + keys.length + " pool" + (keys.length === 1 ? "" : "s") + " of credit</p>"
-        : '<p class="sub">No limits saved yet.</p>') +
-      eyeBtn("cardsum", "your card totals") +
-      (function () {
-        /* what each bank gives you in total, however many cards that is */
-        var byBank = {};
-        keys.forEach(function (k) {
-          var b = pools[k].cards[0].bank || "Other";
-          if (!byBank[b]) byBank[b] = { limit: 0, used: 0, cards: 0 };
-          byBank[b].limit += pools[k].limit;
-          byBank[b].used += pools[k].used;
-          byBank[b].cards += pools[k].cards.length;
-        });
-        var names = Object.keys(byBank).sort(function (x, y) {
-          return byBank[y].limit - byBank[x].limit;
-        });
-        return '<table style="margin-block-start:10px">' +
-          '<tr><th>Bank</th><th class="n">Limit</th><th class="n">Left</th></tr>' +
-          names.map(function (b) {
-            var g = byBank[b];
-            return "<tr><td>" + esc(b) +
-              (g.cards > 1 ? '<br><span class="sub">' + g.cards + " cards</span>" : "") + "</td>" +
-              '<td class="n">' + maskMoney(g.limit, "cardsum") + "</td>" +
-              '<td class="n in">' + maskMoney(g.limit - g.used, "cardsum") + "</td></tr>";
-          }).join("") + "</table>" +
-          (function () {
-            var shares = keys.filter(function (k) { return pools[k].cards.length > 1; });
-            return shares.length
-              ? '<p class="hint">' + shares.map(function (k) {
-                  return esc(pools[k].cards.map(function (c) { return c.name; }).join(" and ")) +
-                    " share one " + money(pools[k].limit) + " limit";
-                }).join("; ") + ". Counted once, not twice. Cards on separate limits " +
-                "are added up.</p>"
-              : "";
-          })();
-      })() +
-      (noLim.length
-        ? '<div class="note" style="margin-block-start:10px"><span aria-hidden="true">\u2139\ufe0f</span><div>' +
-          "<b>" + noLim.length + " card" + (noLim.length === 1 ? " has" : "s have") + " no limit saved.</b>" +
-          '<div class="btns" style="margin-block-start:8px">' +
-          noLim.map(function (c) {
-            return '<button type="button" class="btn g s" data-act="setLimit" data-id="' + esc(c.id) + '">' +
-              esc(c.name) + "</button>";
-          }).join("") + "</div></div></div>"
-        : "") +
-      "</div></div>";
+  /* accounts */
+  var banks = spendAccounts();
+  if (banks.length) {
+    h += '<div class="sec"><div class="rowline"><h2>Where it is</h2>' +
+      '<button type="button" class="btn g s" data-act="go" data-view="money">See all</button>' +
+      "</div>" + banks.map(accountTile).join("") + "</div>";
   }
 
-  /* card timing nudges */
+  /* cards and timing, folded away by default */
+  var cardList = cards();
+  if (cardList.length) {
+    h += fold("home.cards", "Credit cards",
+      cardList.length + (cardList.length === 1 ? " card" : " cards"),
+      creditPoolBlock(), false,
+      cardsOwed() ? money(cardsOwed()) + " owed" : "nothing owed");
+  }
   var fresh = freshCards(), closing = closingSoon();
   if (fresh.length || closing.length) {
-    h += '<div class="sec"><div class="rowline"><h2>Card timing</h2>' +
-      '<button type="button" class="btn g s" data-act="go" data-view="cardplan">See all</button></div>';
+    var timing = "";
     if (fresh.length) {
-      h += '<div class="note ok"><span aria-hidden="true">\u2705</span><div><b>' +
+      timing += '<div class="note ok"><span aria-hidden="true">\u2705</span><div><b>' +
         esc(fresh[0].card.name) + "</b> just billed \u2014 spending on it now gives you about " +
         fresh[0].free.total + " days before you pay." +
         (fresh.length > 1 ? " " + (fresh.length - 1) + " other card" +
           (fresh.length > 2 ? "s are" : " is") + " in the same position." : "") + "</div></div>";
     }
     closing.slice(0, 2).forEach(function (x) {
-      h += '<div class="note"><span aria-hidden="true">\u26a0\ufe0f</span><div><b>' + esc(x.card.name) +
-        "</b> \u2014 " + esc(x.head).toLowerCase() + ". Anything you spend now lands on that bill, due " +
+      timing += '<div class="note"><span aria-hidden="true">\u26a0\ufe0f</span><div><b>' +
+        esc(x.card.name) + "</b> \u2014 " + esc(x.head).toLowerCase() +
+        ". Anything you spend now lands on that bill, due " +
         esc(fDateLong(x.free.due)) + ".</div></div>";
     });
-    h += "</div>";
+    timing += '<button type="button" class="btn g s" data-act="go" data-view="cardplan">' +
+      "Which card to use</button>";
+    h += fold("home.timing", "Card timing",
+      (fresh.length ? fresh.length + " just billed" : "") +
+      (fresh.length && closing.length ? " \u00b7 " : "") +
+      (closing.length ? closing.length + " closing soon" : ""),
+      timing, false, "");
   }
 
-  /* money set aside */
-  var potList = pots();
-  if (potList.length) {
-    h += '<div class="sec"><div class="rowline"><h2>Money set aside</h2>' +
-      '<button type="button" class="btn g s" data-act="go" data-view="saved">Manage</button></div>' +
-      potList.map(potTile).join("") + "</div>";
-  }
-
-  /* mutual funds */
-  var fundList = funds();
-  if (fundList.length) {
-    var top = fundList.slice().sort(function (a, b) { return (b.invested || 0) - (a.invested || 0); }).slice(0, 3);
-    h += '<div class="sec"><div class="rowline"><h2>Mutual funds</h2>' +
-      '<button type="button" class="btn g s" data-act="go" data-view="funds">See all</button></div>' +
-      '<div class="card"><div class="rowline"><span class="lbl">Put in so far</span>' +
-      "<span>" + eyeBtn("funds", "total invested") + "</span></div>" +
-      '<p class="mid">' + maskMoney(fundsTotal(), "funds") + "</p>" +
-      "<table style=\"margin-block-start:8px\">" + top.map(function (f) {
-        return "<tr><td>" + esc(f.name) + '</td><td class="n">' + maskMoney(f.invested, "funds") + "</td></tr>";
-      }).join("") + "</table>" +
-      (function () {
-        var hl = sipHeadline();
-        if (!hl) return "";
-        var icon = hl.tone === "ask" ? "\u2753" : hl.tone === "short" ? "\u26a0\ufe0f" : "\u2705";
-        return '<p class="sub ' + (hl.tone === "short" ? "out" : "") +
-          '" style="margin-block-start:8px">' + icon + " " + esc(hl.text) + "</p>";
-      })() + "</div></div>";
-  }
-
-  var list = alerts();
-  if (list.length) {
-    h += '<div class="sec"><h2>Worth knowing</h2>' + list.slice(0, 5).map(function (a) {
-      return '<div class="note ' + a.k + '"><span aria-hidden="true">' + a.i + "</span><div>" + a.t +
-        (a.go ? ' <button type="button" class="btn g s" data-act="openTx" data-id="' + esc(a.go) + '">Open</button>' : "") +
-        "</div></div>";
-    }).join("") + "</div>";
-  }
-
-  if (stuckAll > 0) {
-    h += '<div class="sec"><div class="card"><span class="lbl">Waiting to come back</span>' +
-      '<p class="mid warnc">' + money(stuckAll) + "</p>" +
-      '<button type="button" class="btn g s" data-act="filterStuck">See them</button></div></div>';
-  }
-
+  /* where the month went */
   var topCats = byCategory(txIn(mk)).slice(0, 5);
   if (topCats.length) {
-    h += '<div class="sec"><h2>Where this month went</h2><div class="card">' +
-      barList(topCats, tMonth.out) + "</div></div>";
+    h += '<div class="sec"><div class="rowline"><h2>Where this month went</h2>' +
+      '<button type="button" class="btn g s" data-act="go" data-view="insights">Why</button>' +
+      '</div><div class="card">' + barList(topCats, tMonth.spend) + "</div></div>";
   }
 
-  var soonBills = upcomingBills().slice(0, 3);
-  if (soonBills.length) {
-    h += '<div class="sec"><h2>Coming up</h2><div class="card"><table>' + soonBills.map(function (u) {
-      return "<tr><td>" + esc(u.bill.name) + '<br><span class="sub">' +
-        (u.days === 0 ? "today" : u.days === 1 ? "tomorrow" : "in " + u.days + " days") +
-        '</span></td><td class="n"><b>' + money(u.bill.amt) + "</b></td></tr>";
-    }).join("") + "</table></div></div>";
-  }
-
+  /* latest */
   var recent = sortTx(db.tx).slice(0, 6);
   h += '<div class="sec"><div class="rowline"><h2>Latest</h2>' +
     '<button type="button" class="btn g s" data-act="go" data-view="history">See all</button></div>' +
@@ -2299,9 +2371,28 @@ function filtered() {
 function pageHistory() {
   if (!ui.filters) ui.filters = blankFilters();
   var f = ui.filters, list = filtered(), t = totalsFor(list);
-  var h = '<div class="sec"><div class="rowline"><h2>History</h2>' +
-    '<span><button type="button" class="btn g s" data-act="addReceipt">📷 Bill</button> ' +
-    '<button type="button" class="btn s" data-act="add">＋ Add</button></span></div>';
+  var gapCount = db.tx.filter(function (x) { return txMissing(x).length; }).length;
+  var h = '<div class="sec"><div class="rowline"><h2>Activity</h2>' +
+    '<span><button type="button" class="btn g s" data-act="pasteMany">📋 Paste</button> ' +
+    '<button type="button" class="btn s" data-act="addAny">＋ Add</button></span></div>';
+
+  /* the fastest ways to narrow the list, without opening anything */
+  var quick = [
+    { k:"all",   label:"Everything" },
+    { k:"gaps",  label:"Needs detail" + (gapCount ? " \u00b7 " + gapCount : "") },
+    { k:"out",   label:"Spent" },
+    { k:"in",    label:"Received" },
+    { k:"card",  label:"On cards" },
+    { k:"month", label:"This month" }
+  ];
+  var activeQuick = f.gaps === "1" ? "gaps"
+    : f.type === "out" ? "out" : f.type === "in" ? "in"
+    : f.how === "card" ? "card"
+    : (f.from && f.from === mKey(new Date()) + "-01") ? "month" : "all";
+  h += '<div class="chips" style="margin-block-end:10px">' +
+    quick.map(function (q) {
+      return chip("quickFilter", { q: q.k }, q.label, "", activeQuick === q.k);
+    }).join("") + "</div>";
 
   h += '<div class="card"><div class="f"><label for="fq">Search</label>' +
     '<input id="fq" data-f="q" value="' + esc(f.q) + '" type="search" ' +
@@ -2338,10 +2429,20 @@ function pageHistory() {
     '<button type="button" class="btn g s" data-act="csvFiltered">Download these</button></div></details></div>';
 
   h += '<div class="grid">' +
-    '<div class="card"><span class="lbl">Spent</span><p class="mid out">' + money(t.out) + "</p></div>" +
+    '<div class="card"><span class="lbl">Spent</span><p class="mid out">' + money(t.spend) + "</p>" +
+      (t.saved ? '<p class="sub">' + money(t.saved) + " into savings</p>" : "") + "</div>" +
     '<div class="card"><span class="lbl">Received</span><p class="mid in">' + money(t.in) + "</p></div>" +
     '<div class="card"><span class="lbl">Difference</span><p class="mid ' + (t.net >= 0 ? "in" : "out") + '">' +
       plus(t.net) + '</p><p class="sub">' + list.length + " entr" + (list.length === 1 ? "y" : "ies") + "</p></div></div></div>";
+
+  if (gapCount && f.gaps !== "1") {
+    h += '<div class="sec"><div class="note"><span aria-hidden="true">\u2757</span><div>' +
+      "<b>" + gapCount + (gapCount === 1 ? " entry is" : " entries are") +
+      " missing a detail.</b><br>They already count in your totals \u2014 filling them in " +
+      "lets the app group and explain your spending properly.<br>" +
+      '<button type="button" class="btn s" data-act="quickFilter" data-q="gaps" ' +
+      'style="margin-block-start:8px">Show just those</button></div></div></div>';
+  }
 
   if (!list.length) return h + '<div class="card"><p class="empty">Nothing matches. Try clearing the filters.</p></div>';
 
@@ -5950,6 +6051,16 @@ function paintSaveWarning() {
     '<button type="button" class="btn s" data-act="go" data-view="settings" ' +
     'style="margin-block-start:8px">Open Settings</button></div></div>';
 }
+/** The header button shows, at a glance, whether everything is masked. */
+function paintPrivacy() {
+  var b = el("privBtn");
+  if (!b) return;
+  var on = privacyOn();
+  b.innerHTML = on ? "\ud83d\ude48" : "\ud83d\udc41";
+  b.setAttribute("aria-pressed", on ? "true" : "false");
+  b.setAttribute("aria-label", on ? "Amounts are hidden. Show them again." : "Hide every amount");
+  b.setAttribute("title", on ? "Amounts are hidden" : "Hide every amount");
+}
 function paintSync() {
   var pill = el("syncPill");
   if (!pill) return;
@@ -7300,6 +7411,35 @@ function paintUpdate() {
     'style="margin-block-start:8px">Later</button></div></div>';
 }
 
+/* ---------- sections you can fold away ----------
+   What you open is remembered, so the page looks the same next time. */
+function foldMap() {
+  if (!db.settings.folds || typeof db.settings.folds !== "object") db.settings.folds = {};
+  return db.settings.folds;
+}
+function isOpen(key, byDefault) {
+  var m = foldMap();
+  return m[key] === undefined ? !!byDefault : !!m[key];
+}
+function toggleFold(key, byDefault) {
+  var m = foldMap();
+  m[key] = !isOpen(key, byDefault);
+  save();
+  return m[key];
+}
+/** A heading that opens and closes what follows it. */
+function fold(key, title, sub, body, byDefault, extra) {
+  var open = isOpen(key, byDefault);
+  return '<div class="sec fold' + (open ? " open" : "") + '">' +
+    '<button type="button" class="foldhead" data-act="fold" data-k="' + esc(key) + '"' +
+    ' data-def="' + (byDefault ? "1" : "") + '" aria-expanded="' + (open ? "true" : "false") + '">' +
+    '<span class="foldtitle"><b>' + esc(title) + "</b>" +
+    (sub ? '<span class="sub">' + esc(sub) + "</span>" : "") + "</span>" +
+    (extra ? '<span class="sub">' + extra + "</span>" : "") +
+    '<span class="chev" aria-hidden="true">' + (open ? "\u2303" : "\u2304") + "</span></button>" +
+    (open ? '<div class="foldbody">' + body + "</div>" : "") + "</div>";
+}
+
 /* ---------- eye toggle, and hiding everything at once ---------- */
 function privacyOn() { return !!db.settings.privacy; }
 function setPrivacy(on) {
@@ -8275,6 +8415,9 @@ function pageInsights() {
       return chip("insMonth", { m: m }, mLabel(m), "", m === mk);
     }).join("") + "</div></div>";
 
+  h += '<div class="btns" style="margin-block-end:6px">' +
+    '<button type="button" class="btn g s" data-act="go" data-view="review">' +
+    "See the month reviewed</button></div>";
   h += storyBlock(mk);
   h += changedBlock(mk);
 
@@ -8825,6 +8968,8 @@ function pageRecovery() {
   var prev = previousInfo();
   var h = backBar("Keeping your data safe");
 
+  h += dataHealthBlock();
+
   h += '<div class="card"><h3>Is anything wrong?</h3>' +
     (chk.ok
       ? '<div class="note ok"><span aria-hidden="true">\u2705</span><div>' +
@@ -9132,6 +9277,500 @@ function pageMoneyBack() {
     }
   }
   h += "</div></div>";
+  return h;
+}
+
+/* =========================================================
+   THE FOR-YOU FEED
+   ---------------------------------------------------------
+   One ranked list of things worth your attention, instead of
+   a wall of equal-weight cards. Every item is built from
+   recorded data and links to where you can act on it.
+   ========================================================= */
+function greeting() {
+  var h = new Date().getHours();
+  return h < 5 ? "Late night" : h < 12 ? "Good morning"
+    : h < 17 ? "Good afternoon" : "Good evening";
+}
+/** tone: red | green | amber | blue — ranked by urgency, then size. */
+function feedItems() {
+  var out = [], mk = mKey(new Date());
+
+  /* card bills waiting */
+  cards().forEach(function (c) {
+    var m = cardMoney(c);
+    if (m.statementRemaining <= 0) return;
+    var due = m.statement && m.statement.dueDate ? m.statement.dueDate : "";
+    var days = due ? Math.round((dateFrom(due) - dateFrom(today())) / 86400000) : null;
+    out.push({
+      tone: days !== null && days <= 3 ? "red" : "amber",
+      rank: days !== null && days <= 3 ? 100 : 70,
+      title: c.name + (days === null ? " bill is waiting"
+        : days < 0 ? " bill was due " + Math.abs(days) + " days ago"
+        : days === 0 ? " bill is due today"
+        : " bill is due in " + days + (days === 1 ? " day" : " days")),
+      body: money(m.statementRemaining) + " to pay" +
+        (m.minRemaining > 0 ? ", at least " + money(m.minRemaining) : "") +
+        ". Your bank balance does not change until you record the payment.",
+      act: "payCard", id: c.id, cta: "Record the payment", weight: m.statementRemaining
+    });
+  });
+  /* entries that still need detail */
+  var gaps = db.tx.filter(function (t) { return txMissing(t).length; });
+  if (gaps.length) {
+    out.push({
+      tone: "amber", rank: 40,
+      title: gaps.length + (gaps.length === 1 ? " entry needs" : " entries need") + " a bit more detail",
+      body: "They already count in your totals. Filling them in lets the app group and " +
+        "explain your spending properly.",
+      act: "filterGaps", cta: "Fill them in", weight: gaps.length
+    });
+  }
+  /* SIP questions and money warnings */
+  sipAlerts().forEach(function (a) {
+    if (a.kind === "ask") {
+      out.push({ tone: "blue", rank: 80, title: a.title, body: a.body,
+        act: "payFund", id: a.fundId, cta: "Yes, I paid it", weight: a.amt });
+    } else if (a.kind === "short") {
+      out.push({ tone: "red", rank: 95, title: a.title,
+        body: money(a.need) + " of SIPs is set to leave " + accName(a.accId) +
+          " soon, but it holds " + maskMoney(a.have, "total") + ". You are " +
+          money(a.short) + " short.",
+        act: "go", view: "funds", cta: "See the SIPs", weight: a.short });
+    } else {
+      /* a.body quotes the balance, so build a version that respects the eye */
+      out.push({ tone: "green", rank: 20,
+        title: money(a.need) + " leaves " + accName(a.accId) + " soon",
+        body: accName(a.accId) + " holds " + maskMoney(a.have, "total") + ", so this is " +
+          "covered. Nothing is taken by this app \u2014 your bank moves it.",
+        act: "go", view: "funds", cta: "See the SIPs", weight: a.need });
+    }
+  });
+  /* money that has just freed up */
+  var freed = freedMoney();
+  freed.done.forEach(function (x) {
+    out.push({ tone: "green", rank: 60,
+      title: money(x.per) + " a month is yours again",
+      body: x.what + " finished on " + fDate(x.date) + ". From " + mLabel(x.freesFrom) +
+        " that money simply stops leaving.",
+      act: "go", view: "debt", cta: "See what is left", weight: x.per });
+  });
+  freed.soon.forEach(function (x) {
+    out.push({ tone: "blue", rank: 25,
+      title: money(x.per) + " a month frees up after " + fDate(x.date),
+      body: x.what + " has its last instalment then.",
+      act: "go", view: "debt", cta: "See the plan", weight: x.per });
+  });
+  /* what moved, good and bad */
+  var w = whatChanged(mk);
+  if (w.enough) {
+    if (w.bad.length) {
+      out.push({ tone: "amber", rank: 45, title: w.bad[0].text,
+        body: "Compared with the same point last month.",
+        act: "go", view: "insights", cta: "See why", weight: Math.abs(w.bad[0].diff || 0) });
+    }
+    if (w.good.length) {
+      out.push({ tone: "green", rank: 15, title: w.good[0].text,
+        body: "Compared with the same point last month.",
+        act: "go", view: "insights", cta: "See the comparison",
+        weight: Math.abs(w.good[0].diff || 0) });
+    }
+  }
+  /* money running short before pay */
+  var plan = safeSpendPlan();
+  if (plan.knowsPayday && plan.free < 0) {
+    out.push({ tone: "red", rank: 90,
+      title: "You are " + money(Math.abs(plan.free)) + " short before payday",
+      body: money(plan.essential) + " is already promised before " + fDate(plan.until) +
+        ", and you hold " + money(plan.have) + ".",
+      act: "go", view: "plan", cta: "See the plan", weight: Math.abs(plan.free) });
+  }
+  /* nothing recorded for a few days */
+  var last = sortTx(db.tx)[0];
+  if (last) {
+    var quiet = Math.round((dateFrom(today()) - dateFrom(last.date)) / 86400000);
+    if (quiet >= 3) {
+      out.push({ tone: "blue", rank: 30,
+        title: "Nothing recorded for " + quiet + " days",
+        body: "The app can only work from what is written down. A quick catch-up keeps " +
+          "everything else honest.",
+        act: "addAny", cta: "Add what you remember", weight: quiet });
+    }
+  }
+  return out.sort(function (a, b) { return b.rank - a.rank || b.weight - a.weight; });
+}
+function feedBlock(limit) {
+  var list = feedItems().slice(0, limit || 5);
+  if (!list.length) {
+    return '<div class="sec"><div class="card"><div class="note ok">' +
+      '<span aria-hidden="true">\u2705</span><div><b>Nothing needs you right now.</b><br>' +
+      "No bills waiting, no questions open, nothing missing.</div></div></div></div>";
+  }
+  return '<div class="sec"><h2>Worth your attention</h2>' +
+    list.map(function (x) {
+      return '<div class="feed ' + x.tone + '">' +
+        '<div class="feedbody"><b>' + esc(x.title) + "</b>" +
+        '<p class="sub">' + esc(x.body) + "</p>" +
+        '<button type="button" class="btn g s" data-act="' + esc(x.act) + '"' +
+        (x.id ? ' data-id="' + esc(x.id) + '"' : "") +
+        (x.view ? ' data-view="' + esc(x.view) + '"' : "") +
+        ">" + esc(x.cta) + "</button></div></div>";
+    }).join("") + "</div>";
+}
+
+/* ---------- one way in for everything ---------- */
+function addAnySheet() {
+  var ways = [
+    { act:"add", arg:"out",  icon:"\ud83d\udcb8", label:"Spent",        sub:"money going out" },
+    { act:"add", arg:"in",   icon:"\ud83d\udcb0", label:"Received",     sub:"money coming in" },
+    { act:"add", arg:"move", icon:"\u2194\ufe0f", label:"Moved",       sub:"between your own accounts" },
+    { act:"payCardAny", arg:"", icon:"\ud83d\udcb3", label:"Card payment", sub:"paying off a bill" },
+    { act:"investAny", arg:"", icon:"\ud83d\udcc8", label:"Invested",   sub:"into a mutual fund" },
+    { act:"potAny",    arg:"", icon:"\ud83c\udfe6", label:"Set aside",  sub:"an FD or a savings pot" }
+  ];
+  return '<div class="shd"><h2>What happened?</h2>' +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    '<div class="waygrid">' + ways.map(function (w) {
+      return '<button type="button" class="way" data-act="' + w.act + '" data-kind="' + w.arg + '">' +
+        '<b aria-hidden="true">' + w.icon + "</b><span>" + esc(w.label) + "</span>" +
+        '<small>' + esc(w.sub) + "</small></button>";
+    }).join("") + "</div>" +
+    '<div class="f" style="margin-block-start:14px"><label for="anyLine">Or just type it</label>' +
+    '<input id="anyLine" placeholder="450 food via PhonePe" autocomplete="off"></div>' +
+    '<div class="btns"><button type="button" class="btn" data-act="anyLineGo">Read that</button>' +
+    '<button type="button" class="btn g" data-act="pasteMany">Paste a list</button>' +
+    '<button type="button" class="btn g" data-act="receipt">Paste a receipt</button></div>' +
+    '<p class="hint">Typing works with whatever you remember \u2014 amount, date, time, ' +
+    "category, app or card. Anything you leave out is flagged, never invented.</p>";
+}
+/* ---------- Money: what you can spend, what is set aside, what is credit ---------- */
+function pageMoneyHub() {
+  var w = netWorthParts();
+  var banks = spendAccounts();
+  var cardList = cards();
+  var h = '<div class="sec" style="margin-block:14px 6px"><h2>Your money</h2></div>';
+
+  h += '<div class="card hero"><div style="display:flex;align-items:center;gap:10px">' +
+    '<div style="flex:1"><span class="lbl">You can spend</span>' +
+    '<p class="big">' + maskMoney(spendable(), "total") + "</p>" +
+    '<p class="sub">in banks, cash and wallets</p></div>' +
+    eyeBtn("total", "your spendable money") + "</div></div>";
+
+  h += '<div class="sec"><h2>Accounts</h2>' +
+    banks.map(accountTile).join("") + "</div>";
+
+  var potList = pots();
+  h += fold("money.aside", "Set aside",
+    (potList.length ? potList.length + (potList.length === 1 ? " pot" : " pots") : "") +
+      (fundsTotal() ? (potList.length ? " \u00b7 " : "") + "funds" : ""),
+    (potList.length ? potList.map(potTile).join("") : "") +
+    '<div class="card"><table>' +
+    (potsTotal() ? row2("Fixed deposits and pots", money(potsTotal())) : "") +
+    (fundsTotal() ? row2("Put into mutual funds", money(fundsTotal())) : "") +
+    "</table>" +
+    '<div class="btns" style="margin-block-start:8px">' +
+    '<button type="button" class="btn g s" data-act="go" data-view="saved">Pots and FDs</button>' +
+    '<button type="button" class="btn g s" data-act="go" data-view="funds">Mutual funds</button>' +
+    "</div>" +
+    '<p class="sub">This is yours, but it is kept out of what you can spend.</p></div>',
+    false,
+    maskMoney(potsTotal() + fundsTotal(), "total"));
+
+  if (cardList.length) {
+    h += fold("money.credit", "Credit",
+      cardList.length + (cardList.length === 1 ? " card" : " cards"),
+      creditPoolBlock(), false,
+      cardsOwed() ? money(cardsOwed()) + " owed" : "nothing owed");
+  }
+
+  h += '<div class="sec"><div class="card"><span class="lbl">Everything, minus what you owe</span>' +
+    '<p class="mid">' + maskMoney(w.net, "worth") + "</p>" + eyeBtn("worth", "your net worth") +
+    '<button type="button" class="btn g s" data-act="go" data-view="worth" ' +
+    'style="margin-block-start:8px">See the breakdown</button></div></div>';
+
+  h += '<div class="btns" style="margin-block-start:12px">' +
+    '<button type="button" class="btn" data-act="newAcc">Add an account</button>' +
+    '<button type="button" class="btn g" data-act="addMove">Move money</button>' +
+    '<button type="button" class="btn g" data-act="go" data-view="accounts">Manage accounts, cards and apps</button>' +
+    '<button type="button" class="btn g" data-act="go" data-view="perks">Card perks</button></div>';
+  return h;
+}
+/** Credit shown as pools, so shared limits never look like more than they are. */
+function creditPoolBlock() {
+  var pools = {}, order = [];
+  cards().forEach(function (c) {
+    var key = c.sharedLimit ? "s:" + c.sharedLimit : c.id;
+    if (!pools[key]) {
+      pools[key] = { limit: sharedLimitOf(c), used: familyUsed(c), cards: [], bank: c.bank };
+      order.push(key);
+    }
+    pools[key].cards.push(c);
+  });
+  var totalLim = 0, totalUsed = 0;
+  order.forEach(function (k) { totalLim += pools[k].limit; totalUsed += pools[k].used; });
+  var h = '<div class="card"><div class="grid">' +
+    '<div><span class="lbl">Your total limit</span><p class="mid">' +
+      maskMoney(totalLim, "cardsum") + "</p></div>" +
+    '<div><span class="lbl">Used</span><p class="mid out">' + maskMoney(totalUsed, "cardsum") + "</p></div>" +
+    '<div><span class="lbl">Left to use</span><p class="mid in">' +
+      maskMoney(totalLim - totalUsed, "cardsum") + "</p></div></div>" +
+    eyeBtn("cardsum", "your card totals") +
+    '<p class="sub">Across ' + order.length + " pool" + (order.length === 1 ? "" : "s") +
+    " of credit. A shared limit is counted once, not once per card.</p></div>";
+
+  h += order.map(function (k) {
+    var p = pools[k];
+    var pct = p.limit ? Math.min(100, (p.used / p.limit) * 100) : 0;
+    var look = bankLook(p.cards[0]);
+    return '<div class="card" style="border-inline-start:5px solid ' + look.c + '">' +
+      '<div class="rowline"><b>' + esc(p.bank || p.cards[0].name) + "</b>" +
+      "<span>" + maskMoney(p.used, "cardsum") + " of " + maskMoney(p.limit, "cardsum") + "</span></div>" +
+      '<div class="bar"><i class="' + (pct > 70 ? "o" : pct > 30 ? "w" : "") +
+      '" style="inline-size:' + pct.toFixed(1) + '%"></i></div>' +
+      '<div class="rowline sub"><span>' + pct.toFixed(0) + "% used</span>" +
+      "<span>" + maskMoney(p.limit - p.used, "cardsum") + " left</span></div>" +
+      '<div class="poolcards">' + p.cards.map(function (c) {
+        return '<button type="button" class="poolcard" data-act="openCard" data-id="' +
+          esc(c.id) + '"><b>' + esc(c.name) + "</b>" +
+          '<small>' + (c.virtualOf ? "companion" : "card") +
+          (c.last4 ? " \u00b7 \u2022\u2022" + esc(c.last4) : "") + "</small></button>";
+      }).join("") + "</div>" +
+      (p.cards.length > 1
+        ? '<p class="sub">These share one limit \u2014 spending on either reduces both.</p>'
+        : "") + "</div>";
+  }).join("");
+  return h;
+}
+
+/** Keep the last few searches, so common ones are one tap away. */
+function rememberSearch(q) {
+  q = String(q || "").trim();
+  if (q.length < 2) return;
+  var list = (db.settings.recentSearch || []).filter(function (x) {
+    return String(x).toLowerCase() !== q.toLowerCase();
+  });
+  list.unshift(q);
+  db.settings.recentSearch = list.slice(0, 8);
+  saveLocalOnly();
+}
+
+/* ---------- searching everything, from anywhere ---------- */
+function pageSearch() {
+  var q = ui.searchQ || "";
+  var h = '<div class="sec" style="display:flex;align-items:center;gap:10px;margin-block:14px 6px">' +
+    '<button type="button" class="ib" data-act="go" data-view="home" aria-label="Back">\u2190</button>' +
+    "<h2>Search</h2></div>";
+  h += '<div class="card"><div class="f"><label for="sq">Look for anything</label>' +
+    '<input id="sq" data-f="searchQ" type="search" value="' + esc(q) +
+    '" placeholder="swiggy, 450, food, hdfc, sep 3" autocomplete="off"></div>' +
+    '<p class="hint">Notes, shops, amounts, categories, accounts, cards, apps and dates.</p></div>';
+
+  if (!q.trim()) {
+    var recent = (db.settings.recentSearch || []).slice(0, 6);
+    if (recent.length) {
+      h += '<div class="sec"><h2>Recent</h2><div class="chips">' +
+        recent.map(function (r) {
+          return chip("searchAgain", { q: r }, r, "", false);
+        }).join("") + "</div></div>";
+    }
+    var top = merchants().slice(0, 6).filter(function (g) { return g.times >= 2; });
+    if (top.length) {
+      h += '<div class="sec"><h2>Shops you use</h2><div class="chips">' +
+        top.map(function (g) {
+          return chip("searchAgain", { q: g.name }, g.name, "", false);
+        }).join("") + "</div></div>";
+    }
+    return h;
+  }
+
+  var hits = searchAll(q);
+  var mHits = merchants().filter(function (g) {
+    return normName(g.name).indexOf(normName(q)) > -1;
+  });
+  var accHits = db.accounts.filter(function (a) {
+    return !a.archived && String(a.name + " " + (a.bank || "")).toLowerCase()
+      .indexOf(q.toLowerCase()) > -1;
+  });
+
+  if (!hits.length && !mHits.length && !accHits.length) {
+    return h + '<div class="card"><p class="empty">Nothing matches \u201c' + esc(q) +
+      "\u201d. Try a shorter word, or part of an amount.</p></div>";
+  }
+
+  if (mHits.length) {
+    h += '<div class="sec"><h2>Shops</h2>' + mHits.slice(0, 3).map(function (g) {
+      return '<div class="card"><div class="rowline"><b>' + esc(g.name) + "</b>" +
+        "<span>" + money(g.thisMonth) + " this month</span></div>" +
+        '<p class="sub">' + g.times + (g.times === 1 ? " visit" : " visits") + " recorded" +
+        (g.lastMonth ? " \u00b7 " + money(g.lastMonth) + " last month" : "") + "</p>" +
+        '<button type="button" class="btn g s" data-act="go" data-view="merch">See all shops</button>' +
+        "</div>";
+    }).join("") + "</div>";
+  }
+  if (accHits.length) {
+    h += '<div class="sec"><h2>Accounts</h2>' +
+      accHits.slice(0, 4).map(function (a) {
+        return a.kind === "card" ? cardTileSmall(a) : accountTile(a);
+      }).join("") + "</div>";
+  }
+  if (hits.length) {
+    var t = totalsFor(hits);
+    h += '<div class="sec"><div class="rowline"><h2>Entries</h2>' +
+      "<span class=\"sub\">" + hits.length + " found</span></div>" +
+      '<div class="card"><div class="grid">' +
+      '<div><span class="lbl">Spent</span><p class="mid out">' + money(t.spend) + "</p></div>" +
+      (t.in ? '<div><span class="lbl">Received</span><p class="mid in">' + money(t.in) + "</p></div>" : "") +
+      "</div></div>" +
+      '<div class="card">' + hits.slice(0, 40).map(txRow).join("") + "</div>" +
+      (hits.length > 40 ? '<p class="sub">Showing the first 40. Narrow it down to see fewer.</p>' : "") +
+      '<button type="button" class="btn g s" data-act="searchInHistory" data-q="' + esc(q) +
+      '">Open these in Activity</button></div>';
+  }
+  return h;
+}
+/* ---------- how trustworthy is the data ---------- */
+function dataHealthBlock() {
+  var chk = checkData();
+  var n = db.tx.length;
+  var gaps = db.tx.filter(function (t) { return txMissing(t).length; });
+  var noTime = db.tx.filter(function (t) { return !t.time && !t.noTime; }).length;
+  var noShop = db.tx.filter(function (t) {
+    return t.type === "out" && !t.merchant && !String(t.note || "").trim();
+  }).length;
+  var pending = db.tx.filter(function (t) { return effectiveStatus(t) === "pending"; }).length;
+  /* complete means nothing is missing from it */
+  var complete = n ? Math.round(((n - gaps.length) / n) * 100) : 100;
+  var h = '<div class="card"><h3>How complete your records are</h3>' +
+    '<p class="big">' + complete + "%</p>" +
+    '<div class="bar"><i class="' + (complete >= 90 ? "" : complete >= 70 ? "w" : "o") +
+    '" style="inline-size:' + complete + '%"></i></div>' +
+    '<p class="sub">' + n + " entr" + (n === 1 ? "y" : "ies") + " recorded" +
+    (gaps.length ? ", " + gaps.length + " missing something" : ", none missing anything") + "</p>";
+  h += "<table style=\"margin-block-start:10px\">" +
+    "<tr><td>" + (chk.problems.length ? "\u26a0\ufe0f" : "\u2705") +
+      " Amounts and dates</td><td class=\"n\">" +
+      (chk.problems.length ? chk.problems.length + " to look at" : "all readable") + "</td></tr>" +
+    (noTime ? "<tr><td>\u2757 No time recorded</td><td class=\"n\">" + noTime + "</td></tr>" : "") +
+    (noShop ? "<tr><td>\u2757 No shop or note</td><td class=\"n\">" + noShop + "</td></tr>" : "") +
+    (pending ? "<tr><td>\u23f3 Still waiting</td><td class=\"n\">" + pending + "</td></tr>" : "") +
+    "</table>";
+  if (gaps.length) {
+    h += '<button type="button" class="btn s" data-act="quickFilter" data-q="gaps" ' +
+      'style="margin-block-start:10px">Fill in the ' + gaps.length + "</button>";
+  }
+  h += '<p class="hint">Nothing here changes a figure \u2014 every entry counts in your ' +
+    "totals whether or not it is complete. This only says how well the app can group " +
+    "and explain your spending.</p></div>";
+  return h;
+}
+
+/* ---------- the month, reviewed ---------- */
+function pageReview() {
+  var mk = ui.revMonth || mShift(mKey(new Date()), -1);
+  var months = monthsWithData();
+  var st = moneyStory(mk);
+  var h = '<div class="sec" style="display:flex;align-items:center;gap:10px;margin-block:14px 6px">' +
+    '<button type="button" class="ib" data-act="go" data-view="insights" aria-label="Back">\u2190</button>' +
+    "<h2>Your " + esc(mLabel(mk)) + "</h2></div>";
+
+  if (months.length > 1) {
+    h += '<div class="chips" style="margin-block-end:12px">' +
+      months.slice(-8).reverse().map(function (m) {
+        return chip("revMonth", { m: m }, mLabel(m), "", m === mk);
+      }).join("") + "</div>";
+  }
+  if (st.empty) {
+    return h + '<div class="card"><p class="empty">Nothing was recorded in ' +
+      esc(mLabel(mk)) + ".</p></div>";
+  }
+
+  /* the headline */
+  var cmp = compare(mk, "", "prev");
+  h += '<div class="card hero" style="text-align:center">' +
+    '<span class="lbl">Spent on things</span>' +
+    '<p class="huge">' + maskMoney(st.spent, "total") + "</p>" +
+    (cmp.ok && cmp.diff !== 0
+      ? '<p class="' + (cmp.diff < 0 ? "in" : "out") + '" style="font-weight:700">' +
+        (cmp.diff < 0 ? "\u2193 " + money(Math.abs(cmp.diff)) + " less than " + cmp.label
+          : "\u2191 " + money(cmp.diff) + " more than " + cmp.label) + "</p>"
+      : '<p class="sub">' + (cmp.ok ? "level with " + cmp.label : "your first month of records") + "</p>") +
+    eyeBtn("total", "the month total") + "</div>";
+
+  /* the biggest single improvement */
+  var moves = categoryMoves(mk, "prev");
+  var win = moves.filter(function (c) { return c.diff < 0; })[0];
+  if (win) {
+    h += '<div class="sec"><h2>Your biggest win</h2><div class="card">' +
+      "<p class=\"mid\">" + catIcon(win.cat) + " " + esc(win.cat) + "</p>" +
+      '<p class="sub">' + money(win.fairBase) + " \u2192 " + money(win.now) + "</p>" +
+      '<p class="big in">' + (win.pct !== null ? Math.abs(Math.round(win.pct)) + "% lower"
+        : money(Math.abs(win.diff)) + " lower") + "</p></div></div>";
+  }
+
+  /* where it went */
+  var cats = byCategory(txIn(mk)).slice(0, 6);
+  if (cats.length) {
+    h += '<div class="sec"><h2>Where it went</h2><div class="card">' +
+      barList(cats, st.spent) + "</div></div>";
+  }
+
+  /* what you kept */
+  if (st.saved > 0) {
+    var sips = sipRecord(dateFrom(mk + "-28"));
+    h += '<div class="sec"><h2>What you kept</h2><div class="card">' +
+      '<p class="big in">' + money(st.saved) + "</p>" +
+      '<p class="sub">moved into savings and investments</p>' +
+      (sips.months
+        ? '<p class="sub" style="margin-block-start:8px">' + sips.paid + " of " + sips.months +
+          " SIP months recorded as paid.</p>"
+        : "") + "</div></div>";
+  }
+
+  /* days you spent nothing */
+  var ns = noSpendDays(mk);
+  if (ns.soFar) {
+    h += '<div class="sec"><h2>Days you spent nothing</h2><div class="card">' +
+      '<p class="big">' + ns.count + "</p>" +
+      '<p class="sub">out of ' + ns.soFar + " days" +
+      (ns.best > 1 ? " \u00b7 longest run " + ns.best + " days" : "") + "</p></div></div>";
+  }
+
+  /* worth reviewing */
+  var worry = moves.filter(function (c) { return c.diff > 0; }).slice(0, 3);
+  var leaks = findLeaks(mk);
+  if (worry.length || leaks.total) {
+    h += '<div class="sec"><h2>Worth reviewing</h2><div class="card">' +
+      worry.map(function (c) {
+        var why = explainChange(mk, c.cat);
+        return "<p>" + catIcon(c.cat) + " <b>" + esc(c.cat) + "</b> up " +
+          money(c.diff) + (why ? '<br><span class="sub">' + esc(why.plain) + "</span>" : "") + "</p>";
+      }).join("") +
+      (leaks.total ? "<p>\ud83e\uddfe <b>Fees and charges</b> " + money(leaks.total) +
+        '<br><span class="sub">across ' + leaks.count + " entr" +
+        (leaks.count === 1 ? "y" : "ies") + "</span></p>" : "") +
+      "</div></div>";
+  }
+
+  /* what is known about the month ahead */
+  var nextMk = mShift(mk, 1);
+  var from = nextMk + "-01", to = nextMk + "-" + p2(mDays(nextMk));
+  var due = commitments(from, to);
+  if (due.length) {
+    var byKind = {};
+    due.forEach(function (x) { byKind[x.kind] = (byKind[x.kind] || 0) + x.amt; });
+    h += '<div class="sec"><h2>' + esc(mLabel(nextMk)) + " ahead</h2><div class=\"card\"><table>" +
+      Object.keys(byKind).map(function (k) {
+        var label = k === "card" ? "Card bills" : k === "sip" ? "SIPs"
+          : k === "emi" ? "Instalments" : "Bills";
+        return "<tr><td>" + label + '</td><td class="n">' + money(byKind[k]) + "</td></tr>";
+      }).join("") + "</table>" +
+      '<p class="sub">Only what is already known from your records. Day-to-day spending ' +
+      "is not guessed at.</p></div></div>";
+  }
+
+  h += '<div class="btns" style="margin-block-start:12px">' +
+    '<button type="button" class="btn g" data-act="go" data-view="insights">See the detail</button>' +
+    '<button type="button" class="btn g" data-act="go" data-view="reports">Build a report</button></div>';
   return h;
 }
 
@@ -11650,7 +12289,8 @@ function act(name, d) {
     case "go":
       ui.view = d.view; render(); el("app").focus(); return;
     case "add":
-      openAdd("out"); return;
+      closeSheet();
+      openAdd(d.kind || "out"); return;
     case "addMove":
       openAdd("move"); return;
     case "addReceipt":
@@ -11986,10 +12626,13 @@ function act(name, d) {
     case "setTheme": db.settings.theme = d.theme; save(); applyTheme(); render(); return;
     case "clearPin": db.settings.pin = ""; save(); render(); toast("PIN removed"); return;
     case "signOut": signOut(); return;
+    case "fold":
+      toggleFold(d.k, !!d.def);
+      reRender(); return;
     case "peek":
       ui.shown = ui.shown || {};
       ui.shown[d.k] = !ui.shown[d.k];
-      render(); return;
+      reRender(); return;
     case "openAcc":
       ui.accId = d.id; ui.accRange = { id:"thismonth", from:"", to:"" };
       ui.view = "account"; render(); return;
@@ -12266,6 +12909,56 @@ function act(name, d) {
       else { closeSheet(); toast("There is no earlier copy to go back to"); }
       return;
     case "extraPay": ui.extraPay = parseInt(d.a, 10) || 0; render(); return;
+    case "revMonth": ui.revMonth = d.m; render(); return;
+    case "openSearch": ui.searchQ = ""; ui.view = "search"; render(); return;
+    case "searchAgain": ui.searchQ = d.q; ui.view = "search"; render(); return;
+    case "searchInHistory":
+      ui.filters = Object.assign(blankFilters(), { q: d.q });
+      ui.view = "history"; render(); return;
+    case "quickFilter": {
+      var qf = blankFilters();
+      if (d.q === "gaps") qf.gaps = "1";
+      else if (d.q === "out") qf.type = "out";
+      else if (d.q === "in") qf.type = "in";
+      else if (d.q === "card") qf.how = "card";
+      else if (d.q === "month") {
+        var mkQ = mKey(new Date());
+        qf.from = mkQ + "-01";
+        qf.to = mkQ + "-" + p2(mDays(mkQ));
+      }
+      ui.filters = qf;
+      ui.view = "history";
+      closeSheet(); render(); return;
+    }
+    case "addAny": openSheet(addAnySheet()); return;
+    case "anyLineGo": {
+      var an = el("anyLine");
+      var atext = an ? String(an.value || "").trim() : "";
+      if (!atext) { toast("Type something first"); return; }
+      var ar = readLine(atext, {});
+      if (!Math.round(ar.draft.amt || 0)) { toast("No amount found \u2014 include a number"); return; }
+      if (ar.ask && ar.ask.length) { ui.quickPending = ar; openSheet(chooseAccSheet(ar)); return; }
+      var mk2 = saveQuick(ar.draft);
+      ui.quickFor = mk2.id;
+      closeSheet(); render();
+      var g2 = txMissing(mk2);
+      toast(money(mk2.amt) + " added" + (g2.length ? " \u00b7 " + g2.length + " to fill in" : ""));
+      return;
+    }
+    case "payCardAny": {
+      var owing = cards().filter(function (c) { return cardMoney(c).statementRemaining > 0; });
+      closeSheet();
+      if (!owing.length) { toast("No card bill is waiting to be paid"); return; }
+      if (owing.length === 1) { act("payCard", { id: owing[0].id }); return; }
+      ui.view = "money"; render();
+      toast("Pick the card you paid");
+      return;
+    }
+    case "investAny":
+      closeSheet(); ui.view = "funds"; render();
+      toast("Pick the fund you paid"); return;
+    case "potAny":
+      closeSheet(); ui.view = "saved"; render(); return;
     case "insMonth": ui.insMonth = d.m; render(); return;
     case "foreDays": ui.foreDays = parseInt(d.d, 10) || 30; render(); return;
     case "wiCat": ui.wiCat = d.c; render(); return;
@@ -12934,6 +13627,22 @@ function onSubmit(e) {
 }
 function onInput(e) {
   var t = e.target;
+  if (t.getAttribute && t.getAttribute("data-f") === "searchQ") {
+    ui.searchQ = t.value;
+    var sPos = t.selectionStart;
+    clearTimeout(onInput.t);
+    onInput.t = setTimeout(function () {
+      var wasQ = ui.searchQ;
+      reRender();
+      var back = el("sq");
+      if (back) {
+        try { back.focus(); if (back.setSelectionRange && sPos !== null) back.setSelectionRange(sPos, sPos); }
+        catch (err) {}
+      }
+      rememberSearch(wasQ);
+    }, 260);
+    return;
+  }
   if (t.getAttribute && t.getAttribute("data-f")) {
     ui.filters = ui.filters || blankFilters();
     ui.filters[t.getAttribute("data-f")] = t.value;
@@ -13144,10 +13853,15 @@ return {
              checkData: checkData, storageCheck: storageCheck, restorePrevious: restorePrevious,
              previousInfo: previousInfo, weekdayPattern: weekdayPattern, monthShape: monthShape,
              netWorthParts: netWorthParts, debtPlan: debtPlan,
+             feedItems: feedItems, feedBlock: feedBlock, greeting: greeting,
+             addAnySheet: addAnySheet, creditPoolBlock: creditPoolBlock,
+             fold: fold, isOpen: isOpen, toggleFold: toggleFold, reRender: reRender,
              privacyOn: privacyOn, setPrivacy: setPrivacy, lockAfter: lockAfter,
              setLockAfter: setLockAfter, shouldLock: shouldLock, touchActivity: touchActivity,
              checkForUpdate: checkForUpdate,
              storyBlock: storyBlock, changedBlock: changedBlock,
+             rememberSearch: rememberSearch,
+             pageSearch: pageSearch, dataHealthBlock: dataHealthBlock,
              pageMoneyBack: pageMoneyBack,
              refundRows: refundRows, refundSummary: refundSummary,
              feesInYear: feesInYear, failedRows: failedRows, failedSummary: failedSummary,
