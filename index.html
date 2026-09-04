@@ -242,6 +242,7 @@ var MT = (function () {
    1. BASICS
    ========================================================= */
 var KEY = "moneytracker";
+var BUILD = "2026-09-03.4";  /* shown in Settings so you can tell which copy you are running */
 var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 var DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 var COLORS = ["#0f766e","#f59e0b","#5b5bd6","#d92d20","#0ea5e9","#0b8a5f","#db2777","#65a30d","#ea580c","#64748b"];
@@ -333,6 +334,7 @@ var ui = {
   accRange: null,
   shown: {},
   syncTimer: null,
+  wakeWatch: false,
   recovery: "",
   authed: false,
   undo: null,
@@ -4754,7 +4756,25 @@ function markDirty() {
   paintSync();
   scheduleAutoPush();
 }
+/** Check the moment you come back to the tab, not just on the timer. */
+function watchForWake() {
+  if (ui.wakeWatch) return;
+  ui.wakeWatch = true;
+  var pull = function () {
+    if (syncReady() && isUnlocked() && !ui.pushing) pullFromGithub(true);
+  };
+  if (typeof document !== "undefined" && document.addEventListener) {
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) pull();
+    });
+  }
+  if (typeof window !== "undefined" && window.addEventListener) {
+    window.addEventListener("focus", pull);
+    window.addEventListener("online", pull);
+  }
+}
 function startSyncTimer() {
+  watchForWake();
   if (ui.syncTimer) return;
   if (typeof setInterval !== "function") return;
   ui.syncTimer = setInterval(function () {
@@ -6299,6 +6319,7 @@ function dataHomeCard() {
     row2("Accounts", String(db.accounts.length)) +
     row2("Credit cards", String(cards().length)) +
     row2("Mutual funds", String(funds().length)) +
+    row2("This page's version", BUILD) +
     row2("Also on your other devices", c.on ? "yes, through GitHub" : "no \u2014 this device only") +
     (c.on && c.lastPush ? row2("Last sent up", fStamp(c.lastPush)) : "") +
     (c.on && c.lastPull ? row2("Last checked", fStamp(c.lastPull)) : "") +
