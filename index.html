@@ -157,6 +157,18 @@ input[type=checkbox]{inline-size:20px;block-size:20px;min-block-size:20px;margin
 .story .storygap{color:var(--muted);font-weight:500;font-size:14.5px}
 .story .storyarrow{text-align:center;color:var(--muted);font-size:15px;
   margin-block:9px;opacity:.55}
+.newbar{background:linear-gradient(135deg,var(--accent-soft),var(--surface));
+  border:1px solid var(--accent);border-radius:16px;padding:12px}
+.newmain{display:flex;gap:12px;align-items:center;inline-size:100%;background:none;
+  border:0;padding:0;text-align:start;cursor:pointer;color:inherit}
+.newmain b{font-size:16px;display:block}
+.newmain small{display:block;color:var(--muted);font-size:12px;line-height:1.4;
+  margin-block-start:2px}
+.newicon{font-size:26px;flex:0 0 auto}
+.newrow{display:flex;gap:6px;flex-wrap:wrap;margin-block-start:10px}
+.newchip{background:var(--surface);border:1px solid var(--border);border-radius:999px;
+  padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+  color:var(--accent)}
 .tabs{display:flex;gap:4px;overflow-x:auto;border-block-end:1px solid var(--border);
   margin-block-end:2px;padding-block-end:0}
 .tab{background:none;border:0;border-block-end:2px solid transparent;padding:9px 11px;
@@ -536,7 +548,7 @@ var MT = (function () {
    1. BASICS
    ========================================================= */
 var KEY = "moneytracker";
-var BUILD = "2026-09-05.3";  /* shown in Settings so you can tell which copy you are running */
+var BUILD = "2026-09-05.4";  /* shown in Settings so you can tell which copy you are running */
 var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 var DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 var COLORS = ["#0f766e","#f59e0b","#5b5bd6","#d92d20","#0ea5e9","#0b8a5f","#db2777","#65a30d","#ea580c","#64748b"];
@@ -2242,6 +2254,21 @@ function pageHome() {
       "</div></div></div>";
   }
 
+  /* The way in to everything new. On the screen you actually open, because
+     a feature you cannot find from the home screen may as well not exist. */
+  h += '<div class="sec"><div class="newbar">' +
+    '<button type="button" class="newmain" data-act="go" data-view="explore">' +
+    '<span class="newicon" aria-hidden="true">\ud83d\udd2d</span>' +
+    "<span><b>Explore</b><small>Drag one strip \u2014 every figure moves with " +
+    "it. Tap any number to open it.</small></span></button>" +
+    '<div class="newrow">' +
+    [["rephub", "Reports"], ["credit", "Credit in use"],
+     ["visuals", "Charts"], ["unknown", "What is not known"]]
+      .map(function (x) {
+        return '<button type="button" class="newchip" data-act="go" ' +
+          'data-view="' + x[0] + '">' + esc(x[1]) + "</button>";
+      }).join("") + "</div></div></div>";
+
   /* the one number that matters, and what of it is really free */
   /* Lead with what you have actually done this month — that is the thing this
      app tracks. What you hold, and what of it is genuinely free, sits under it
@@ -3873,6 +3900,13 @@ function daySheet(iso) {
 /* ---------- More (hub) ---------- */
 function pageMore() {
   var items = [
+    ["explore", "🔭", "Explore", "Drag one strip and every figure moves with it"],
+    ["rephub", "📈", "Reports", "Overview, spending, trends, wealth, review"],
+    ["visuals", "🌊", "Ways to look at it", "Year orbit, cash-flow river, calendar, pulse"],
+    ["credit", "💳", "Credit in use", "One ring per pool, shared limits counted once"],
+    ["timeline", "📜", "Your history", "Every month, and how well each is recorded"],
+    ["loyalty", "🔁", "Habits", "Where repeat money goes, and what convenience costs"],
+    ["unknown", "🕳️", "What this app does not know", "The gaps, stated rather than hidden"],
     ["health", "❤️", "Money health", "Everything at a glance, and what is coming"],
     ["insights", "💡", "Insights", "What changed this month, and why"],
     ["plan", "🗓️", "Plan ahead", "Safe to spend, salary cycle, what-if"],
@@ -3888,13 +3922,6 @@ function pageMore() {
     ["perks", "🎁", "Card perks", "What each card gives you, and what is left"],
     ["funds", "📈", "Mutual funds", "Your SIPs and what you have put in"],
     ["saved", "🏛️", "Money set aside", "Fixed deposits and savings pots"],
-    ["explore", "🔭", "Explore", "Drag one strip and every figure moves with it"],
-    ["rephub", "📈", "Reports", "Overview, spending, trends, wealth, review"],
-    ["visuals", "🌊", "Ways to look at it", "Year orbit, cash-flow river, calendar, pulse"],
-    ["timeline", "📜", "Your history", "Every month, and how well each is recorded"],
-    ["loyalty", "🔁", "Habits", "Where repeat money goes, and what convenience costs"],
-    ["credit", "💳", "Credit in use", "One ring per pool, shared limits counted once"],
-    ["unknown", "🕳️", "What this app does not know", "The gaps, stated rather than hidden"],
     ["monthreview", "📆", "Month in review", "One month, told back to you"],
     ["builder", "🛠️", "Build a report", "Pick a metric, a breakdown and a period"],
     ["recovery", "🛡️", "Keeping your data safe", "Check, restore and back up"],
