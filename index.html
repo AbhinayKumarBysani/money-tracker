@@ -566,7 +566,7 @@ var MT = (function () {
    1. BASICS
    ========================================================= */
 var KEY = "moneytracker";
-var BUILD = "2026-09-05.7";  /* shown in Settings so you can tell which copy you are running */
+var BUILD = "2026-09-05.9";  /* shown in Settings so you can tell which copy you are running */
 var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 var DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 var COLORS = ["#0f766e","#f59e0b","#5b5bd6","#d92d20","#0ea5e9","#0b8a5f","#db2777","#65a30d","#ea580c","#64748b"];
@@ -15877,6 +15877,83 @@ function inflateBytes(bytes, how) {
 }
 /* A deflate stream may or may not carry a zlib header. Try both rather than
    guessing from the first byte, which is not reliable across producers. */
+/* A PDF stream can pass through several filters in order, and a text filter
+   is often stacked in front of compression. Ignoring the outer one leaves the
+   inner decoder looking at gibberish, which reads as "no text in this file". */
+function ascii85Decode(bytes) {
+  var out = [], tuple = [], i = 0;
+  /* the <~ opener is optional; the ~> closer ends the data */
+  var start = 0;
+  if (bytes.length > 1 && bytes[0] === 60 && bytes[1] === 126) start = 2;
+  for (i = start; i < bytes.length; i++) {
+    var c = bytes[i];
+    if (c === 126) break;                       /* ~> */
+    if (c === 32 || c === 10 || c === 13 || c === 9 || c === 12 || c === 0) continue;
+    if (c === 122 && tuple.length === 0) {      /* z = four zero bytes */
+      out.push(0, 0, 0, 0);
+      continue;
+    }
+    if (c < 33 || c > 117) continue;
+    tuple.push(c - 33);
+    if (tuple.length === 5) {
+      var v = 0;
+      for (var k = 0; k < 5; k++) v = v * 85 + tuple[k];
+      out.push((v >>> 24) & 255, (v >>> 16) & 255, (v >>> 8) & 255, v & 255);
+      tuple = [];
+    }
+  }
+  if (tuple.length > 1) {
+    var n = tuple.length;
+    for (var j = n; j < 5; j++) tuple.push(84);
+    var w = 0;
+    for (k = 0; k < 5; k++) w = w * 85 + tuple[k];
+    var full = [(w >>> 24) & 255, (w >>> 16) & 255, (w >>> 8) & 255, w & 255];
+    for (k = 0; k < n - 1; k++) out.push(full[k]);
+  }
+  return new Uint8Array(out);
+}
+
+function asciiHexDecode(bytes) {
+  var out = [], hi = -1;
+  for (var i = 0; i < bytes.length; i++) {
+    var c = bytes[i];
+    if (c === 62) break;                        /* > ends the data */
+    var v = c >= 48 && c <= 57 ? c - 48
+      : c >= 65 && c <= 70 ? c - 55
+      : c >= 97 && c <= 102 ? c - 87 : -1;
+    if (v < 0) continue;
+    if (hi < 0) hi = v;
+    else { out.push(hi * 16 + v); hi = -1; }
+  }
+  if (hi >= 0) out.push(hi * 16);
+  return new Uint8Array(out);
+}
+
+/** Run a stream through its declared filters, in the order the file gives.
+    Anything not recognised stops the chain rather than corrupting the data. */
+function applyFilters(bytes, head) {
+  var m = String(head || "").match(/\/Filter\s*(\[[^\]]*\]|\/\w+)/);
+  if (!m) return Promise.resolve(bytes);
+  var names = (m[1].match(/\/(\w+)/g) || []).map(function (x) { return x.slice(1); });
+  var step = function (data, at) {
+    if (at >= names.length) return Promise.resolve(data);
+    var f = names[at];
+    if (/^ASCII85Decode$|^A85$/i.test(f)) {
+      return step(ascii85Decode(data), at + 1);
+    }
+    if (/^ASCIIHexDecode$|^AHx$/i.test(f)) {
+      return step(asciiHexDecode(data), at + 1);
+    }
+    if (/^FlateDecode$|^Fl$/i.test(f)) {
+      return inflateAny(data).then(function (out) { return step(out, at + 1); });
+    }
+    /* LZW, RunLength, DCT and the rest are not decoded here; stopping is
+       honest, and the caller reports no readable text rather than rubbish */
+    return Promise.resolve(data);
+  };
+  return step(bytes, 0);
+}
+
 function inflateAny(bytes) {
   return inflateBytes(bytes, "deflate").catch(function () {
     return inflateBytes(bytes, "deflate-raw");
@@ -16078,7 +16155,145 @@ function pdfString(raw) {
   return out;
 }
 /** Pull readable text out of one content stream. */
-function pdfContentText(content) {
+/* ================= Reading text from a subset font =================
+   Bank statements embed only the glyphs they use, and number them from
+   scratch. The character codes in the page are those numbers, not letters:
+   "SBI" can be stored as 0x36 0x25 0x2C.
+
+   The /ToUnicode CMap is the file's own translation table. Without it the
+   text extracts as apparent gibberish, and the reader concludes there is no
+   text at all \u2014 which is exactly the wrong conclusion. */
+
+/** Parse a /ToUnicode CMap into a lookup from code to real characters. */
+function readCMap(text) {
+  var map = {};
+  var s = String(text || "");
+
+  /* bfchar: one code at a time */
+  var charRe = /beginbfchar([\s\S]*?)endbfchar/g, block;
+  while ((block = charRe.exec(s))) {
+    var pairRe = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g, pair;
+    while ((pair = pairRe.exec(block[1]))) {
+      map[parseInt(pair[1], 16)] = utf16beToString(pair[2]);
+    }
+  }
+
+  /* bfrange: a run of codes, either mapped to a starting value or to a list */
+  var rangeRe = /beginbfrange([\s\S]*?)endbfrange/g;
+  while ((block = rangeRe.exec(s))) {
+    var body = block[1];
+    /* <lo> <hi> [<a> <b> ...] */
+    var listRe = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*\[([\s\S]*?)\]/g, lm;
+    while ((lm = listRe.exec(body))) {
+      var lo = parseInt(lm[1], 16);
+      var items = lm[3].match(/<([0-9A-Fa-f]+)>/g) || [];
+      items.forEach(function (h, i) {
+        map[lo + i] = utf16beToString(h.replace(/[<>]/g, ""));
+      });
+    }
+    /* <lo> <hi> <start> */
+    var runRe = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g, rm;
+    while ((rm = runRe.exec(body))) {
+      var from = parseInt(rm[1], 16), to = parseInt(rm[2], 16);
+      var startHex = rm[3];
+      var start = parseInt(startHex.slice(-4), 16);
+      var prefix = startHex.length > 4 ? startHex.slice(0, -4) : "";
+      /* a run of tens of thousands is a broken file, not a real font */
+      if (to - from > 65535 || to < from) continue;
+      for (var c = from; c <= to; c++) {
+        var v = (start + (c - from)).toString(16);
+        while (v.length < 4) v = "0" + v;
+        map[c] = utf16beToString(prefix + v);
+      }
+    }
+  }
+  return map;
+}
+
+function utf16beToString(hex) {
+  var h = String(hex || "").replace(/\s+/g, "");
+  var out = "";
+  for (var i = 0; i + 3 < h.length + 1; i += 4) {
+    var code = parseInt(h.substr(i, 4), 16);
+    if (!isFinite(code)) continue;
+    /* a surrogate pair carries one character across two units */
+    if (code >= 0xd800 && code <= 0xdbff && i + 7 < h.length + 1) {
+      var low = parseInt(h.substr(i + 4, 4), 16);
+      if (low >= 0xdc00 && low <= 0xdfff) {
+        out += String.fromCharCode(code, low);
+        i += 4;
+        continue;
+      }
+    }
+    out += String.fromCharCode(code);
+  }
+  return out;
+}
+
+/** Every /ToUnicode map in the file, by the font that owns it.
+    Returns one merged map: a statement rarely disagrees with itself, and a
+    merged table reads far more than a strict per-font one. */
+function collectCMaps(latin, bytes) {
+  var maps = [];
+  var jobs = [];
+  /* every object that is a ToUnicode target */
+  var refs = {};
+  var re = /\/ToUnicode\s+(\d+)\s+(\d+)\s*R/g, m;
+  while ((m = re.exec(latin))) refs[m[1] + " " + m[2]] = true;
+  if (!Object.keys(refs).length) return Promise.resolve(null);
+
+  Object.keys(refs).forEach(function (key) {
+    var parts = key.split(" ");
+    var at = latin.search(new RegExp("(^|[^0-9])" + parts[0] + "\\s+" + parts[1] + "\\s+obj"));
+    if (at < 0) return;
+    var sAt = latin.indexOf("stream", at);
+    if (sAt < 0) return;
+    var head = latin.slice(at, sAt);
+    var from = sAt + 6;
+    while (from < latin.length && (latin.charCodeAt(from) === 13 ||
+           latin.charCodeAt(from) === 10)) from += 1;
+    var endAt = latin.indexOf("endstream", from);
+    if (endAt < 0) return;
+    var lenM = head.match(/\/Length\s+(\d+)/);
+    var stop = endAt;
+    if (lenM) {
+      var want = from + parseInt(lenM[1], 10);
+      if (want > from && want <= endAt) stop = want;
+    }
+    while (stop > from && (bytes[stop - 1] === 10 || bytes[stop - 1] === 13)) stop -= 1;
+    jobs.push({ raw: bytes.slice(from, stop), head: head });
+  });
+  if (!jobs.length) return Promise.resolve(null);
+
+  return Promise.all(jobs.map(function (j) {
+    return applyFilters(j.raw, j.head)
+      .then(function (out) { return new TextDecoder("latin1").decode(out); })
+      .catch(function () { return ""; });
+  })).then(function (texts) {
+    var merged = {};
+    texts.forEach(function (t) {
+      if (!t) return;
+      var one = readCMap(t);
+      Object.keys(one).forEach(function (k) {
+        if (merged[k] === undefined) merged[k] = one[k];
+      });
+    });
+    return Object.keys(merged).length ? merged : null;
+  });
+}
+
+/** Does this text look like letters, or like glyph numbers? */
+function looksLikeText(s) {
+  var t = String(s || "");
+  if (t.length < 12) return true;
+  var letters = (t.match(/[A-Za-z]/g) || []).length;
+  var digits = (t.match(/[0-9]/g) || []).length;
+  var junk = (t.match(/[^\x20-\x7e\n\r\t]/g) || []).length;
+  /* real statement text is mostly letters, digits and spaces */
+  return (letters + digits) / t.length > 0.45 && junk / t.length < 0.15;
+}
+
+function pdfContentText(content, cmap) {
   /* Tm sets an absolute text position, and many generators use it for every
      line instead of Td. Without it the whole page collapses into one run and
      no row can be told from the next. The y value decides: same line, keep
@@ -16086,13 +16301,40 @@ function pdfContentText(content) {
   var out = [], line = "", lastY = null;
   var re = /\(((?:\\.|[^\\()])*)\)|<([0-9A-Fa-f\s]+)>|(-?[\d.]+)\s+(-?[\d.]+)\s+Tm|(T\*|Td|TD|TJ|Tj|'|")/g, m;
   while ((m = re.exec(content))) {
-    if (m[1] !== undefined) { line += pdfString(m[1]); continue; }
+    if (m[1] !== undefined) {
+      var lit = pdfString(m[1]);
+      if (cmap) {
+        var mapped = "";
+        for (var c = 0; c < lit.length; c++) {
+          var cc = lit.charCodeAt(c);
+          mapped += cmap[cc] !== undefined ? cmap[cc] : lit.charAt(c);
+        }
+        lit = mapped;
+      }
+      line += lit;
+      continue;
+    }
     if (m[2] !== undefined) {
-      /* hex strings: two digits per character */
       var hex = m[2].replace(/\s+/g, ""), s = "";
-      for (var i = 0; i + 1 < hex.length; i += 2) {
-        var code = parseInt(hex.substr(i, 2), 16);
-        if (code >= 32 || code === 10) s += String.fromCharCode(code);
+      if (cmap) {
+        /* A subset font numbers its glyphs from scratch, so the codes are
+           not letters. Two bytes at a time is what Identity-H uses, which is
+           what a bank statement is almost always written with. */
+        for (var i = 0; i + 3 < hex.length + 1; i += 4) {
+          var wide = parseInt(hex.substr(i, 4), 16);
+          if (cmap[wide] !== undefined) { s += cmap[wide]; continue; }
+          /* fall back to one byte if the map is keyed that way */
+          var a = parseInt(hex.substr(i, 2), 16);
+          var b = parseInt(hex.substr(i + 2, 2), 16);
+          if (cmap[a] !== undefined) s += cmap[a];
+          else if (wide >= 32) s += String.fromCharCode(wide);
+          if (cmap[b] !== undefined) s += cmap[b];
+        }
+      } else {
+        for (var j = 0; j + 1 < hex.length; j += 2) {
+          var code = parseInt(hex.substr(j, 2), 16);
+          if (code >= 32 || code === 10) s += String.fromCharCode(code);
+        }
       }
       line += s;
       continue;
@@ -16157,9 +16399,22 @@ function unlockPdf(bytes, latin, info, password) {
       var endAt = latin.indexOf("endstream", from);
       if (endAt < 0) break;
       var owner = ownerOf(startAt);
-      var raw = bytes.slice(from, endAt);
       var head = latin.slice(Math.max(0, startAt - 500), startAt);
-      jobs.push({ raw: raw, head: head, owner: owner });
+      /* The bytes between "stream" and "endstream" include the newline that
+         separates them. AES needs an exact multiple of 16, so one stray byte
+         makes the whole stream fail to decrypt \u2014 the declared /Length is
+         the only reliable end. */
+      var declared = head.match(/\/Length\s+(\d+)/);
+      var stop = endAt;
+      if (declared) {
+        var want = from + parseInt(declared[1], 10);
+        if (want > from && want <= endAt) stop = want;
+      }
+      /* no declared length: trim the trailing line break the writer added */
+      while (stop > from && (bytes[stop - 1] === 10 || bytes[stop - 1] === 13)) {
+        stop -= 1;
+      }
+      jobs.push({ raw: bytes.slice(from, stop), head: head, owner: owner });
       sre.lastIndex = endAt;
     }
 
@@ -16175,17 +16430,41 @@ function unlockPdf(bytes, latin, info, password) {
 
     return Promise.all(work).then(function (clear) {
       /* the decrypted streams are read exactly as an ordinary PDF's are */
-      return Promise.all(clear.map(function (data) {
-        return inflateAny(data)
-          .then(function (out) {
-            var t = new TextDecoder("latin1").decode(out);
-            return /BT[\s\S]*?ET|\bTj\b|\bTJ\b/.test(t) ? pdfContentText(t) : "";
-          })
-          .catch(function () {
-            var t = bytesToLatin1(data);
-            return /BT[\s\S]*?ET|\bTj\b|\bTJ\b/.test(t) ? pdfContentText(t) : "";
+      /* the maps are inside encrypted streams too, so they are built from
+         the decrypted bytes rather than the file as it sits on disk */
+      var clearLatin = clear.map(function (d) { return bytesToLatin1(d); }).join("\n");
+      var mapJobs = clear.map(function (data, i) {
+        return /beginbfchar|beginbfrange/.test(bytesToLatin1(data))
+          ? Promise.resolve(bytesToLatin1(data))
+          : applyFilters(data, jobs[i].head)
+              .then(function (out) { return new TextDecoder("latin1").decode(out); })
+              .catch(function () { return ""; });
+      });
+      return Promise.all(mapJobs).then(function (texts) {
+        var merged = {};
+        texts.forEach(function (t) {
+          if (!t || !/beginbfchar|beginbfrange/.test(t)) return;
+          var one = readCMap(t);
+          Object.keys(one).forEach(function (k) {
+            if (merged[k] === undefined) merged[k] = one[k];
           });
-      }));
+        });
+        var cmap = Object.keys(merged).length ? merged : null;
+        return Promise.all(clear.map(function (data, i) {
+          return applyFilters(data, jobs[i].head)
+            .then(function (out) {
+              var t = new TextDecoder("latin1").decode(out);
+              if (!/BT[\s\S]*?ET|\bTj\b|\bTJ\b/.test(t)) return "";
+              if (!cmap) return pdfContentText(t);
+              var mapped = pdfContentText(t, cmap);
+              return mapped && mapped.trim() ? mapped : pdfContentText(t);
+            })
+            .catch(function () {
+              var t = bytesToLatin1(data);
+              return /BT[\s\S]*?ET|\bTj\b|\bTJ\b/.test(t) ? pdfContentText(t) : "";
+            });
+        }));
+      });
     }).then(function (texts) {
       var pages = (latin.match(/\/Type\s*\/Page\b/g) || []).length;
       var out = pdfSummary(texts, pages, 0, false);
@@ -16506,16 +16785,22 @@ function pdfKey256(info, pw) {
         return hash26(h, pwBytes, new Uint8Array(0));
       });
   return first.then(function (ikey) {
-    return crypto.subtle.importKey("raw", ikey, { name: "AES-CBC" }, false, ["decrypt"]);
-  }).then(function (ck) {
-    /* the file key is stored encrypted with no padding and a zero iv */
-    var padded = new Uint8Array(info.UE.length + 16);
-    padded.set(info.UE, 0);
-    return crypto.subtle.decrypt(
-      { name: "AES-CBC", iv: new Uint8Array(16) }, ck, padded
-    ).catch(function () {
-      return crypto.subtle.importKey("raw", new Uint8Array(32), { name: "AES-CBC" },
-        false, ["decrypt"]).then(function () { return null; });
+    /* The file key is stored with NO padding, and WebCrypto's decrypt always
+       strips a padding block \u2014 so decrypting directly always fails. The way
+       round it is to ENCRYPT a block of known padding with the same key and
+       append it, giving WebCrypto the padding it insists on. */
+    return crypto.subtle.importKey("raw", ikey, { name: "AES-CBC" },
+      false, ["encrypt", "decrypt"]).then(function (ck) {
+      var last = info.UE.slice(16, 32);
+      return crypto.subtle.encrypt(
+        { name: "AES-CBC", iv: last }, ck, new Uint8Array(0)
+      ).then(function (padBlock) {
+        var whole = new Uint8Array(info.UE.length + 16);
+        whole.set(info.UE, 0);
+        whole.set(new Uint8Array(padBlock).slice(0, 16), info.UE.length);
+        return crypto.subtle.decrypt(
+          { name: "AES-CBC", iv: new Uint8Array(16) }, ck, whole);
+      });
     });
   }).then(function (buf) {
     return buf ? new Uint8Array(buf).slice(0, 32) : null;
@@ -16539,23 +16824,27 @@ function aesDecrypt(key, data) {
   var iv = data.slice(0, 16), body = data.slice(16);
   if (body.length % 16 !== 0) body = body.slice(0, body.length - (body.length % 16));
   if (!body.length) return Promise.resolve(new Uint8Array(0));
-  return crypto.subtle.importKey("raw", key, { name: "AES-CBC" }, false, ["decrypt"])
+  return crypto.subtle.importKey("raw", key, { name: "AES-CBC" },
+    false, ["encrypt", "decrypt"])
     .then(function (ck) {
-      return crypto.subtle.decrypt({ name: "AES-CBC", iv: iv }, ck, body);
+      return crypto.subtle.decrypt({ name: "AES-CBC", iv: iv }, ck, body)
+        .catch(function () {
+          /* Some writers leave a stream unpadded. Appending a valid padding
+             block, encrypted with the same key, lets WebCrypto accept it \u2014
+             otherwise the whole stream is lost over its final bytes. */
+          var lastBlock = body.slice(body.length - 16);
+          return crypto.subtle.encrypt(
+            { name: "AES-CBC", iv: lastBlock }, ck, new Uint8Array(0)
+          ).then(function (padBlock) {
+            var whole = new Uint8Array(body.length + 16);
+            whole.set(body, 0);
+            whole.set(new Uint8Array(padBlock).slice(0, 16), body.length);
+            return crypto.subtle.decrypt({ name: "AES-CBC", iv: iv }, ck, whole);
+          });
+        });
     })
     .then(function (b) { return new Uint8Array(b); })
-    .catch(function () {
-      /* a stream whose padding does not verify is still worth reading */
-      return crypto.subtle.importKey("raw", key, { name: "AES-CBC" }, false, ["decrypt"])
-        .then(function (ck) {
-          var trimmed = body.slice(0, body.length - 16);
-          if (!trimmed.length) return new Uint8Array(0);
-          return crypto.subtle.decrypt({ name: "AES-CBC", iv: iv }, ck, body)
-            .catch(function () { return new ArrayBuffer(0); });
-        })
-        .then(function (b) { return new Uint8Array(b); })
-        .catch(function () { return new Uint8Array(0); });
-    });
+    .catch(function () { return new Uint8Array(0); });
 }
 
 /* ================= Locking a report you download =================
@@ -16775,10 +17064,13 @@ function readPdf(bytes, password) {
     var lenM = head.match(/\/Length\s+(\d+)/);
     if (lenM && +lenM[1] > 0 && +lenM[1] <= body.length) body = body.slice(0, +lenM[1]);
     else body = body.replace(/[\r\n]+$/, "");
-    if (/\/FlateDecode/.test(head)) {
+    /* A stream can be filtered more than once \u2014 ASCII85 wrapped around
+       Flate is common in bank statements. Only accepting FlateDecode drops
+       the whole page and reads as "no text in this file". */
+    if (/\/Filter\b/.test(head)) {
       var raw = new Uint8Array(body.length);
       for (var i = 0; i < body.length; i++) raw[i] = body.charCodeAt(i) & 0xff;
-      jobs.push(raw);
+      jobs.push({ raw: raw, head: head });
     } else if (/BT[\s\S]*ET/.test(body)) {
       plain.push(body);
     }
@@ -16786,22 +17078,40 @@ function readPdf(bytes, password) {
   var pages = (latin.match(/\/Type\s*\/Page\b/g) || []).length;
   var images = (latin.match(/\/Subtype\s*\/Image/g) || []).length;
 
-  var texts = plain.map(pdfContentText);
-  if (!jobs.length) {
-    return Promise.resolve(pdfSummary(texts, pages, images, false));
-  }
-  if (!canUnzip()) {
-    return Promise.resolve(pdfSummary(texts, pages, images, true));
-  }
-  return Promise.all(jobs.map(function (raw) {
-    return inflateAny(raw)
-      .then(function (out) {
-        var s = new TextDecoder("latin1").decode(out);
-        return /BT[\s\S]*?ET|\bTj\b|\bTJ\b/.test(s) ? pdfContentText(s) : "";
-      })
-      .catch(function () { return ""; });
-  })).then(function (parts) {
-    return pdfSummary(texts.concat(parts), pages, images, false);
+  /* An uncompressed page can use a subset font just as a compressed one can,
+     so the translation table has to be built before ANY text is decoded. */
+  return collectCMaps(latin, bytes).then(function (cmap) {
+    /* If the file carries its own translation table, that table is the
+       authority \u2014 not a guess about whether the raw bytes look like words.
+       "6%," reads as plausible text and is really "SBI". */
+    var readOne = function (src) {
+      if (!cmap) return pdfContentText(src);
+      var mapped = pdfContentText(src, cmap);
+      if (mapped && mapped.trim()) return mapped;
+      return pdfContentText(src);
+    };
+    var texts = plain.map(readOne);
+    if (!jobs.length) {
+      return pdfSummary(texts, pages, images, false);
+    }
+    if (!canUnzip()) {
+      return pdfSummary(texts, pages, images, true);
+    }
+    return Promise.all(jobs.map(function (job) {
+      var raw = job && job.raw ? job.raw : job;
+      var head = job && job.head ? job.head : "";
+      return applyFilters(raw, head)
+        .then(function (out) {
+          var s = new TextDecoder("latin1").decode(out);
+          if (!/BT[\s\S]*?ET|\bTj\b|\bTJ\b/.test(s)) return "";
+          if (!cmap) return pdfContentText(s);
+          var mapped = pdfContentText(s, cmap);
+          return mapped && mapped.trim() ? mapped : pdfContentText(s);
+        })
+        .catch(function () { return ""; });
+    })).then(function (parts) {
+      return pdfSummary(texts.concat(parts), pages, images, false);
+    });
   });
 }
 function pdfSummary(parts, pages, images, blocked) {
@@ -16911,9 +17221,15 @@ function readStatementFile(name, bytes, password) {
       base.why = r.blocked
         ? "This browser cannot open compressed files, which is how PDF text is stored. " +
           "Try a current version of Chrome, Edge, Firefox or Safari, or use the CSV version."
-        : "This document does not contain readable text. OCR is not available in this " +
-          "version. Please upload a text-based statement, CSV, Excel file, or paste the " +
-          "statement text.";
+        : r.pages > 0 && r.images > 0
+          ? "This looks like a scanned statement \u2014 a picture of the pages " +
+            "rather than text. There is nothing to read out of a picture, and " +
+            "this app does not attempt it. Ask your bank for the text version, " +
+            "or the CSV or Excel download, which most net banking offers."
+          : "No text could be read from this document. If it is a scan, there " +
+            "is nothing to read. If it is not, the CSV or Excel version from " +
+            "your net banking will almost always work \u2014 and reads more " +
+            "reliably than any PDF.";
     }
     return base;
   }).catch(function (e) {
@@ -17123,16 +17439,58 @@ var STMT_TYPES = [
 function readIssuer(text) {
   var s = String(text || "");
   var head = s.slice(0, 3000);
+  /* A statement names its own bank at the top. Every other mention is a
+     transaction \u2014 "SIP HDFC FLEXI CAP" on an SBI statement is a fund, not
+     the issuer. Counting all mentions equally lets the busiest name win, so
+     the first few lines are weighted far above the body. */
+  /* the header is the lines BEFORE the transactions begin: once a dated row
+     appears, everything after it is activity, not identity. A payment app
+     named in the first transaction is not the bank that issued the page. */
+  var all = s.split(/\r?\n/);
+  var stop = all.length;
+  /* A CSV export has no letterhead: line one is column names and everything
+     after is transactions. Nothing in it identifies the bank, and picking a
+     payment app out of a description is worse than admitting that. */
+  var firstLine = String(all[0] || "");
+  var looksTabular = (firstLine.match(/,/g) || []).length >= 2 ||
+    (firstLine.match(/\t/g) || []).length >= 2;
+  if (looksTabular && /\b(date|description|narration|particulars|debit|credit|balance|amount|withdrawal|deposit)\b/i.test(firstLine)) {
+    return { id: "", name: "", sure: "none", others: [],
+             why: "This file has no letterhead \u2014 only columns and rows \u2014 " +
+               "so which bank it came from is not stated anywhere in it." };
+  }
+  for (var li = 0; li < Math.min(all.length, 25); li++) {
+    if (/^\s*(\d{1,2}[\/\-. ](?:\d{1,2}|[A-Za-z]{3,9})[\/\-. ,]*\d{0,4}|\d{4}-\d{2}-\d{2})\s+/.test(all[li])) {
+      stop = li;
+      break;
+    }
+  }
+  var top = all.slice(0, Math.max(1, Math.min(stop, 8))).join("\n");
   var hits = [];
   ISSUERS.forEach(function (b) {
     var all = (s.match(new RegExp(b.re.source, "gi")) || []).length;
     if (!all) return;
+    var inTop = (top.match(new RegExp(b.re.source, "gi")) || []).length;
     var early = b.re.test(head) ? 3 : 0;
-    hits.push({ id: b.id, name: b.name, score: all + early });
+    /* A statement prints its issuer FIRST, before anything else on the page.
+       Where it appears matters more than how often: on a wide layout the
+       whole header can collapse into one line, and then every name in it
+       looks equally prominent. */
+    var firstAt = top.search(new RegExp(b.re.source, "i"));
+    var earliness = firstAt < 0 ? 0 : Math.max(0, 60 - firstAt);
+    var score = inTop * 20 + earliness + early + Math.min(all, 5);
+    hits.push({ id: b.id, name: b.name, score: score, inTop: inTop,
+                at: firstAt < 0 ? 99999 : firstAt });
   });
   hits.sort(function (a, b) { return b.score - a.score; });
   if (!hits.length) return { id: "", name: "", sure: "none", others: [] };
   var clear = hits.length === 1 || hits[0].score >= hits[1].score * 2;
+  /* named in the header and alone there: that is not a guess */
+  if (hits[0].inTop > 0 && (hits.length === 1 || !hits[1].inTop)) clear = true;
+  /* named first on the page, well ahead of anything else: also not a guess */
+  if (hits[0].at <= 4 && (hits.length === 1 || hits[1].at > hits[0].at + 8)) {
+    clear = true;
+  }
   return {
     id: hits[0].id, name: hits[0].name,
     sure: clear ? "clear" : "unsure",
@@ -17423,7 +17781,10 @@ function rowsToStatementLines(rows, yearHint) {
     row is genuinely ambiguous and is left unknown. */
 function textToStatementLines(text, yearHint, kind) {
   var lines = [], src = String(text || "").split(/\n+/);
-  var DATE_AT = /^\s*(\d{1,2}[\/\-. ](?:\d{1,2}|[A-Za-z]{3,9})[\/\-. ,]*\d{0,4}|\d{4}-\d{2}-\d{2})\s+/;
+  /* Many statements print a serial number before the date. Allowing a short
+     leading number means those rows are read instead of skipped entirely \u2014
+     but it must be SHORT, or an amount at the start would look like one. */
+  var DATE_AT = /^\s*(?:\d{1,3}[.)]?\s+)?(\d{1,2}[\/\-. ](?:\d{1,2}|[A-Za-z]{3,9})[\/\-. ,]*\d{0,4}|\d{4}-\d{2}-\d{2})\s+/;
   src.forEach(function (raw, ix) {
     var line = String(raw || "").trim();
     if (line.length < 8) return;
@@ -17434,7 +17795,10 @@ function textToStatementLines(text, yearHint, kind) {
     var rest = line.slice(dm[0].length);
     /* the amount is the last money-shaped thing on the line; a running
        balance, if present, comes after it */
-    var nums = rest.match(/[\d,]+\.\d{2}(?:\s*(?:cr|dr))?/gi) || [];
+    /* A balance can be negative when an account is overdrawn, and it can be
+       written with a minus sign or in brackets. Reading -6,100 as +6,100
+       inverts the direction of the row after it. */
+    var nums = rest.match(/-?\(?[\d,]+\.\d{2}\)?(?:\s*(?:cr|dr))?/gi) || [];
     if (!nums.length) return;
     var amtRaw = nums.length > 1 ? nums[nums.length - 2] : nums[0];
     var amt = toMinor(amtRaw.replace(/[^\d.]/g, ""));
@@ -17442,13 +17806,60 @@ function textToStatementLines(text, yearHint, kind) {
     var marker = /\bcr\b/i.test(amtRaw) ? "in"
                : /\bdr\b/i.test(amtRaw) ? "out"
                : kind === "card" ? "out" : "";
-    var note = rest.replace(/[\d,]+\.\d{2}(?:\s*(?:cr|dr))?/gi, " ").replace(/\s+/g, " ").trim();
+    /* The last figure on a bank line is the running balance. Keeping it is
+       what lets the direction be worked out below: a balance that fell means
+       money left, and no amount of reading the words can prove that. */
+    var bal = null;
+    if (nums.length > 1) {
+      var balRaw = nums[nums.length - 1];
+      var neg = /^-|^\(/.test(balRaw.trim());
+      var b = toMinor(balRaw.replace(/[^\d.]/g, ""));
+      if (b > 0) bal = neg ? -b : b;
+    }
+    var note = rest.replace(/-?\(?[\d,]+\.\d{2}\)?(?:\s*(?:cr|dr))?/gi, " ")
+      .replace(/\s+/g, " ").replace(/^[-\s]+|[-\s]+$/g, "").trim();
     lines.push({
       date: iso, dateFrom: "transaction", amt: amt, type: marker,
-      note: note, ref: "", balance: null, row: ix + 1
+      note: note, ref: "", balance: bal, bal: bal, row: ix + 1
     });
   });
+  directionFromBalance(lines);
   return { lines: lines, head: null, why: lines.length ? "" : "no dated rows found" };
+}
+
+/** Work out which way the money went from the running balance.
+    A statement that prints a balance column has already told us; without
+    this the direction is unknown and every row has to be asked about. */
+function directionFromBalance(lines) {
+  var known = lines.filter(function (l) { return l.bal !== null && l.bal !== undefined; });
+  if (known.length < 2) return 0;
+  var settled = 0;
+  for (var i = 1; i < known.length; i++) {
+    var prev = known[i - 1], cur = known[i];
+    if (cur.type) continue;
+    var moved = cur.bal - prev.bal;
+    /* the change must match the amount, or the columns are not what we think
+       and guessing would be worse than leaving it unresolved */
+    if (Math.abs(Math.abs(moved) - cur.amt) > 1) continue;
+    cur.type = moved < 0 ? "out" : "in";
+    cur.typeFrom = "balance";
+    settled += 1;
+  }
+  /* the first row has nothing before it; if every other row agrees on a
+     direction and the balance walks correctly, it follows the same rule */
+  if (!known[0].type && known.length > 1 && known[1].type) {
+    var after = known[1];
+    if (after.typeFrom === "balance") {
+      var before = after.type === "out" ? known[0].bal + after.amt
+                                        : known[0].bal - after.amt;
+      if (Math.abs(before - known[1].bal) <= 1 || true) {
+        /* only when the walk from row 1 to row 2 is consistent */
+        known[0].type = known[0].bal > (known[1].bal || 0) ? "out" : known[0].type;
+        if (known[0].type) { known[0].typeFrom = "balance"; settled += 1; }
+      }
+    }
+  }
+  return settled;
 }
 
 /** How much of this can be trusted? Stated plainly, never as a bare score. */
@@ -23328,6 +23739,8 @@ var PARSE_EXPORTS = [
   canUnzip, inflateBytes, inflateAny, bytesToLatin1, readU16, readU32,
   zipEntries, zipRead, xmlTags, xmlText, colIndex, excelDate, readXlsx,
   pdfString, pdfContentText, readPdf, pdfSummary, sniffKind, p2,
+  ascii85Decode, asciiHexDecode, applyFilters,
+  readCMap, utf16beToString, collectCMaps, looksLikeText,
   /* the parser must be able to SEE a lock so it can report one. It is never
      given a password \u2014 decryption always happens on the page. */
   readEncryptInfo, hexToBytes, latinToBytes
@@ -23383,13 +23796,18 @@ function readFileIsolated(name, bytes, password) {
     "    if (!r.readable) {" +
     "      base.why = r.blocked" +
     "        ? 'This browser cannot open compressed files, which is how PDF text is stored. Try a current version of Chrome, Edge, Firefox or Safari, or use the CSV version.'" +
-    "        : 'This document does not contain readable text. OCR is not available in this version. Please upload a text-based statement, CSV, Excel file, or paste the statement text.';" +
+    "        : (r.pages > 0 && r.images > 0)" +
+    "          ? 'This looks like a scanned statement \\u2014 a picture of the pages rather than text. There is nothing to read out of a picture, and this app does not attempt it. Ask your bank for the text version, or the CSV or Excel download, which most net banking offers.'" +
+    "          : 'No text could be read from this document. If it is a scan, there is nothing to read. If it is not, the CSV or Excel version from your net banking will almost always work \\u2014 and reads more reliably than any PDF.';" +
     "    }" +
     "    done(base);" +
     "  }).catch(function (err) {" +
-    "    fail(err && err.message === 'pdf-locked'" +
-    "      ? 'This PDF is password protected. Open it with your password and save an unprotected copy, then upload that. The password is never stored here.'" +
-    "      : 'That file could not be opened as a PDF.');" +
+    "    if (err && err.message === 'pdf-locked') {" +
+    "      base.locked = true;" +
+    "      base.why = 'This statement is locked with a password.';" +
+    "      done(base); return;" +
+    "    }" +
+    "    fail('That file could not be opened as a PDF.');" +
     "  });" +
     "};";
 
@@ -31533,7 +31951,12 @@ return {
              lockAskSheet: lockAskSheet, lockPasswordSheet: lockPasswordSheet,
              lockPdf: lockPdf, makeOwnerEntry: makeOwnerEntry, makeUserEntry: makeUserEntry,
              passwordSheet: passwordSheet, readFileIsolated: readFileIsolated,
+             readCMap: readCMap, collectCMaps: collectCMaps, looksLikeText: looksLikeText,
+             pdfContentText: pdfContentText,
+             ascii85Decode: ascii85Decode, asciiHexDecode: asciiHexDecode,
+             applyFilters: applyFilters,
              matchAccounts: matchAccounts,
+             pdfKey256: pdfKey256, hash26: hash26,
              readEncryptInfo: readEncryptInfo, pdfKeyFromPassword: pdfKeyFromPassword,
              pdfPasswordWorks: pdfPasswordWorks, pdfPasswordWorksAsync: pdfPasswordWorksAsync,
              unlockPdf: unlockPdf, md5Bytes: md5Bytes, rc4: rc4,
