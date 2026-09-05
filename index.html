@@ -8,38 +8,65 @@
 <title>Money Tracker</title>
 <style>
 :root{
-  /* Light: a warm off-white page with white cards, so cards lift off the page
-     instead of merging with it. Text is near-black but not pure, which is
-     easier on the eye over a long session. */
-  --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f1f3f7; --surface-3:#e7eaf0;
-  --border:#dfe3ea;
-  --text:#1a1d23; --muted:#5f6672; --accent:#0d6e66; --accent-soft:#dcf1ee;
-  --in:#116b3a; --out:#a52318; --move:#3f4ec4; --warn:#9a5b06; --info:#1b4dc7;
-  --spend:#1a1d23;
-  --shadow:0 1px 2px rgba(16,24,40,.04),0 6px 18px rgba(16,24,40,.05);
+  /* Premium Midnight Financial — light.
+     A soft blue-grey page with pure white cards, so a card lifts off the page
+     rather than merging into it. Indigo carries every interaction; colour is
+     reserved for meaning, never decoration. */
+  --bg:#f7f8fc; --surface:#ffffff; --surface-2:#f1f4f9; --surface-3:#e8edf5;
+  --nav:#ffffff; --border:#e2e8f0;
+  --text:#172033; --muted:#5d6b7d; --faint:#94a3b8;
+  --accent:#4f46e5; --accent-hi:#4338ca; --accent-soft:#eef2ff;
+  /* Each status colour is one step deeper than the reference palette so that
+     it still reads at 4.5:1 on its own soft background. The published tones
+     land at 3.0-4.4:1 there, which is under the bar this same spec sets. */
+  --ok:#15803d; --ok-soft:#ecfdf3;
+  --warn:#b45309; --warn-soft:#fff7e6;
+  --bad:#c81e1e; --bad-soft:#fef2f2;
+  --info:#0369a1; --info-soft:#e6f4fd;
+  --save:#047857; --save-soft:#ecfdf3;
+  --invest:#0f766e; --invest-soft:#e6fffb;
+  --credit:#4f46e5; --credit-soft:#eef2ff;
+  /* Money leaving is not an error. An ordinary expense reads as plain text;
+     only a real problem earns a colour. */
+  --in:#16a34a; --out:#172033; --move:#0284c7; --spend:#172033;
+  --shadow:0 1px 2px rgba(23,32,51,.05),0 6px 18px rgba(23,32,51,.06);
   --r:14px; --r2:10px;
 }
 [data-theme="dark"]{
-  /* Dark: a soft charcoal, never pure black — pure black against light text
-     causes halation and makes long reading tiring. Cards sit a step lighter
-     than the page so the same lift is preserved. */
-  --bg:#161a20; --surface:#1e232b; --surface-2:#272d37; --surface-3:#323945;
-  --border:#353c48;
-  --text:#e2e6ec; --muted:#9aa4b2; --accent:#63bdb1; --accent-soft:#1d3733;
-  --in:#77cba2; --out:#e8a49e; --move:#a3a6e4; --warn:#d8ac74; --info:#93adf2;
-  --spend:#e2e6ec;
-  --shadow:0 1px 2px rgba(0,0,0,.32),0 8px 22px rgba(0,0,0,.24);
+  /* Premium Midnight Financial — dark.
+     Layered navy, never pure black: hierarchy comes from five surface shades
+     rather than from heavy shadows, and light text on true black halates. */
+  --bg:#0b1020; --surface:#121a2b; --surface-2:#192235; --surface-3:#202c40;
+  --nav:#0e1627; --border:#293449;
+  --text:#f8fafc; --muted:#aab6c8; --faint:#778399;
+  --accent:#818cf8; --accent-hi:#a5b4fc; --accent-soft:#20264d;
+  --ok:#4ade80; --ok-soft:#123522;
+  --warn:#fbbf24; --warn-soft:#422f12;
+  --bad:#fb7185; --bad-soft:#451a24;
+  --info:#38bdf8; --info-soft:#0c2c40;
+  --save:#34d399; --save-soft:#123522;
+  --invest:#2dd4bf; --invest-soft:#0f3330;
+  --credit:#818cf8; --credit-soft:#20264d;
+  --in:#4ade80; --out:#f8fafc; --move:#38bdf8; --spend:#f8fafc;
+  --shadow:0 1px 2px rgba(0,0,0,.36),0 8px 22px rgba(0,0,0,.26);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  /* Dark: a soft charcoal, never pure black — pure black against light text
-     causes halation and makes long reading tiring. Cards sit a step lighter
-     than the page so the same lift is preserved. */
-  --bg:#161a20; --surface:#1e232b; --surface-2:#272d37; --surface-3:#323945;
-  --border:#353c48;
-  --text:#e2e6ec; --muted:#9aa4b2; --accent:#63bdb1; --accent-soft:#1d3733;
-  --in:#77cba2; --out:#e8a49e; --move:#a3a6e4; --warn:#d8ac74; --info:#93adf2;
-  --spend:#e2e6ec;
-  --shadow:0 1px 2px rgba(0,0,0,.32),0 8px 22px rgba(0,0,0,.24);
+  /* Premium Midnight Financial — dark.
+     Layered navy, never pure black: hierarchy comes from five surface shades
+     rather than from heavy shadows, and light text on true black halates. */
+  --bg:#0b1020; --surface:#121a2b; --surface-2:#192235; --surface-3:#202c40;
+  --nav:#0e1627; --border:#293449;
+  --text:#f8fafc; --muted:#aab6c8; --faint:#778399;
+  --accent:#818cf8; --accent-hi:#a5b4fc; --accent-soft:#20264d;
+  --ok:#4ade80; --ok-soft:#123522;
+  --warn:#fbbf24; --warn-soft:#422f12;
+  --bad:#fb7185; --bad-soft:#451a24;
+  --info:#38bdf8; --info-soft:#0c2c40;
+  --save:#34d399; --save-soft:#123522;
+  --invest:#2dd4bf; --invest-soft:#0f3330;
+  --credit:#818cf8; --credit-soft:#20264d;
+  --in:#4ade80; --out:#f8fafc; --move:#38bdf8; --spend:#f8fafc;
+  --shadow:0 1px 2px rgba(0,0,0,.36),0 8px 22px rgba(0,0,0,.26);
 }}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;overflow-x:hidden}
@@ -71,6 +98,9 @@ header.top .wrap{display:flex;align-items:center;gap:8px;min-block-size:56px}
 .mid{font-size:19px;font-weight:700}
 .sub{color:var(--muted);font-size:13px}
 .in{color:var(--in)} .out{color:var(--out)} .move{color:var(--move)} .warnc{color:var(--warn)}
+.badc{color:var(--bad)} .okc{color:var(--ok)} .infoc{color:var(--info)}
+.savec{color:var(--save)} .investc{color:var(--invest)} .creditc{color:var(--credit)}
+.muted{color:var(--faint)}
 .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .sec{margin-block:16px}
 .sec>h2{margin-block-end:10px}
@@ -90,7 +120,7 @@ input[type=checkbox]{inline-size:20px;block-size:20px;min-block-size:20px;margin
 .btn:hover{filter:brightness(1.08)}
 .btn[disabled]{opacity:.45;cursor:not-allowed;filter:none}
 .btn.g{background:var(--surface-2);color:var(--text);border:1px solid var(--border)}
-.btn.d{background:var(--out);color:#fff}
+.btn.d{background:var(--bad);color:#fff}
 .btn.s{padding:8px 12px;font-size:14px;min-block-size:38px;border-radius:9px}
 .btn.full{inline-size:100%}
 .btns{display:flex;gap:8px;flex-wrap:wrap}
@@ -125,7 +155,7 @@ input[type=checkbox]{inline-size:20px;block-size:20px;min-block-size:20px;margin
 .feed{display:flex;gap:0;background:var(--surface);border:1px solid var(--border);
   border-radius:14px;margin-block-end:8px;overflow:hidden}
 .feed::before{content:"";inline-size:4px;flex:none;background:var(--muted)}
-.feed.red::before{background:var(--out)}
+.feed.red::before{background:var(--bad)}
 .feed.amber::before{background:var(--warn)}
 .feed.green::before{background:var(--in)}
 .feed.blue::before{background:var(--move)}
@@ -135,7 +165,7 @@ input[type=checkbox]{inline-size:20px;block-size:20px;min-block-size:20px;margin
 .waygrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px}
 .way{display:flex;flex-direction:column;align-items:center;gap:3px;padding:14px 8px;
   background:var(--surface-2);border:1px solid var(--border);border-radius:14px;
-  color:var(--fg);font:inherit;cursor:pointer;text-align:center;transition:transform .1s ease,background .12s ease}
+  color:var(--text);font:inherit;cursor:pointer;text-align:center;transition:transform .1s ease,background .12s ease}
 .way:hover{background:var(--surface-3);transform:translateY(-1px)}
 .way:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .way b{font-size:23px;font-weight:400;line-height:1}
@@ -144,7 +174,7 @@ input[type=checkbox]{inline-size:20px;block-size:20px;min-block-size:20px;margin
 .poolcards{display:flex;flex-wrap:wrap;gap:6px;margin-block-start:10px}
 .poolcard{flex:1 1 130px;display:flex;flex-direction:column;gap:1px;padding:9px 11px;
   background:var(--surface-2);border:1px solid var(--border);border-radius:11px;
-  color:var(--fg);font:inherit;cursor:pointer;text-align:start}
+  color:var(--text);font:inherit;cursor:pointer;text-align:start}
 .poolcard:hover{background:var(--surface-3)}
 .poolcard b{font-size:.86rem;font-weight:650}
 .poolcard small{color:var(--muted);font-size:.72rem}
@@ -152,7 +182,7 @@ input[type=checkbox]{inline-size:20px;block-size:20px;min-block-size:20px;margin
    an overdue bill, a shortfall, a failure. An ordinary purchase reads neutral. */
 .mid.out,.big.out,.huge.out{color:var(--spend)}
 .txamt.out{color:var(--spend)}
-.note.bad .mid,.feed.red .mid{color:var(--out)}
+.note.bad .mid,.feed.red .mid{color:var(--bad)}
 .huge{font-size:clamp(2.3rem,10vw,3.2rem);font-weight:800;letter-spacing:-.02em;
   line-height:1.05;margin-block:6px}
 /* Motion: small, purposeful, and switched off if the system asks. */
@@ -218,7 +248,7 @@ kbd{display:inline-block;min-inline-size:22px;text-align:center;padding:2px 6px;
 .fold{margin-block:14px}
 .foldhead{inline-size:100%;display:flex;align-items:center;gap:10px;background:var(--surface);
   border:1px solid var(--border);border-radius:14px;padding:12px 14px;cursor:pointer;
-  color:var(--fg);font:inherit;text-align:start;transition:background .12s ease}
+  color:var(--text);font:inherit;text-align:start;transition:background .12s ease}
 .foldhead:hover{background:var(--surface-2)}
 .foldhead:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .fold.open .foldhead{border-end-start-radius:0;border-end-end-radius:0;border-block-end:0}
@@ -238,8 +268,15 @@ kbd{display:inline-block;min-inline-size:22px;text-align:center;padding:2px 6px;
   background:var(--warn);color:#1a1205;font-weight:800;font-size:.8rem;line-height:1;
   align-self:flex-start}
 .bang:hover,.bang:focus-visible{filter:brightness(1.12)}
+/* a row that is saved but still missing something: marked, never hidden */
+.bangtag{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;
+  background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad);
+  font-size:.76rem;font-weight:700;line-height:1.5}
+.oktag{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;color:var(--muted)}
+tr.rowbad>td{background:var(--bad-soft)}
+tr.rowbad>td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
 .qbox{inline-size:100%;min-block-size:52px;resize:vertical;font:inherit;padding:10px 12px;
-  border-radius:12px;border:1px solid var(--border);background:var(--surface-2);color:var(--fg)}
+  border-radius:12px;border:1px solid var(--border);background:var(--surface-2);color:var(--text)}
 .qbox:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .txamt small{display:block;font-weight:500;font-size:11.5px;color:var(--muted)}
 .dayhd{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:700;color:var(--muted);padding-block:8px 4px}
@@ -254,7 +291,7 @@ kbd{display:inline-block;min-inline-size:22px;text-align:center;padding:2px 6px;
 
 .bar{block-size:10px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-block:6px}
 .bar i{display:block;block-size:100%;background:var(--accent);border-radius:99px}
-.bar i.w{background:var(--warn)} .bar i.o{background:var(--out)}
+.bar i.w{background:var(--warn)} .bar i.o{background:var(--bad)}
 table{inline-size:100%;border-collapse:collapse;font-size:14px}
 th,td{text-align:start;padding:9px 6px;border-block-end:1px solid var(--border);vertical-align:top}
 th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
@@ -278,7 +315,10 @@ svg{display:block;inline-size:100%;block-size:auto}
 .legend i{display:inline-block;inline-size:10px;block-size:10px;border-radius:3px;margin-inline-end:5px}
 .note{display:flex;gap:9px;background:var(--surface-2);border:1px solid var(--border);
   border-inline-start:4px solid var(--warn);border-radius:11px;padding:11px 12px;font-size:14px;margin-block-end:8px}
-.note.bad{border-inline-start-color:var(--out)} .note.ok{border-inline-start-color:var(--in)}
+.note.bad{border-inline-start-color:var(--bad);background:var(--bad-soft)}
+.note.ok{border-inline-start-color:var(--ok);background:var(--ok-soft)}
+.note.warn{border-inline-start-color:var(--warn);background:var(--warn-soft)}
+.note.info{border-inline-start-color:var(--info);background:var(--info-soft)}
 .note.info{border-inline-start-color:var(--move)}
 .note{position:relative;padding-inline-end:34px}
 .sipx{position:absolute;inset-block-start:6px;inset-inline-end:6px;inline-size:26px;block-size:26px;
@@ -311,13 +351,13 @@ svg{display:block;inline-size:100%;block-size:auto}
     padding:11px 12px;border-radius:11px;color:var(--muted);font:inherit;font-weight:600;
     cursor:pointer;text-align:start}
   .sidelink b{font-size:19px;font-weight:400}
-  .sidelink:hover{background:var(--surface-2);color:var(--fg)}
+  .sidelink:hover{background:var(--surface-2);color:var(--text)}
   .sidelink.on{background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
   .sidekids{display:flex;flex-direction:column;gap:1px;margin:2px 0 8px 14px;
     border-inline-start:2px solid var(--border);padding-inline-start:8px}
   .sidekid{background:none;border:0;padding:7px 10px;border-radius:8px;color:var(--muted);
     font:inherit;font-size:.86rem;cursor:pointer;text-align:start}
-  .sidekid:hover{background:var(--surface-2);color:var(--fg)}
+  .sidekid:hover{background:var(--surface-2);color:var(--text)}
   .sidekid.on{color:var(--accent);font-weight:600}
 }
 nav.bottom{position:fixed;inset-inline:0;inset-block-end:0;z-index:40;background:var(--surface);
@@ -330,7 +370,7 @@ nav.bottom button[aria-current=page]{color:var(--accent)}
 nav.bottom button.plus b{background:var(--accent);color:#fff;border-radius:50%;inline-size:38px;block-size:38px;
   display:grid;place-items:center;margin-block-start:-14px;box-shadow:0 4px 14px rgba(15,118,110,.4);font-size:22px}
 nav.bottom button.plus{color:var(--accent)}
-nav.bottom button:hover{color:var(--fg)}
+nav.bottom button:hover{color:var(--text)}
 /* On a laptop the bar is stretched wide, so the icons look lost.
    Keep it centred at a comfortable width and scale everything up. */
 @media(min-width:700px){
@@ -429,7 +469,7 @@ var MT = (function () {
    1. BASICS
    ========================================================= */
 var KEY = "moneytracker";
-var BUILD = "2026-09-04.17";  /* shown in Settings so you can tell which copy you are running */
+var BUILD = "2026-09-05.1";  /* shown in Settings so you can tell which copy you are running */
 var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 var DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 var COLORS = ["#0f766e","#f59e0b","#5b5bd6","#d92d20","#0ea5e9","#0b8a5f","#db2777","#65a30d","#ea580c","#64748b"];
@@ -541,6 +581,7 @@ var ui = {
   reportOpen: false,
   weekBack: 0,
   countNote: "",
+  tidy: null,
   catName: "",
   catMonth: "",
   foreDays: 30,
@@ -890,7 +931,9 @@ function cardInfo(a) {
 /** Money put into savings this period. It leaves your account, but you
     still own it \u2014 so it is counted as money out, never as spending on things. */
 function intoSavings(t) {
-  return (t.type === "move" && t.potId) ? Math.round(t.amt || 0) : 0;
+  if (t.type !== "move") return 0;
+  /* a pot and a fund are the same idea: money kept rather than used */
+  return (t.potId || t.fundId) ? Math.round(t.amt || 0) : 0;
 }
 function totalsFor(list) {
   var out = 0, inc = 0, back = 0, held = 0, saved = 0;
@@ -1132,7 +1175,7 @@ function barList(items, total, opts) {
    ========================================================= */
 var PALETTES = [
   { id:"default", name:"Balanced", hint:"calm and readable, the default",
-    c:["#0d6e66","#e08b1f","#4f5bd5","#b3446c","#3f8fc4","#7a9e2e","#c05621","#5b7083","#8b5cf6","#0891b2"] },
+    c:["#6366f1","#3b82f6","#14b8a6","#22c55e","#f59e0b","#f97316","#f43f5e","#a855f7","#0ea5e9","#84cc16"] },
   { id:"innovate", name:"Innovate", hint:"cool blues and teals",
     c:["#3257a8","#4a9bd6","#20b2aa","#6f42c1","#2f9e8f","#5a7fc4","#17a2b8","#4c6ef5","#3b8ea5","#7048e8"] },
   { id:"bloom", name:"Bloom", hint:"warm and vivid",
@@ -1287,8 +1330,10 @@ function dayStrip(mk) {
 /** Where money goes by what it is FOR, not just by category name. */
 function roleChart(list) {
   var r = byRole(list);
-  var rows = ROLES.filter(function (x) { return r[x.id] > 0; }).map(function (x, i) {
-    return { label: x.icon + " " + x.label, value: r[x.id], colour: scaleAt(i) };
+  /* x.c, not scaleAt(i): a role that happens to be absent one month must not
+     shift every other role's colour along by one */
+  var rows = ROLES.filter(function (x) { return r[x.id] > 0; }).map(function (x) {
+    return { label: x.icon + " " + x.label, value: r[x.id], colour: x.c };
   });
   if (!rows.length) return "";
   var total = rows.reduce(function (s, x) { return s + x.value; }, 0);
@@ -1331,19 +1376,32 @@ function weekBars(mk) {
    ones cannot. A chart that repeats another chart is clutter. */
 
 /** A gauge: how far along something is against a limit. */
+/** One place decides what a budget position is called, so the wording on a
+    gauge, a bar and a summary line can never drift apart. */
+function budgetState(pct) {
+  if (pct > 100) return { id: "over",  icon: "\u26a0", words: "Over budget",       tone: "var(--bad)" };
+  if (pct > 80)  return { id: "near",  icon: "\u25b3", words: "Nearing the limit", tone: "var(--warn)" };
+  return           { id: "ok",    icon: "\u2713", words: "Within budget",     tone: "var(--accent)" };
+}
 function gauge(value, limit, label) {
   var pct = limit > 0 ? Math.min(100, (value / limit) * 100) : 0;
   var W = 200, H = 110, cx = 100, cy = 96, r = 76;
   var a = Math.PI * (1 - pct / 100);
   var x = cx + r * Math.cos(a), y = cy - r * Math.sin(a);
-  var tone = pct > 100 ? "var(--out)" : pct > 80 ? "var(--warn)" : "var(--accent)";
+  var real = limit > 0 ? (value / limit) * 100 : 0;
+  var st = budgetState(real);
   return '<svg viewBox="0 0 ' + W + " " + H + '" class="chart" role="img" aria-label="' +
-    esc((label || "Progress") + ": " + Math.round(pct) + " percent of " + plainMoney(limit)) + '">' +
+    esc((label || "Progress") + ": " + Math.round(real) + " percent of " + plainMoney(limit) +
+      ". " + st.words) + '">' +
     '<path d="M24 96 A76 76 0 0 1 176 96" fill="none" stroke="var(--surface-2)" stroke-width="14" stroke-linecap="round"/>' +
     '<path d="M24 96 A76 76 0 ' + (pct > 50 ? 1 : 0) + ' 1 ' + x.toFixed(1) + " " + y.toFixed(1) +
-    '" fill="none" stroke="' + tone + '" stroke-width="14" stroke-linecap="round"/>' +
-    '<text x="100" y="82" font-size="22" font-weight="700" fill="var(--text)" text-anchor="middle">' +
-    Math.round(pct) + "%</text></svg>";
+    '" fill="none" stroke="' + st.tone + '" stroke-width="14" stroke-linecap="round"/>' +
+    '<text x="100" y="78" font-size="22" font-weight="700" fill="var(--text)" text-anchor="middle">' +
+    Math.round(real) + "%</text>" +
+    /* the words carry the same meaning as the colour, for anyone who cannot
+       tell amber from green */
+    '<text x="100" y="94" font-size="10" font-weight="600" fill="var(--muted)" ' +
+    'text-anchor="middle">' + esc(st.icon + " " + st.words) + "</text></svg>";
 }
 /** A heatmap of the month: which days cost most, laid out as a calendar. */
 function heatmap(mk) {
@@ -2133,7 +2191,7 @@ function pageHome() {
       '<p class="sub">over ' + pace.elapsed + (pace.elapsed === 1 ? " day" : " days") +
       "</p></div>" +
     (tMonth.saved > 0
-      ? '<div class="card"><span class="lbl">Into savings</span><p class="mid in">' +
+      ? '<div class="card"><span class="lbl">Into savings</span><p class="mid savec">' +
         money(tMonth.saved) + '</p><p class="sub">this month</p></div>'
       : "") +
     (pace.hasBudget && pace.perDayLeft !== null
@@ -2402,11 +2460,49 @@ function tidyLine(line) {
     .replace(/\s+/g, " ")
     .trim();
 }
+/** Do two notes describe the same purchase?
+    "bus from home to lb nagar" and "auto from lb nagar to panama" are two
+    \u20b930 rides on one day with no times recorded. On date, amount and account
+    alone they are indistinguishable, so the words are the only thing that can
+    tell them apart. */
+function sameErrand(a, b) {
+  var wordsOf = function (x) {
+    var seen = {}, list = [];
+    String(x || "").toLowerCase().split(/[^a-z0-9]+/).forEach(function (w) {
+      /* drop the filler every line carries, the date, and the amount itself \u2014
+         those are already compared separately, so counting them again would
+         make any two entries on one day look alike */
+      if (w.length < 3) return;
+      if (/^\d+$/.test(w)) return;
+      /* the clock is compared on its own, so "4pm" must not count as a
+         difference between two lines that are otherwise the same */
+      if (/^\d{1,4}(am|pm)$/.test(w)) return;
+      if (/^\d{1,2}[:.]\d{2}$/.test(w)) return;
+      if (/^(the|and|for|from|via|paid|spent|rs|inr|using|with|acct|account|was|were)$/.test(w)) return;
+      if (/^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)/.test(w) && w.length <= 9) return;
+      if (seen[w]) return;
+      seen[w] = 1;
+      list.push(w);
+    });
+    return list;
+  };
+  var x = wordsOf(a), y = wordsOf(b);
+  if (!x.length || !y.length) return true;   /* nothing written down either side */
+  var mark = {}, shared = 0;
+  x.forEach(function (w) { mark[w] = 1; });
+  y.forEach(function (w) { if (mark[w]) { shared += 1; mark[w] = 0; } });
+  /* Measured against everything either line says, not just the shorter one.
+     "bus from home to lb nagar" and "auto from lb nagar to panama" share the
+     landmark but nothing else \u2014 two real rides, not one written twice. */
+  var union = x.length + y.length - shared;
+  return union > 0 && (shared / union) >= 0.6;
+}
 /** How alike are two entries? exact | time | amount | partial | none */
 function duplicateKind(a, b) {
   if (!a || !b) return "none";
   if (a.date !== b.date) return "none";
   if ((a.acc || "") !== (b.acc || "")) return "none";
+  if (!sameErrand(a.note, b.note)) return "none";
   var sameAmt = Math.round(a.amt || 0) === Math.round(b.amt || 0);
   var aT = a.time || "", bT = b.time || "";
   var sameTime = aT === bT;
@@ -2433,7 +2529,7 @@ function readBlock(text) {
     }
     var d = r.draft;
     var row = { no: i + 1, line: line, draft: d, missing: r.missing, read: r.read,
-                ask: r.ask, keep: true, why: "", pairs: [] };
+                ask: r.ask, keep: true, act: "add", why: "", pairs: [] };
 
     /* against what is already saved */
     var hit = null, kind = "none";
@@ -2442,53 +2538,126 @@ function readBlock(text) {
       if (kk === "exact") { hit = db.tx[k]; kind = "exact"; break; }
       if (kk !== "none" && !hit) { hit = db.tx[k]; kind = kk; }
     }
-    /* against earlier lines in this same paste */
-    for (var j = 0; j < accepted.length; j++) {
-      var kj = duplicateKind(d, accepted[j].draft);
-      if (kj === "exact") { hit = accepted[j].draft; kind = "exact"; break; }
-      if (kj !== "none" && kind === "none") { hit = accepted[j].draft; kind = kj; }
+    /* Against earlier lines in this same paste. This is a different question
+       from the one above: two identical lines you typed out yourself are two
+       real payments far more often than they are a slip. Two \u20b930 autos on one
+       day, neither with a time, look identical and both happened. So a repeat
+       inside one paste is raised, never dropped on its own \u2014 only a match
+       against something already saved is certain enough to drop. */
+    var twinInPaste = false;
+    if (kind === "none") {
+      for (var j = 0; j < accepted.length; j++) {
+        var kj = duplicateKind(d, accepted[j].draft);
+        if (kj === "none") continue;
+        hit = accepted[j].draft;
+        kind = kj;
+        twinInPaste = true;
+        if (kj === "exact") break;
+      }
     }
 
     if (kind === "exact") {
       row.keep = false;
+      row.act = "skip";
       row.why = "already recorded";
       plan.skipped.push(row);
       return;
     }
     if (kind !== "none") {
-      row.pairs.push({ kind: kind, other: hit });
+      row.pairs.push({ kind: kind, other: hit, saved: hit && hit.id ? hit.id : "" });
+      /* "partial" means same day, same amount, and one of the two has no time
+         \u2014 nearly always the same payment written down twice, where the new
+         line carries the detail the old one lacks. Start on merge.
+         A different time or a different amount is far more likely to be a
+         second real payment, so start on keeping both. */
+      row.act = (!twinInPaste && kind === "partial" && hit && hit.id) ? "merge" : "add";
       plan.questions.push(row);
     }
     accepted.push(row);
     plan.rows.push(row);
   });
-  plan.count = plan.rows.filter(function (r) { return r.keep; }).length;
+  plan.count = plan.rows.filter(function (r) { return r.act === "add"; }).length;
+  plan.merges = plan.rows.filter(function (r) { return r.act === "merge"; }).length;
   return plan;
+}
+/** Treat a pasted line as the same event as one already saved: fill in the
+    blanks it can, leave anything already answered alone, make no second row. */
+function mergeDraftInto(t, d) {
+  if (!t || !d) return { filled: [], kept: [] };
+  var filled = [], kept = [];
+  var take = function (field, val, label) {
+    if (!val) return;
+    if (!t[field]) { t[field] = val; filled.push(label); }
+    else if (String(t[field]) !== String(val)) kept.push(label);
+  };
+  take("time", d.time, "time");
+  take("cat", d.cat, "category");
+  take("acc", d.acc, "account");
+  take("appId", d.appId, "app");
+  take("channel", d.channel, "card use");
+  take("fundId", d.fundId, "fund");
+  take("potId", d.potId, "savings pot");
+  take("merchant", d.merchant, "shop");
+  if (d.how && !t.how) { t.how = d.how; filled.push("how you paid"); }
+  if (d.note && !t.note) { t.note = d.note; filled.push("note"); }
+  if (t.time) t.noTime = false;
+  if (filled.length) { t.updatedAt = stamp(); }
+  return { filled: filled, kept: kept };
 }
 /** Put the confirmed rows in. One undo step covers the whole import. */
 function commitBlock(plan) {
-  if (!plan) return { added: 0, ids: [] };
-  var ids = [], batch = id("imp");
+  if (!plan) return { added: 0, ids: [], merged: 0 };
+  var ids = [], merges = [], batch = id("imp");
   plan.rows.forEach(function (r) {
-    if (!r.keep) return;
+    if (r.act === "skip") return;
+    if (r.act === "merge") {
+      /* the row it matched is a saved entry, so fill that one in instead of
+         making a second one */
+      var into = r.pairs[0] && r.pairs[0].saved ? tx(r.pairs[0].saved) : null;
+      if (into) {
+        var before = {
+          time: into.time, cat: into.cat, acc: into.acc, appId: into.appId,
+          how: into.how, channel: into.channel, fundId: into.fundId,
+          potId: into.potId, merchant: into.merchant, note: into.note,
+          noTime: into.noTime
+        };
+        var res = mergeDraftInto(into, r.draft);
+        merges.push({ id: into.id, was: before, filled: res.filled });
+        return;
+      }
+      /* the match was another line in the same paste, not something saved \u2014
+         nothing to merge into yet, so this line is simply left out */
+      return;
+    }
     var t = saveQuick(r.draft);
     t.importId = batch;
     ids.push(t.id);
   });
-  if (ids.length) {
+  if (ids.length || merges.length) {
     /* kept apart from ui.undo, which the toast owns */
-    ui.lastImport = { ids: ids, at: stamp() };
+    ui.lastImport = { ids: ids, merges: merges, at: stamp() };
     save();
   }
-  return { added: ids.length, ids: ids, batch: batch };
+  return { added: ids.length, ids: ids, merged: merges.length, batch: batch };
 }
-/** Take back a whole import in one go. */
-function undoImport(ids) {
-  if (!ids || !ids.length) return 0;
-  var before = db.tx.length;
-  db.tx = db.tx.filter(function (t) { return ids.indexOf(t.id) === -1; });
-  save();
-  return before - db.tx.length;
+/** Take back a whole import in one go \u2014 both the new rows and the merges. */
+function undoImport(ids, merges) {
+  var n = 0;
+  if (ids && ids.length) {
+    var before = db.tx.length;
+    db.tx = db.tx.filter(function (t) { return ids.indexOf(t.id) === -1; });
+    n += before - db.tx.length;
+  }
+  (merges || []).forEach(function (m) {
+    var t = tx(m.id);
+    if (!t) return;
+    /* put back exactly what each field held before the merge */
+    Object.keys(m.was).forEach(function (k) { t[k] = m.was[k]; });
+    t.updatedAt = stamp();
+    n += 1;
+  });
+  if (n) save();
+  return n;
 }
 
 /** Something recorded moments ago that looks like the same purchase. */
@@ -2692,6 +2861,7 @@ function saveQuick(d) {
     appId: d.appId || "", channel: d.channel || "",
     date: d.date || today(), time: d.time || "", noTime: false,
     note: d.note || "", merchant: d.merchant || "", ref: d.ref || "",
+    fundId: d.fundId || "", potId: d.potId || "",
     more: false, status: "done", deducted: 0, refunds: [],
     typedIn: true, createdAt: stamp(), updatedAt: stamp()
   };
@@ -2844,30 +3014,48 @@ function pasteSheet() {
     'placeholder="sep 1: 120 lunch gpay&#10;- sep 2: 60 auto cash&#10;3 sep 450 shopping phonepe hdfc"></textarea>' +
     '<p class="hint">Nothing is saved yet. You will see exactly what it read, what it thinks ' +
     "is a repeat, and anything it needs to ask about \u2014 then you decide.</p>" +
-    '<button type="button" class="btn full" data-act="pasteRead">Look through it</button>';
+    '<button type="button" class="btn full" data-act="pasteRead">Look through it first</button>' +
+    '<button type="button" class="btn g full" style="margin-block-start:8px" ' +
+      'data-act="pasteAll">Just add it all</button>' +
+    '<p class="hint">Adding it all saves every line straight away. Anything that looks like ' +
+    "a repeat of something you already have is then shown to you one at a time, so you can " +
+    "clear it up afterwards instead of beforehand. Nothing is ever removed without you saying so.</p>";
 }
-function dupWords(kind) {
-  return kind === "time" ? "same day and same amount, but a different time"
+function dupWords(kind, twin) {
+  var base = kind === "time" ? "same day and same amount, but a different time"
     : kind === "amount" ? "same day and same time, but a different amount"
     : kind === "partial" ? "same day and same amount, and one of them has no time"
+    : kind === "exact" ? "same day, same amount, same time, same account"
     : "already recorded";
+  return twin ? base + " \u2014 both are lines in what you just pasted" : base;
 }
 function planSheet() {
   var plan = ui.plan;
   if (!plan) return "";
-  var keeping = plan.rows.filter(function (r) { return r.keep; }).length;
+  var keeping = plan.rows.filter(function (r) { return r.act === "add"; }).length;
+  var merging = plan.rows.filter(function (r) { return r.act === "merge"; }).length;
+  var gappy = plan.rows.filter(function (r) { return r.act !== "skip" && r.missing.length; }).length;
   var h = '<div class="shd"><h2>Before anything is saved</h2>' +
     '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>';
 
   h += '<div class="grid">' +
     '<div class="card"><span class="lbl">Will be added</span><p class="mid in">' + keeping + "</p></div>" +
-    '<div class="card"><span class="lbl">Already there</span><p class="mid">' +
+    '<div class="card"><span class="lbl">Joined to existing</span><p class="mid">' + merging + "</p>" +
+      (merging ? '<p class="sub">no second row</p>' : "") + "</div>" +
+    '<div class="card"><span class="lbl">Exact repeats</span><p class="mid">' +
       plan.skipped.length + "</p>" +
-      (plan.skipped.length ? '<p class="sub">skipped</p>' : "") + "</div>" +
+      (plan.skipped.length ? '<p class="sub">left out</p>' : "") + "</div>" +
     '<div class="card"><span class="lbl">Need your answer</span><p class="mid ' +
       (plan.questions.length ? "warnc" : "") + '">' + plan.questions.length + "</p></div>" +
     '<div class="card"><span class="lbl">Not understood</span><p class="mid ' +
-      (plan.unreadable.length ? "out" : "") + '">' + plan.unreadable.length + "</p></div></div>";
+      (plan.unreadable.length ? "warnc" : "") + '">' + plan.unreadable.length + "</p></div></div>";
+
+  if (gappy) {
+    h += '<div class="note warn"><span aria-hidden="true">!</span><div><b>' + gappy +
+      " of these are missing some detail.</b><br>They will still be saved and counted. " +
+      'Each one is marked <span class="bangtag"><span aria-hidden="true">!</span></span> below ' +
+      "so you can find it again.</div></div>";
+  }
 
   if (plan.questions.length) {
     h += '<div class="note bad"><span aria-hidden="true">\u2753</span><div><b>' +
@@ -2877,25 +3065,37 @@ function planSheet() {
     h += plan.questions.map(function (r) {
       var pair = r.pairs[0];
       var o = pair.other;
+      var canMerge = !!pair.saved;
+      var cell = function (a, b) {
+        /* show plainly where the two differ, and where the new line fills a blank */
+        var same = String(a || "") === String(b || "");
+        return "<td>" + (a ? esc(a) : '<span class="muted">not known</span>') + "</td>" +
+          "<td" + (same ? "" : ' class="warnc"') + ">" +
+          (b ? esc(b) : '<span class="muted">not known</span>') + "</td>";
+      };
       return '<div class="card"><p class="sub">Line ' + r.no + "</p>" +
         "<b>" + esc(r.line) + "</b>" +
-        '<p class="sub">' + esc(dupWords(pair.kind)) + "</p>" +
-        "<table>" +
-        "<tr><th></th><th>Already there</th><th>Your new line</th></tr>" +
-        "<tr><td>Date</td><td>" + esc(fDate(o.date)) + "</td><td>" + esc(fDate(r.draft.date)) + "</td></tr>" +
-        '<tr><td>Amount</td><td class="n">' + money(o.amt) + '</td><td class="n">' +
-          money(r.draft.amt) + "</td></tr>" +
-        "<tr><td>Time</td><td>" + (o.time ? esc(fTime(o.time)) : "not known") + "</td><td>" +
-          (r.draft.time ? esc(fTime(r.draft.time)) : "not known") + "</td></tr>" +
-        "<tr><td>Account</td><td>" + esc(accName(o.acc)) + "</td><td>" +
-          esc(accName(r.draft.acc)) + "</td></tr>" +
+        '<p class="sub">' + esc(dupWords(pair.kind, !pair.saved)) + "</p>" +
+        '<table><tr><th></th><th>Already saved</th><th>Your new line</th></tr>' +
+        "<tr><td>Date</td>" + cell(fDate(o.date), fDate(r.draft.date)) + "</tr>" +
+        '<tr><td>Amount</td>' + cell(money(o.amt), money(r.draft.amt)) + "</tr>" +
+        "<tr><td>Time</td>" + cell(o.time ? fTime(o.time) : "", r.draft.time ? fTime(r.draft.time) : "") + "</tr>" +
+        "<tr><td>Account</td>" + cell(o.acc ? accName(o.acc) : "", r.draft.acc ? accName(r.draft.acc) : "") + "</tr>" +
+        "<tr><td>Category</td>" + cell(o.cat || "", r.draft.cat || "") + "</tr>" +
         "</table>" +
         '<div class="btns" style="margin-block-start:8px">' +
-        '<button type="button" class="btn ' + (r.keep ? "" : "g") + ' s" data-act="planKeep" ' +
-          'data-no="' + r.no + '">Both are real \u2014 add it</button>' +
-        '<button type="button" class="btn ' + (r.keep ? "g" : "") + ' s" data-act="planDrop" ' +
-          'data-no="' + r.no + '">Same thing \u2014 skip it</button></div>' +
-        '<p class="sub">' + (r.keep ? "\u2705 will be added" : "\u23ed\ufe0f will be skipped") +
+        (canMerge
+          ? '<button type="button" class="btn ' + (r.act === "merge" ? "" : "g") + ' s" ' +
+            'data-act="planMerge" data-no="' + r.no + '">Same one \u2014 merge them</button>'
+          : "") +
+        '<button type="button" class="btn ' + (r.act === "add" ? "" : "g") + ' s" data-act="planKeep" ' +
+          'data-no="' + r.no + '">Two different ones \u2014 add it</button>' +
+        '<button type="button" class="btn ' + (r.act === "skip" ? "" : "g") + ' s" data-act="planDrop" ' +
+          'data-no="' + r.no + '">Drop this line</button></div>' +
+        '<p class="sub">' + (r.act === "merge"
+            ? "\u21c4 will be joined into the saved one \u2014 no second row"
+            : r.act === "add" ? "\u2705 will be added as its own entry"
+            : "\u23ed\ufe0f will be left out") +
         "</p></div>";
     }).join("");
   }
@@ -2905,11 +3105,19 @@ function planSheet() {
     h += '<div class="sec"><h2>Read from your list</h2><div class="card"><table>' +
       "<tr><th>#</th><th>What it read</th><th>Missing</th></tr>" +
       plain.map(function (r) {
-        return "<tr><td>" + r.no + "</td><td>" + esc(r.read.join(" \u00b7 ")) +
+        return '<tr' + (r.missing.length ? ' class="rowbad"' : "") + '><td>' + r.no + "</td><td>" +
+          esc(r.read.join(" \u00b7 ")) +
           '<br><span class="sub">' + esc(r.line) + "</span></td>" +
-          '<td class="sub">' + (r.missing.length ? esc(r.missing.join(", ")) : "\u2014") +
+          "<td>" + (r.missing.length
+            ? '<span class="bangtag" title="' + esc(r.missing.join(", ")) + '">' +
+              '<span aria-hidden="true">!</span> ' + esc(r.missing.join(", ")) + "</span>"
+            : '<span class="oktag"><span aria-hidden="true">\u2713</span> complete</span>') +
           "</td></tr>";
-      }).join("") + "</table></div></div>";
+      }).join("") + "</table>" +
+      '<p class="sub">Rows marked <span class="bangtag"><span aria-hidden="true">!</span> ' +
+      "</span> are saved and counted in your totals \u2014 the missing parts only affect how " +
+      "well they can be grouped and explained. You can fill them in later from History.</p>" +
+      "</div></div>";
   }
   if (plan.skipped.length) {
     h += '<div class="sec"><h2>Already recorded, so skipped</h2><div class="card"><table>' +
@@ -2929,9 +3137,72 @@ function planSheet() {
   }
 
   h += '<div class="btns" style="margin-block-start:14px">' +
-    '<button type="button" class="btn" data-act="planCommit"' + (keeping ? "" : " disabled") + '>' +
-    "Add " + keeping + " entr" + (keeping === 1 ? "y" : "ies") + "</button>" +
+    '<button type="button" class="btn" data-act="planCommit"' +
+      ((keeping || merging) ? "" : " disabled") + '>' +
+    "Save \u2014 " + keeping + " new" + (merging ? ", " + merging + " joined" : "") + "</button>" +
     '<button type="button" class="btn g" data-act="planCancel">Cancel, save nothing</button></div>';
+  return h;
+}
+
+/** After "just add it all": walk through what looked like a repeat. */
+function tidySheet() {
+  var t = ui.tidy;
+  if (!t) return "";
+  var pending = t.items.filter(function (x) { return !x.done; });
+  var h = '<div class="shd"><h2>Added \u2014 now let us tidy up</h2>' +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>';
+
+  h += '<div class="note ok"><span aria-hidden="true">\u2705</span><div><b>' + t.added +
+    " entr" + (t.added === 1 ? "y is" : "ies are") + " saved.</b>" +
+    (t.dropped ? "<br>" + t.dropped + " line" + (t.dropped === 1 ? " was" : "s were") +
+      " an exact repeat of something already recorded \u2014 same day, same amount, same time, " +
+      "same account \u2014 so " + (t.dropped === 1 ? "it was" : "they were") +
+      " left out rather than saved twice." : "") + "</div></div>";
+
+  if (!pending.length) {
+    h += '<div class="note ok"><span aria-hidden="true">\u2713</span><div>' +
+      (t.items.length
+        ? "That is everything \u2014 all " + t.items.length + " checked."
+        : "Nothing else looked like a repeat.") + "</div></div>" +
+      '<button type="button" class="btn full" data-act="tidyDone">Done</button>';
+    return h;
+  }
+
+  var x = pending[0], seen = tx(x.savedId), made = tx(x.newId);
+  if (!seen || !made) {
+    /* one of the two is gone \u2014 nothing left to compare */
+    x.done = true;
+    return tidySheet();
+  }
+  var left = t.items.length - pending.length + 1;
+  h += '<p class="sub">' + left + " of " + t.items.length + "</p>";
+  h += '<div class="note warn"><span aria-hidden="true">!</span><div>' +
+    "<b>These two look like the same payment.</b><br>" + esc(dupWords(x.kind)) +
+    ". Two chai on one day really are two entries, so this is your call.</div></div>";
+
+  var row = function (label, a, b) {
+    var same = String(a || "") === String(b || "");
+    return "<tr><td>" + label + "</td><td>" +
+      (a ? esc(a) : '<span class="muted">not known</span>') + "</td>" +
+      "<td" + (same ? "" : ' class="warnc"') + ">" +
+      (b ? esc(b) : '<span class="muted">not known</span>') + "</td></tr>";
+  };
+  h += '<div class="card"><table><tr><th></th><th>Was already there</th>' +
+    "<th>Just added</th></tr>" +
+    row("Date", fDate(seen.date), fDate(made.date)) +
+    row("Amount", money(seen.amt), money(made.amt)) +
+    row("Time", seen.time ? fTime(seen.time) : "", made.time ? fTime(made.time) : "") +
+    row("Account", seen.acc ? accName(seen.acc) : "", made.acc ? accName(made.acc) : "") +
+    row("Category", seen.cat || "", made.cat || "") +
+    row("Note", seen.note || "", made.note || "") +
+    "</table></div>";
+
+  h += '<div class="btns" style="flex-direction:column;align-items:stretch;margin-block-start:10px">' +
+    '<button type="button" class="btn" data-act="tidyMerge">Same one \u2014 join them and remove the copy</button>' +
+    '<button type="button" class="btn g" data-act="tidyKeep">Two different payments \u2014 keep both</button>' +
+    "</div>" +
+    '<p class="hint">Joining keeps the older entry and fills in any blank it had from the ' +
+    "newer line, then removes the duplicate. Keeping both changes nothing.</p>";
   return h;
 }
 
@@ -3329,7 +3600,7 @@ function calendar(mk) {
     cells += '<button type="button" class="cd' + (iso === today() ? " now" : "") +
       (weekend ? " we" : "") + (hol ? " hol" : "") +
       (dayMarks.length ? " marked" : "") + '" data-act="calDay" data-d="' + iso + '"' +
-      (v > 0 ? ' style="background:color-mix(in srgb, var(--out) ' + shade + '%, var(--surface-2))"' : "") +
+      (v > 0 ? ' style="background:color-mix(in srgb, var(--accent) ' + shade + '%, var(--surface-2))"' : "") +
       ' aria-label="' + esc(say.join(". ")) + '"><b>' + i + "</b>" +
       (dayMarks.length
         ? '<span class="pins" aria-hidden="true">' +
@@ -3485,7 +3756,7 @@ function daySheet(iso) {
   h += '<div class="grid">' +
     '<div class="card"><span class="lbl">Spent</span><p class="mid out">' + money(t.spend) + "</p></div>" +
     '<div class="card"><span class="lbl">Received</span><p class="mid in">' + money(t.in) + "</p></div>" +
-    (t.saved ? '<div class="card"><span class="lbl">Into savings</span><p class="mid">' +
+    (t.saved ? '<div class="card"><span class="lbl">Into savings</span><p class="mid savec">' +
       money(t.saved) + "</p></div>" : "") + "</div>";
   h += '<div class="card">' + (list.length
     ? list.map(txRowDated).join("")
@@ -4431,8 +4702,9 @@ function cardTile(card) {
       '<div class="grid" style="margin-block:8px">' +
       '<div><span class="lbl">' + (m.shared ? "Shared limit" : "Total limit") + '</span><p class="mid">' +
         money(m.limit) + "</p></div>" +
-      '<div><span class="lbl">Used</span><p class="mid out">' + money(m.poolUsed) + "</p></div>" +
-      '<div><span class="lbl">Left to use</span><p class="mid in">' + money(m.available) + "</p></div></div>" +
+      '<div><span class="lbl">Used</span><p class="mid creditc">' + money(m.poolUsed) + "</p></div>" +
+      '<div><span class="lbl">Left to borrow</span><p class="mid creditc">' + money(m.available) +
+        '</p><p class="sub">not your money</p></div></div>' +
       '<p class="sub">' + m.utilisation.toFixed(1) + "% of the limit used" +
       (m.unbilled > 0 ? " \u00b7 " + money(m.unbilled) + " not billed yet" : "") + "</p>";
     if (m.shared) {
@@ -5062,8 +5334,10 @@ function readAmount(text) {
   if (m) return Math.round(parseFloat(m[1]) * 1000 * 100);
   /* ₹1,200.50 / rs 50 / 50/- / plain 50 */
   m = s.match(/(?:\u20b9|\brs\.?\b|\binr\b)\s*(\d[\d,]*(?:\.\d{1,2})?)/i) ||
-      s.match(/(\d[\d,]*(?:\.\d{1,2})?)\s*(?:\/-|\brupees?\b|\/=)/i) ||
-      s.match(/(?:^|\s)(\d[\d,]*(?:\.\d{1,2})?)(?=\s|$)/);
+      s.match(/(\d[\d,]*(?:\.\d{1,2})?)\s*(?:\/-|\brupees?\b|\brs\.?\b|\/=)/i) ||
+      /* a bracket, comma or full stop may sit straight after the number:
+         "500( to lpu", "33,500(credit card bills)" */
+      s.match(/(?:^|[\s(\[])(\d[\d,]*(?:\.\d{1,2})?)(?=[\s)\](,.]|$)/);
   if (!m) return 0;
   var n = parseFloat(String(m[1]).replace(/,/g, ""));
   if (!isFinite(n) || n <= 0) return 0;
@@ -5173,6 +5447,66 @@ function matchAccounts(text) {
   });
   return hits.sort(function (x, y) { return y.score - x.score; });
 }
+/* A fund name overlaps an account name often — "HDFC Flexi Cap" is not
+   HDFC Savings. Match the fund first, then blank its words out of the text
+   before any account is looked for. */
+function nameZone(text) {
+  /* People write "<what it was> via/from <where the money came from>".
+     Only the first half names the thing; the second half names the account.
+     Without this, "Motilal Oswal sip via phonepe hdfc" matches HDFC Flexi Cap. */
+  var s = String(text || "").toLowerCase();
+  var cut = s.search(/\b(via|from|paid|using|through)\b/);
+  var head = cut > 0 ? s.slice(0, cut) : s;
+  return head.replace(/^\W*\d[\d,.]*\s*/, " ");
+}
+function matchFund(text) {
+  var whole = String(text || "").toLowerCase();
+  if (!/\b(sip|mf|fund|mutual)\b/.test(whole)) return null;
+  var s = nameZone(whole);
+  var best = null, bestScore = 0;
+  (db.funds || []).forEach(function (f) {
+    if (f.stopped) return;
+    var words = String(f.name || "").toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(function (w) {
+        /* words shared by half the fund industry carry no signal */
+        return w.length > 2 && !/^(fund|direct|growth|plan|the|and|of)$/.test(w);
+      });
+    var score = 0;
+    words.forEach(function (w) { if (hasWord(s, w)) score += 1; });
+    if (score > bestScore) { bestScore = score; best = f; }
+  });
+  return bestScore >= 1 ? best : null;
+}
+/** Money moved into a savings pot rather than spent. */
+function matchPot(text) {
+  var s = nameZone(text);
+  var best = null, bestScore = 0;
+  (db.pots || []).forEach(function (pt) {
+    var words = String(pt.name || "").toLowerCase().split(/[^a-z0-9]+/)
+      .filter(function (w) {
+        /* "savings" and "account" name half the entries in the list — a pot
+           has to be recognised by its own word, not a generic one */
+        return w.length > 2 && !/^(savings?|account|money|the|and)$/.test(w);
+      });
+    var score = 0;
+    words.forEach(function (w) { if (hasWord(s, w)) score += 1; });
+    if (score > bestScore) { bestScore = score; best = pt; }
+  });
+  if (!best && /\bfd\b|fixed deposit/.test(s)) {
+    best = (db.pots || []).filter(function (pt) { return /fixed|fd/i.test(pt.name); })[0] || null;
+    if (best) bestScore = 1;
+  }
+  return bestScore >= 1 ? best : null;
+}
+/** Blank out a name's words so a later match cannot see them. */
+function maskWords(text, name) {
+  var out = String(text || "");
+  String(name || "").toLowerCase().split(/[^a-z0-9]+/).forEach(function (w) {
+    if (w.length > 2) out = out.replace(new RegExp("\\b" + w + "\\b", "gi"), " ");
+  });
+  return out;
+}
 function matchApp(text) {
   var s = String(text || "").toLowerCase().replace(/\s+/g, "");
   var found = null;
@@ -5192,14 +5526,20 @@ function readLine(text, base) {
   var s = String(text || "").trim();
   var d = Object.assign({
     amt: 0, date: "", time: "", cat: "", acc: "", how: "", appId: "", channel: "",
-    note: "", type: "out"
+    note: "", type: "out", fundId: "", potId: ""
   }, base || {});
   var ask = [];
   if (!s) return { draft: d, missing: ["amount"], ask: ask, read: [], text: s };
 
   var read = [];
-  if (/\b(received|got|credited|refund|salary|income|from)\b/i.test(s) &&
-      !/\bpaid\b|\bspent\b/i.test(s)) { d.type = "in"; read.push("money coming in"); }
+  /* "from" is deliberately NOT here. In everyday writing it names a source \u2014
+     "train from Tirupati", "SIP from SBI account" \u2014 and almost never means
+     money arriving. Only words that unambiguously mean a receipt count. */
+  if (/\b(received|credited|deposited|refund(?:ed)?|salary|income|cashback|reimburs)\b/i.test(s) &&
+      !/\b(paid|spent|sent|gave|bought)\b/i.test(s)) {
+    d.type = "in";
+    read.push("money coming in");
+  }
 
   var amt = readAmount(s);
   if (amt > 0 && !d.amt) { d.amt = amt; read.push(money(amt)); }
@@ -5217,6 +5557,36 @@ function readLine(text, base) {
   var appHit = matchApp(s);
   if (appHit) { d.appId = appHit.id; d.how = "app"; read.push(appHit.name); }
 
+  /* A card bill is not spending — the spending happened when the card was
+     swiped. Recognise it so it lands in the right place. */
+  if (/\b(credit card|cc|card)\b[^.]{0,20}\bbills?\b|\bbills?\b[^.]{0,20}\bcredit card\b/i.test(s)) {
+    d.type = "bill";
+    read.push("credit card bill");
+  }
+
+  /* accountText is what is left once fund and pot names are taken out, so
+     "HDFC Flexi Cap ... from SBI" cannot resolve to HDFC Savings */
+  var accountText = s;
+  var fundHit = matchFund(s);
+  if (fundHit) {
+    d.fundId = fundHit.id;
+    accountText = maskWords(accountText, fundHit.name);
+    read.push(fundHit.name);
+  }
+  var potHit = !fundHit ? matchPot(s) : null;
+  if (potHit) {
+    d.potId = potHit.id;
+    accountText = maskWords(accountText, potHit.name);
+    read.push("into " + potHit.name);
+  }
+  if (d.fundId || d.potId) {
+    /* This money has not been spent \u2014 it has moved from an account you can
+       spend from into one you cannot. Recording it as a payment would make
+       every SIP look like an expense and understate what you keep. */
+    d.type = "move";
+    read.push("set aside, not spent");
+  }
+
   for (var j = 0; j < HOW_WORDS.length; j++) {
     if (HOW_WORDS[j].re.test(s)) {
       if (!d.appId || HOW_WORDS[j].how === "cash") d.how = HOW_WORDS[j].how;
@@ -5227,7 +5597,7 @@ function readLine(text, base) {
     if (CHANNEL_WORDS[k].re.test(s)) { d.channel = CHANNEL_WORDS[k].ch; break; }
   }
 
-  var hits = matchAccounts(s);
+  var hits = matchAccounts(accountText);
   if (hits.length === 1 || (hits.length > 1 && hits[0].score > hits[1].score)) {
     d.acc = hits[0].acc.id;
     read.push(hits[0].acc.name);
@@ -7605,14 +7975,21 @@ function goodNews(mk) {
    Debt           repayments
    Investment     SIPs and funds
    Nothing is guessed at spend time: a category with no role behaves as Flexible. */
+/* Each role owns one colour and keeps it on every page. A colour that moves
+   about \u2014 teal on Home, orange in Reports \u2014 teaches nothing, because the
+   reader has to re-learn the key each time. These never shift. */
 var ROLES = [
-  { id:"essential",     label:"Essential",     icon:"\ud83d\udd12", hint:"hard to avoid this month" },
-  { id:"flexible",      label:"Flexible",      icon:"\u2696\ufe0f", hint:"you control the amount" },
-  { id:"discretionary", label:"Discretionary", icon:"\u2728", hint:"you could skip it" },
-  { id:"savings",       label:"Savings",       icon:"\ud83d\udcb0", hint:"kept, not spent" },
-  { id:"debt",          label:"Debt",          icon:"\ud83c\udfe6", hint:"repayments" },
-  { id:"investment",    label:"Investment",    icon:"\ud83d\udcc8", hint:"put to work" }
+  { id:"essential",     label:"Essential",     icon:"\ud83d\udd12", hint:"hard to avoid this month", c:"#3b82f6" },
+  { id:"flexible",      label:"Flexible",      icon:"\u2696\ufe0f", hint:"you control the amount",    c:"#6366f1" },
+  { id:"discretionary", label:"Discretionary", icon:"\u2728",        hint:"you could skip it",         c:"#f97316" },
+  { id:"savings",       label:"Savings",       icon:"\ud83d\udcb0", hint:"kept, not spent",           c:"#22c55e" },
+  { id:"debt",          label:"Debt",          icon:"\ud83c\udfe6", hint:"repayments",                c:"#f43f5e" },
+  { id:"investment",    label:"Investment",    icon:"\ud83d\udcc8", hint:"put to work",               c:"#14b8a6" }
 ];
+function roleColour(id) {
+  for (var i = 0; i < ROLES.length; i++) if (ROLES[i].id === id) return ROLES[i].c;
+  return "#6366f1";
+}
 /* Sensible starting points. The user can change any of them. */
 var ROLE_DEFAULTS = {
   Rent:"essential", Bills:"essential", Health:"essential", Education:"essential",
@@ -9865,7 +10242,7 @@ function storyBlock(mk) {
   h += '<div class="grid" style="margin-block-start:10px">' +
     (st.got ? '<div><span class="lbl">Came in</span><p class="mid in">' + money(st.got) + "</p></div>" : "") +
     '<div><span class="lbl">Spent</span><p class="mid out">' + money(st.spent) + "</p></div>" +
-    (st.saved ? '<div><span class="lbl">Saved</span><p class="mid">' + money(st.saved) + "</p></div>" : "") +
+    (st.saved ? '<div><span class="lbl">Saved</span><p class="mid savec">' + money(st.saved) + "</p></div>" : "") +
     (st.cardPaid ? '<div><span class="lbl">Card bills</span><p class="mid">' + money(st.cardPaid) + "</p></div>" : "") +
     "</div></div></div>";
   return h;
@@ -10305,9 +10682,10 @@ function creditPoolBlock() {
   var h = '<div class="card"><div class="grid">' +
     '<div><span class="lbl">Your total limit</span><p class="mid">' +
       maskMoney(totalLim, "cardsum") + "</p></div>" +
-    '<div><span class="lbl">Used</span><p class="mid out">' + maskMoney(totalUsed, "cardsum") + "</p></div>" +
-    '<div><span class="lbl">Left to use</span><p class="mid in">' +
-      maskMoney(totalLim - totalUsed, "cardsum") + "</p></div></div>" +
+    '<div><span class="lbl">Used</span><p class="mid creditc">' + maskMoney(totalUsed, "cardsum") + "</p></div>" +
+    '<div><span class="lbl">Left to borrow</span><p class="mid creditc">' +
+      maskMoney(totalLim - totalUsed, "cardsum") +
+      '</p><p class="sub">borrowing room, not money you hold</p></div></div>' +
     eyeBtn("cardsum", "your card totals") +
     '<p class="sub">Across ' + order.length + " pool" + (order.length === 1 ? "" : "s") +
     " of credit. A shared limit is counted once, not once per card.</p></div>";
@@ -15544,14 +15922,82 @@ function act(name, d) {
       openSheet(planSheet());
       return;
     }
+    case "pasteAll": {
+      var ab = el("pasteBox");
+      var atext = ab ? String(ab.value || "") : "";
+      if (!atext.trim()) { toast("Paste your lines first"); return; }
+      var aplan = readBlock(atext);
+      if (!aplan.rows.length && !aplan.skipped.length) {
+        toast("Nothing in that looked like an entry");
+        return;
+      }
+      /* an exact repeat is not a judgement call \u2014 same day, same amount, same
+         time, same account is the same payment, so it is simply not added.
+         Everything else goes in, and the near-misses are asked about after. */
+      aplan.rows.forEach(function (r) { r.act = "add"; r.keep = true; });
+      var ares = commitBlock(aplan);
+      var items = [];
+      aplan.rows.forEach(function (r, ix) {
+        if (!r.pairs.length || !r.pairs[0].saved) return;
+        var newId = ares.ids[aplan.rows.slice(0, ix).filter(function (q) {
+          return q.act === "add"; }).length];
+        if (!newId) return;
+        items.push({ savedId: r.pairs[0].saved, newId: newId, kind: r.pairs[0].kind, done: false });
+      });
+      ui.tidy = { added: ares.added, dropped: aplan.skipped.length, items: items };
+      ui.plan = null;
+      render();
+      openSheet(tidySheet());
+      return;
+    }
+    case "tidyKeep": {
+      if (!ui.tidy) return;
+      for (var ti = 0; ti < ui.tidy.items.length; ti++) {
+        if (!ui.tidy.items[ti].done) { ui.tidy.items[ti].done = true; break; }
+      }
+      openSheet(tidySheet());
+      return;
+    }
+    case "tidyMerge": {
+      if (!ui.tidy) return;
+      for (var tm = 0; tm < ui.tidy.items.length; tm++) {
+        var it = ui.tidy.items[tm];
+        if (it.done) continue;
+        var into = tx(it.savedId), dupe = tx(it.newId);
+        if (into && dupe) {
+          mergeDraftInto(into, dupe);
+          db.tx = db.tx.filter(function (q) { return q.id !== dupe.id; });
+          /* it is gone, so the undo list must not try to remove it twice */
+          if (ui.lastImport && ui.lastImport.ids) {
+            ui.lastImport.ids = ui.lastImport.ids.filter(function (q) { return q !== dupe.id; });
+          }
+          save();
+        }
+        it.done = true;
+        break;
+      }
+      render();
+      openSheet(tidySheet());
+      return;
+    }
+    case "tidyDone":
+      ui.tidy = null; closeSheet(); render();
+      toast("All tidied up");
+      return;
     case "planKeep":
+    case "planMerge":
     case "planDrop": {
       if (!ui.plan) return;
       var wantNo = parseInt(d.no, 10);
+      var wantAct = name === "planKeep" ? "add" : name === "planMerge" ? "merge" : "skip";
       ui.plan.rows.forEach(function (r) {
-        if (r.no === wantNo) r.keep = (name === "planKeep");
+        if (r.no !== wantNo) return;
+        /* merging needs something saved to merge into */
+        if (wantAct === "merge" && !(r.pairs[0] && r.pairs[0].saved)) return;
+        r.act = wantAct;
+        r.keep = wantAct !== "skip";
       });
-      ui.plan.count = ui.plan.rows.filter(function (r) { return r.keep; }).length;
+      ui.plan.count = ui.plan.rows.filter(function (r) { return r.act === "add"; }).length;
       openSheet(planSheet());
       return;
     }
@@ -15565,14 +16011,17 @@ function act(name, d) {
       var skippedN = ui.plan.skipped.length;
       ui.plan = null;
       closeSheet(); render();
-      toast(res.added + " added" + (skippedN ? ", " + skippedN + " already there" : ""),
-        res.added ? function () { act("undoImport", {}); } : null);
+      toast(res.added + " added" +
+        (res.merged ? ", " + res.merged + " joined" : "") +
+        (skippedN ? ", " + skippedN + " repeats left out" : ""),
+        (res.added || res.merged) ? function () { act("undoImport", {}); } : null);
       return;
     }
     case "undoImport": {
-      var n = undoImport((ui.lastImport && ui.lastImport.ids) || []);
+      var n = undoImport((ui.lastImport && ui.lastImport.ids) || [],
+                         (ui.lastImport && ui.lastImport.merges) || []);
       ui.lastImport = null; render();
-      toast(n ? n + " entries taken back out" : "Nothing to undo");
+      toast(n ? n + " changes taken back out" : "Nothing to undo");
       return;
     }
     case "quickAdd": {
@@ -16792,6 +17241,7 @@ return {
              KEYS: KEYS, typingInto: typingInto, crashPage: crashPage,
              PALETTES: PALETTES, palette: palette, setPalette: setPalette, paletteId: paletteId,
              gauge: gauge, heatmap: heatmap, waterfall: waterfall, sparkRow: sparkRow,
+             budgetState: budgetState, roleColour: roleColour,
              lineChart: lineChart, pairBars: pairBars, dayStrip: dayStrip,
              roleChart: roleChart, weekBars: weekBars, shortMoney: shortMoney, scaleAt: scaleAt,
              pageWatch: pageWatch, watchSheet: watchSheet,
