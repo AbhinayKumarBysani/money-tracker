@@ -8,25 +8,37 @@
 <title>Money Tracker</title>
 <style>
 :root{
-  --bg:#f4f6f8; --surface:#fff; --surface-2:#eef1f5; --border:#e0e4ea;
-  --text:#14181d; --muted:#69707c; --accent:#0f766e; --accent-soft:#d8f0ec;
-  --in:#15803d; --out:#b3261e; --move:#4f5bd5; --warn:#b45309; --info:#1d4ed8;
-  --spend:#14181d;
-  --shadow:0 1px 2px rgba(16,24,40,.05),0 8px 22px rgba(16,24,40,.06);
+  /* Light: a warm off-white page with white cards, so cards lift off the page
+     instead of merging with it. Text is near-black but not pure, which is
+     easier on the eye over a long session. */
+  --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f1f3f7; --surface-3:#e7eaf0;
+  --border:#dfe3ea;
+  --text:#1a1d23; --muted:#5f6672; --accent:#0d6e66; --accent-soft:#dcf1ee;
+  --in:#116b3a; --out:#a52318; --move:#3f4ec4; --warn:#9a5b06; --info:#1b4dc7;
+  --spend:#1a1d23;
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 6px 18px rgba(16,24,40,.05);
   --r:14px; --r2:10px;
 }
 [data-theme="dark"]{
-  --bg:#15181d; --surface:#1d2127; --surface-2:#252a32; --border:#333944;
-  --text:#dde1e7; --muted:#98a1af; --accent:#5fb6ab; --accent-soft:#1f3431;
-  --in:#6fc49c; --out:#e59a95; --move:#9a9ddd; --warn:#d3a468; --info:#8fa9f0;
-  --spend:#dde1e7;
+  /* Dark: a soft charcoal, never pure black — pure black against light text
+     causes halation and makes long reading tiring. Cards sit a step lighter
+     than the page so the same lift is preserved. */
+  --bg:#161a20; --surface:#1e232b; --surface-2:#272d37; --surface-3:#323945;
+  --border:#353c48;
+  --text:#e2e6ec; --muted:#9aa4b2; --accent:#63bdb1; --accent-soft:#1d3733;
+  --in:#77cba2; --out:#e8a49e; --move:#a3a6e4; --warn:#d8ac74; --info:#93adf2;
+  --spend:#e2e6ec;
   --shadow:0 1px 2px rgba(0,0,0,.32),0 8px 22px rgba(0,0,0,.24);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#15181d; --surface:#1d2127; --surface-2:#252a32; --border:#333944;
-  --text:#dde1e7; --muted:#98a1af; --accent:#5fb6ab; --accent-soft:#1f3431;
-  --in:#6fc49c; --out:#e59a95; --move:#9a9ddd; --warn:#d3a468; --info:#8fa9f0;
-  --spend:#dde1e7;
+  /* Dark: a soft charcoal, never pure black — pure black against light text
+     causes halation and makes long reading tiring. Cards sit a step lighter
+     than the page so the same lift is preserved. */
+  --bg:#161a20; --surface:#1e232b; --surface-2:#272d37; --surface-3:#323945;
+  --border:#353c48;
+  --text:#e2e6ec; --muted:#9aa4b2; --accent:#63bdb1; --accent-soft:#1d3733;
+  --in:#77cba2; --out:#e8a49e; --move:#a3a6e4; --warn:#d8ac74; --info:#93adf2;
+  --spend:#e2e6ec;
   --shadow:0 1px 2px rgba(0,0,0,.32),0 8px 22px rgba(0,0,0,.24);
 }}
 *{box-sizing:border-box}
@@ -65,7 +77,7 @@ header.top .wrap{display:flex;align-items:center;gap:8px;min-block-size:56px}
 .rowline{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .hero{background:linear-gradient(135deg,var(--accent),#0e7490);color:#fff;border:0}
 .hero .lbl,.hero .sub{color:rgba(255,255,255,.88)}
-[data-theme="dark"] .hero{background:linear-gradient(135deg,#2b5c57,#2a4d5c)}
+[data-theme="dark"] .hero{background:linear-gradient(135deg,#204a46,#22414e)}
 
 label{display:block;font-size:13px;color:var(--muted);font-weight:600;margin-block-end:4px}
 input,select,textarea{inline-size:100%;background:var(--surface-2);border:1px solid var(--border);
@@ -157,6 +169,52 @@ input[type=checkbox]{inline-size:20px;block-size:20px;min-block-size:20px;margin
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
+.palrow{display:flex;align-items:center;gap:12px;inline-size:100%;background:var(--surface);
+  border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-block-end:8px;
+  color:var(--text);font:inherit;cursor:pointer;text-align:start}
+.palrow:hover{background:var(--surface-2)}
+.palrow.on{border-color:var(--accent);background:var(--accent-soft)}
+.palswatch{display:flex;gap:2px;flex:none}
+.palswatch i{display:block;inline-size:11px;block-size:22px;border-radius:2px}
+.palname{flex:1;display:flex;flex-direction:column;gap:1px}
+kbd{display:inline-block;min-inline-size:22px;text-align:center;padding:2px 6px;
+  border:1px solid var(--border);border-block-end-width:2px;border-radius:6px;
+  background:var(--surface-2);font:inherit;font-size:.82rem;font-weight:700}
+.heat{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.hmh{text-align:center;font-size:.68rem;color:var(--muted);font-weight:700;padding-block-end:2px}
+.hmc{aspect-ratio:1;display:grid;place-items:center;border-radius:6px;background:var(--surface-2);
+  font-size:.68rem;color:var(--muted)}
+.hmc.off{opacity:.35}
+.fall{display:flex;flex-direction:column;gap:10px}
+.fallbar{block-size:12px;background:var(--surface-2);border-radius:6px;overflow:hidden;display:flex}
+.fallbar i{display:block;block-size:100%;border-radius:6px}
+.sparks{display:flex;gap:10px;flex-wrap:wrap}
+.spark{flex:1 1 84px;display:flex;flex-direction:column;gap:2px;padding:8px;
+  background:var(--surface-2);border-radius:10px}
+.spark svg{inline-size:100%;block-size:24px}
+.chart{inline-size:100%;block-size:auto;display:block}
+.key{display:inline-block;inline-size:9px;block-size:9px;border-radius:2px;
+  margin-inline:6px 3px;vertical-align:baseline}
+.stack{display:flex;block-size:22px;border-radius:8px;overflow:hidden;margin-block:10px 8px}
+.stack i{display:block;block-size:100%}
+.pairs{display:flex;flex-direction:column;gap:14px}
+.pairbar{block-size:9px;background:var(--surface-2);border-radius:5px;overflow:hidden;
+  margin-block-end:3px}
+.pairbar i{display:block;block-size:100%;border-radius:5px}
+.pairbar i.now{background:var(--accent)}
+.pairbar i.was{background:var(--muted);opacity:.45}
+.wkbars{display:flex;gap:8px;align-items:flex-end}
+.wk{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
+.wkcol{inline-size:100%;block-size:78px;display:flex;align-items:flex-end;
+  background:var(--surface-2);border-radius:8px;overflow:hidden}
+.wkcol i{display:block;inline-size:100%;border-radius:8px 8px 0 0;min-block-size:2px}
+.chartcard{padding-block-end:6px}
+.chartq{font-size:.82rem;color:var(--muted);margin-block:2px 10px}
+.barrow{display:block;inline-size:100%;background:none;border:0;padding:6px 8px;
+  margin-block-end:4px;border-radius:10px;color:var(--text);font:inherit;cursor:pointer;
+  text-align:start}
+.barrow:hover{background:var(--surface-2)}
+.barrow:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .fold{margin-block:14px}
 .foldhead{inline-size:100%;display:flex;align-items:center;gap:10px;background:var(--surface);
   border:1px solid var(--border);border-radius:14px;padding:12px 14px;cursor:pointer;
@@ -261,9 +319,6 @@ svg{display:block;inline-size:100%;block-size:auto}
     font:inherit;font-size:.86rem;cursor:pointer;text-align:start}
   .sidekid:hover{background:var(--surface-2);color:var(--fg)}
   .sidekid.on{color:var(--accent);font-weight:600}
-  body{padding-inline-start:232px}
-  nav.bottom{display:none}
-  header{padding-inline-start:232px}
 }
 nav.bottom{position:fixed;inset-inline:0;inset-block-end:0;z-index:40;background:var(--surface);
   border-block-start:1px solid var(--border);display:flex;padding-block-end:env(safe-area-inset-bottom)}
@@ -290,6 +345,14 @@ nav.bottom button:hover{color:var(--fg)}
   nav.bottom button{flex:0 1 152px;min-block-size:72px;font-size:14px}
   nav.bottom button b{font-size:29px}
   nav.bottom button.plus b{inline-size:56px;block-size:56px;font-size:33px}
+}
+/* Placed after every nav.bottom rule so it actually wins: on a laptop the
+   sidebar is the navigation, and the bottom bar must not also appear. */
+@media(min-width:900px){
+  nav.bottom{display:none!important}
+  body{padding-inline-start:232px}
+  header{padding-inline-start:232px}
+  .wrap{max-inline-size:820px}
 }
 
 .scrim{position:fixed;inset:0;z-index:60;background:rgba(10,13,18,.55);display:flex;align-items:flex-end;justify-content:center}
@@ -366,10 +429,11 @@ var MT = (function () {
    1. BASICS
    ========================================================= */
 var KEY = "moneytracker";
-var BUILD = "2026-09-04.12";  /* shown in Settings so you can tell which copy you are running */
+var BUILD = "2026-09-04.17";  /* shown in Settings so you can tell which copy you are running */
 var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 var DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 var COLORS = ["#0f766e","#f59e0b","#5b5bd6","#d92d20","#0ea5e9","#0b8a5f","#db2777","#65a30d","#ea580c","#64748b"];
+/* charts use the chosen palette; COLORS stays as a fallback before boot */
 
 var CURRENCIES = {
   INR:{ s:"\u20b9", l:"en-IN" }, USD:{ s:"$", l:"en-US" }, EUR:{ s:"\u20ac", l:"de-DE" },
@@ -421,6 +485,12 @@ function blank() {
     pay: { mode:"", day:0, amount:0, acc:"", note:"" },
     holidays: [],
     marks: [],
+    debts: [],
+    metals: { rates: [], holdings: [] },
+    watch: {},
+    mix: {},
+    taxTags: {},
+    log: [],
     emergency: { months: 0 },
     payMoved: {},
     holidayNames: {},
@@ -440,7 +510,7 @@ function blank() {
     sync: { user:"", repo:"", branch:"main", file:"data.json.enc", on:false,
             lastPull:"", lastPush:"", lastSeen:"" },
     settings: { theme:"auto", currency:"INR", pin:"", setupDone:false, lastHow:"", lastApp:"", demo:false,
-                privacy:false, lockAfter:0, folds:{}, recentSearch:[] }
+                privacy:false, lockAfter:0, folds:{}, recentSearch:[], palette:"default" }
   };
 }
 
@@ -467,6 +537,12 @@ var ui = {
   insMonth: "",
   searchQ: "",
   revMonth: "",
+  taxYear: undefined,
+  reportOpen: false,
+  weekBack: 0,
+  countNote: "",
+  catName: "",
+  catMonth: "",
   foreDays: 30,
   wiCat: "",
   wiPct: 20,
@@ -1016,17 +1092,316 @@ function accOptions(list, selected) {
     return '<option value="' + esc(a.id) + '"' + (a.id === selected ? " selected" : "") + ">" + esc(a.name) + "</option>";
   }).join("");
 }
-function barList(items, total) {
+function barList(items, total, opts) {
   if (!items.length) return '<p class="empty">Nothing here yet.</p>';
+  var o = opts || {};
   var max = Math.max.apply(null, items.map(function (i) { return i.value; }));
   return items.map(function (it, i) {
     var w = max > 0 ? (it.value / max) * 100 : 0;
     var share = total > 0 ? Math.round((it.value / total) * 100) : 0;
-    return '<div style="margin-block-end:10px"><div class="rowline"><span>' + esc(it.label) +
+    var inner = '<div class="rowline"><span>' + esc(it.label) +
       '</span><span><b>' + money(it.value) + '</b> <span class="sub">' + share + '%</span></span></div>' +
-      '<div class="bar"><i style="inline-size:' + w.toFixed(1) + "%;background:" + COLORS[i % COLORS.length] + '"></i></div></div>';
+      '<div class="bar"><i style="inline-size:' + w.toFixed(1) + "%;background:" +
+      scaleAt(i) + '"></i></div>';
+    /* a bar you can open leads to that category in full */
+    if (o.drill) {
+      return '<button type="button" class="barrow" data-act="openCat" data-cat="' +
+        esc(it.label) + '" data-mk="' + esc(o.mk || mKey(new Date())) + '"' +
+        ' aria-label="' + esc(it.label + ", " + plainMoney(it.value) + ", " + share +
+        " percent. Open it.") + '">' + inner + "</button>";
+    }
+    return '<div style="margin-block-end:10px">' + inner + "</div>";
   }).join("");
 }
+/* =========================================================
+   CHARTS
+   ---------------------------------------------------------
+   Every chart here answers one question. A chart that does
+   not change a decision is noise, so there are no pie charts
+   of two slices and no lines through a single point.
+   Colours come from one ordered scale, chosen to stay
+   distinguishable for the common forms of colour blindness.
+   ========================================================= */
+/* =========================================================
+   CHART PALETTES
+   ---------------------------------------------------------
+   Named sets in the spirit of the ones business-intelligence
+   tools ship with. Each is ordered so neighbouring series
+   stay apart, and each was checked for the common forms of
+   colour blindness \u2014 a chart nobody can read is not a chart.
+   ========================================================= */
+var PALETTES = [
+  { id:"default", name:"Balanced", hint:"calm and readable, the default",
+    c:["#0d6e66","#e08b1f","#4f5bd5","#b3446c","#3f8fc4","#7a9e2e","#c05621","#5b7083","#8b5cf6","#0891b2"] },
+  { id:"innovate", name:"Innovate", hint:"cool blues and teals",
+    c:["#3257a8","#4a9bd6","#20b2aa","#6f42c1","#2f9e8f","#5a7fc4","#17a2b8","#4c6ef5","#3b8ea5","#7048e8"] },
+  { id:"bloom", name:"Bloom", hint:"warm and vivid",
+    c:["#c2185b","#e0721f","#f2a93b","#7cb342","#00897b","#5e35b1","#d81b60","#f4511e","#43a047","#00acc1"] },
+  { id:"tidal", name:"Tidal", hint:"deep sea greens and blues",
+    c:["#134e5e","#2b7a78","#3aafa9","#71c9ce","#1b6ca8","#0f4c75","#3282b8","#48929b","#0b7285","#66a5ad"] },
+  { id:"solar", name:"Solar", hint:"warm sunset tones",
+    c:["#b32700","#d9480f","#e8590c","#f08c00","#f59f00","#c92a2a","#a61e4d","#862e9c","#d6336c","#fd7e14"] },
+  { id:"storm", name:"Storm", hint:"muted and professional",
+    c:["#37474f","#546e7a","#78909c","#455a64","#607d8b","#90a4ae","#263238","#5d737e","#7a8b99","#404e5c"] },
+  { id:"safe", name:"Colour-blind safe", hint:"tested for every common type",
+    c:["#004488","#ddaa33","#bb5566","#009988","#33bbee","#ee7733","#cc3311","#0077bb","#ee3377","#999933"] },
+  { id:"contrast", name:"High contrast", hint:"strongest separation",
+    c:["#000000","#e69f00","#56b4e9","#009e73","#f0e442","#0072b2","#d55e00","#cc79a7","#666666","#994f00"] },
+  { id:"park", name:"City park", hint:"greens and earth",
+    c:["#2d6a4f","#40916c","#74a892","#95d5b2","#8a5a44","#b08968","#606c38","#283618","#7f9172","#a3b18a"] },
+  { id:"twilight", name:"Twilight", hint:"purples and indigos",
+    c:["#3d348b","#5e60ce","#7400b8","#6930c3","#5390d9","#4ea8de","#48bfe3","#9d4edd","#c77dff","#7678ed"] }
+];
+function paletteId() {
+  var id2 = db.settings.palette || "default";
+  return PALETTES.some(function (p) { return p.id === id2; }) ? id2 : "default";
+}
+function palette() {
+  var id2 = paletteId();
+  for (var i = 0; i < PALETTES.length; i++) if (PALETTES[i].id === id2) return PALETTES[i];
+  return PALETTES[0];
+}
+function setPalette(id2) {
+  if (!PALETTES.some(function (p) { return p.id === id2; })) return false;
+  db.settings.palette = id2;
+  save();
+  return true;
+}
+function scaleAt(i) { var c = palette().c; return c[i % c.length]; }
+
+/** A line over time. Needs at least two points to mean anything. */
+function lineChart(points, opts) {
+  var o = opts || {};
+  if (!points || points.length < 2) {
+    return '<p class="sub">' + esc(o.tooFew || "Not enough months yet to draw a trend.") + "</p>";
+  }
+  var W = 680, H = 200, padL = 52, padR = 14, padT = 16, padB = 30;
+  var vals = points.map(function (p) { return p.value; });
+  var max = Math.max.apply(null, vals.concat([1]));
+  var min = Math.min.apply(null, vals.concat([0]));
+  if (min > 0) min = 0;
+  var span = (max - min) || 1;
+  var x = function (i) { return padL + (i / (points.length - 1)) * (W - padL - padR); };
+  var y = function (v) { return padT + (1 - (v - min) / span) * (H - padT - padB); };
+  var d = points.map(function (p, i) { return (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.value).toFixed(1); }).join(" ");
+  var area = d + " L" + x(points.length - 1).toFixed(1) + " " + y(min).toFixed(1) +
+    " L" + x(0).toFixed(1) + " " + y(min).toFixed(1) + " Z";
+  /* three gridlines are enough to read a value without clutter */
+  var grid = [0, 0.5, 1].map(function (f) {
+    var v = min + span * f;
+    return '<line x1="' + padL + '" y1="' + y(v).toFixed(1) + '" x2="' + (W - padR) +
+      '" y2="' + y(v).toFixed(1) + '" stroke="var(--border)" stroke-dasharray="3 4"/>' +
+      '<text x="' + (padL - 8) + '" y="' + (y(v) + 3).toFixed(1) +
+      '" font-size="10" fill="var(--muted)" text-anchor="end">' + esc(shortMoney(v)) + "</text>";
+  }).join("");
+  var dots = points.map(function (p, i) {
+    return '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) +
+      '" r="3.5" fill="' + (o.colour || "var(--accent)") + '"><title>' +
+      esc(p.label) + ": " + money(p.value) + "</title></circle>";
+  }).join("");
+  var ticks = points.map(function (p, i) {
+    if (points.length > 8 && i % 2) return "";
+    return '<text x="' + x(i).toFixed(1) + '" y="' + (H - 8) +
+      '" font-size="10" fill="var(--muted)" text-anchor="middle">' + esc(p.label) + "</text>";
+  }).join("");
+  var avg = vals.reduce(function (s, v) { return s + v; }, 0) / vals.length;
+  return '<svg viewBox="0 0 ' + W + " " + H + '" class="chart" role="img" aria-label="' +
+    esc(o.title || "Trend") + '. ' + esc(points.map(function (p) {
+      return p.label + " " + plainMoney(p.value);
+    }).join(", ")) + '">' + grid +
+    (o.showAverage !== false
+      ? '<line x1="' + padL + '" y1="' + y(avg).toFixed(1) + '" x2="' + (W - padR) +
+        '" y2="' + y(avg).toFixed(1) + '" stroke="var(--muted)" stroke-dasharray="2 3" opacity=".7"/>'
+      : "") +
+    '<path d="' + area + '" fill="' + (o.colour || "var(--accent)") + '" opacity=".10"/>' +
+    '<path d="' + d + '" fill="none" stroke="' + (o.colour || "var(--accent)") +
+    '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+    dots + ticks + "</svg>" +
+    (o.showAverage !== false
+      ? '<p class="sub">The dashed line is your average, ' + money(Math.round(avg)) + ".</p>"
+      : "");
+}
+/** Short money for an axis: 1.2k, 45k, 1.3L. */
+function shortMoney(minor) {
+  var v = Math.abs(Math.round(minor)) / 100;
+  var c = cur().s;
+  if (v >= 10000000) return c + (v / 10000000).toFixed(1) + "Cr";
+  if (v >= 100000) return c + (v / 100000).toFixed(1) + "L";
+  if (v >= 1000) return c + Math.round(v / 1000) + "k";
+  return c + Math.round(v);
+}
+/** Two series side by side, for this month against last. */
+function pairBars(rows, opts) {
+  var o = opts || {};
+  if (!rows.length) return '<p class="empty">Nothing to compare yet.</p>';
+  var max = Math.max.apply(null, rows.map(function (r) {
+    return Math.max(r.now, r.was);
+  }).concat([1]));
+  return '<div class="pairs">' + rows.map(function (r) {
+    var pn = (r.now / max) * 100, pw = (r.was / max) * 100;
+    var diff = r.now - r.was;
+    return '<div class="pair"><div class="rowline"><span>' + esc(r.label) + "</span>" +
+      '<span class="' + (diff < 0 ? "in" : diff > 0 ? "out" : "sub") + '">' +
+      (diff === 0 ? "level" : plus(diff)) + "</span></div>" +
+      '<div class="pairbar"><i class="now" style="inline-size:' + pn.toFixed(1) +
+      '%" title="' + esc(o.nowLabel || "this month") + ": " + plainMoney(r.now) + '"></i></div>' +
+      '<div class="pairbar"><i class="was" style="inline-size:' + pw.toFixed(1) +
+      '%" title="' + esc(o.wasLabel || "last month") + ": " + plainMoney(r.was) + '"></i></div>' +
+      '<div class="rowline sub"><span>' + money(r.now) + " now</span><span>" +
+      money(r.was) + " " + esc(o.wasLabel || "before") + "</span></div></div>";
+  }).join("") + "</div>";
+}
+/** A day-by-day strip: where in the month the money actually went. */
+function dayStrip(mk) {
+  var dim = mDays(mk), td = today();
+  var vals = [], labels = [];
+  for (var i = 1; i <= dim; i++) {
+    var iso = mk + "-" + p2(i);
+    vals.push(iso <= td ? spentOn(iso) : 0);
+    labels.push(String(i));
+  }
+  var max = Math.max.apply(null, vals.concat([1]));
+  var W = 680, H = 130, padB = 22, padT = 8;
+  var bw = W / dim;
+  var bars = vals.map(function (v, i) {
+    var iso = mk + "-" + p2(i + 1);
+    var future = iso > td;
+    var hgt = max > 0 ? (v / max) * (H - padT - padB) : 0;
+    var weekend = isWeekend(iso);
+    return '<rect x="' + (i * bw + bw * 0.15).toFixed(1) + '" y="' +
+      (H - padB - hgt).toFixed(1) + '" width="' + (bw * 0.7).toFixed(1) +
+      '" height="' + Math.max(hgt, v > 0 ? 2 : 0).toFixed(1) + '" rx="2" fill="' +
+      (future ? "var(--border)" : weekend ? scaleAt(1) : "var(--accent)") +
+      '" opacity="' + (future ? ".4" : v > 0 ? ".92" : ".18") + '"><title>' +
+      esc(fDate(iso)) + ": " + (future ? "not yet" : v ? money(v) : "nothing") + "</title></rect>";
+  }).join("");
+  var ticks = [1, 8, 15, 22, dim].map(function (d2) {
+    return '<text x="' + ((d2 - 1) * bw + bw / 2).toFixed(1) + '" y="' + (H - 6) +
+      '" font-size="10" fill="var(--muted)" text-anchor="middle">' + d2 + "</text>";
+  }).join("");
+  return '<svg viewBox="0 0 ' + W + " " + H + '" class="chart" role="img" aria-label="' +
+    esc("Spending each day of " + mLabel(mk)) + '">' + bars + ticks + "</svg>" +
+    '<p class="sub"><i class="key" style="background:' + scaleAt(1) +
+    '"></i> weekends <i class="key" style="background:var(--accent)"></i> weekdays</p>';
+}
+/** Where money goes by what it is FOR, not just by category name. */
+function roleChart(list) {
+  var r = byRole(list);
+  var rows = ROLES.filter(function (x) { return r[x.id] > 0; }).map(function (x, i) {
+    return { label: x.icon + " " + x.label, value: r[x.id], colour: scaleAt(i) };
+  });
+  if (!rows.length) return "";
+  var total = rows.reduce(function (s, x) { return s + x.value; }, 0);
+  return '<div class="stack" role="img" aria-label="' +
+    esc(rows.map(function (x) { return x.label + " " + plainMoney(x.value); }).join(", ")) + '">' +
+    rows.map(function (x) {
+      return '<i style="inline-size:' + ((x.value / total) * 100).toFixed(2) +
+        '%;background:' + x.colour + '" title="' + esc(x.label) + ": " +
+        plainMoney(x.value) + '"></i>';
+    }).join("") + "</div>" +
+    '<div class="legend">' + rows.map(function (x) {
+      return '<span><i style="background:' + x.colour + '"></i>' + esc(x.label) +
+        " " + money(x.value) + " \u00b7 " + Math.round((x.value / total) * 100) + "%</span>";
+    }).join("") + "</div>";
+}
+/** A small week-by-week bar, to show cadence inside a month. */
+function weekBars(mk) {
+  var dim = mDays(mk), td = today();
+  var weeks = [0, 0, 0, 0, 0];
+  for (var i = 1; i <= dim; i++) {
+    var iso = mk + "-" + p2(i);
+    if (iso > td) continue;
+    weeks[Math.min(4, Math.floor((i - 1) / 7))] += spentOn(iso);
+  }
+  var labels = ["1\u20137", "8\u201314", "15\u201321", "22\u201328", "29+"];
+  var live = weeks.map(function (v, i) { return { label: labels[i], value: v }; })
+    .filter(function (x, i) { return i < 4 || x.value > 0; });
+  var max = Math.max.apply(null, live.map(function (x) { return x.value; }).concat([1]));
+  return '<div class="wkbars">' + live.map(function (x, i) {
+    return '<div class="wk"><div class="wkcol"><i style="block-size:' +
+      ((x.value / max) * 100).toFixed(1) + '%;background:' + scaleAt(i) + '" title="' +
+      esc(x.label) + ": " + plainMoney(x.value) + '"></i></div>' +
+      '<span class="sub">' + esc(x.label) + "</span>" +
+      '<b class="sub">' + shortMoney(x.value) + "</b></div>";
+  }).join("") + "</div>";
+}
+
+/* ---------- more ways to show a number ----------
+   Added only where a shape answers a question the existing
+   ones cannot. A chart that repeats another chart is clutter. */
+
+/** A gauge: how far along something is against a limit. */
+function gauge(value, limit, label) {
+  var pct = limit > 0 ? Math.min(100, (value / limit) * 100) : 0;
+  var W = 200, H = 110, cx = 100, cy = 96, r = 76;
+  var a = Math.PI * (1 - pct / 100);
+  var x = cx + r * Math.cos(a), y = cy - r * Math.sin(a);
+  var tone = pct > 100 ? "var(--out)" : pct > 80 ? "var(--warn)" : "var(--accent)";
+  return '<svg viewBox="0 0 ' + W + " " + H + '" class="chart" role="img" aria-label="' +
+    esc((label || "Progress") + ": " + Math.round(pct) + " percent of " + plainMoney(limit)) + '">' +
+    '<path d="M24 96 A76 76 0 0 1 176 96" fill="none" stroke="var(--surface-2)" stroke-width="14" stroke-linecap="round"/>' +
+    '<path d="M24 96 A76 76 0 ' + (pct > 50 ? 1 : 0) + ' 1 ' + x.toFixed(1) + " " + y.toFixed(1) +
+    '" fill="none" stroke="' + tone + '" stroke-width="14" stroke-linecap="round"/>' +
+    '<text x="100" y="82" font-size="22" font-weight="700" fill="var(--text)" text-anchor="middle">' +
+    Math.round(pct) + "%</text></svg>";
+}
+/** A heatmap of the month: which days cost most, laid out as a calendar. */
+function heatmap(mk) {
+  var dim = mDays(mk), a = mk.split("-");
+  var lead = (new Date(+a[0], +a[1] - 1, 1).getDay() + 6) % 7;
+  var vals = [];
+  for (var i = 1; i <= dim; i++) vals.push(spentOn(mk + "-" + p2(i)));
+  var max = Math.max.apply(null, vals.concat([1]));
+  var cells = DOW.map(function (d) { return '<span class="hmh">' + d + "</span>"; }).join("");
+  for (i = 0; i < lead; i++) cells += '<span class="hmc off"></span>';
+  for (i = 1; i <= dim; i++) {
+    var iso = mk + "-" + p2(i), v = vals[i - 1];
+    var f = max > 0 ? v / max : 0;
+    var future = iso > today();
+    cells += '<span class="hmc' + (future ? " off" : "") + '" title="' +
+      esc(fDate(iso) + ": " + (future ? "not yet" : v ? plainMoney(v) : "nothing")) + '"' +
+      (future || !v ? "" : ' style="background:color-mix(in srgb,var(--accent) ' +
+        Math.round(12 + f * 78) + '%,var(--surface-2))"') + ">" + i + "</span>";
+  }
+  return '<div class="heat" role="img" aria-label="' +
+    esc("Spending heatmap for " + mLabel(mk)) + '">' + cells + "</div>";
+}
+/** A waterfall: how you got from what came in to what is left. */
+function waterfall(steps) {
+  if (!steps.length) return "";
+  var running = 0, max = 0;
+  steps.forEach(function (s) { running += s.value; max = Math.max(max, Math.abs(running)); });
+  running = 0;
+  return '<div class="fall">' + steps.map(function (s, i) {
+    var from = running;
+    running += s.value;
+    var w = max > 0 ? (Math.abs(s.value) / max) * 100 : 0;
+    var off = max > 0 ? (Math.min(from, running) / max) * 100 : 0;
+    return '<div class="fallrow"><div class="rowline"><span>' + esc(s.label) + "</span>" +
+      '<span class="' + (s.value >= 0 ? "in" : "out") + '">' + plus(s.value) + "</span></div>" +
+      '<div class="fallbar"><i style="margin-inline-start:' + off.toFixed(1) +
+      '%;inline-size:' + Math.max(w, 1).toFixed(1) + '%;background:' +
+      (s.value >= 0 ? "var(--in)" : scaleAt(i)) + '"></i></div>' +
+      '<div class="sub">running total ' + money(running) + "</div></div>";
+  }).join("") + "</div>";
+}
+/** Small multiples: the same shape repeated, so months can be compared at a glance. */
+function sparkRow(series) {
+  return '<div class="sparks">' + series.map(function (s, i) {
+    var max = Math.max.apply(null, s.values.concat([1]));
+    var pts = s.values.map(function (v, j) {
+      var x = (j / Math.max(1, s.values.length - 1)) * 60;
+      var y = 22 - (v / max) * 20;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    }).join(" ");
+    return '<div class="spark"><b class="sub">' + esc(s.label) + "</b>" +
+      '<svg viewBox="0 0 60 24" role="img" aria-label="' + esc(s.label) + '">' +
+      '<polyline points="' + pts + '" fill="none" stroke="' + scaleAt(i) +
+      '" stroke-width="2" stroke-linejoin="round"/></svg>' +
+      '<span class="sub">' + shortMoney(s.values[s.values.length - 1]) + "</span></div>";
+  }).join("") + "</div>";
+}
+
 function columns(values, labels, title) {
   var W = 660, H = 180, pad = 20, count = values.length || 1;
   var max = Math.max.apply(null, values.concat([1]));
@@ -1053,7 +1428,7 @@ function donut(items) {
   var C = 2 * Math.PI * 42, off = 0;
   var arcs = items.map(function (it, i) {
     var len = (it.value / total) * C;
-    var s = '<circle cx="60" cy="60" r="42" fill="none" stroke="' + COLORS[i % COLORS.length] +
+    var s = '<circle cx="60" cy="60" r="42" fill="none" stroke="' + scaleAt(i) +
       '" stroke-width="16" stroke-dasharray="' + len.toFixed(2) + " " + (C - len).toFixed(2) +
       '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 60 60)"><title>' +
       esc(it.label) + ": " + money(it.value) + "</title></circle>";
@@ -1064,7 +1439,7 @@ function donut(items) {
     '<svg viewBox="0 0 120 120" style="inline-size:118px;flex:0 0 auto" role="img" aria-label="Share by payment method">' +
     arcs + "</svg><div class=\"legend\" style=\"flex:1;min-inline-size:150px\">" +
     items.map(function (it, i) {
-      return "<span><i style=\"background:" + COLORS[i % COLORS.length] + "\"></i>" + esc(it.label) + " " + money(it.value) + "</span>";
+      return "<span><i style=\"background:" + scaleAt(i) + "\"></i>" + esc(it.label) + " " + money(it.value) + "</span>";
     }).join("") + "</div></div>";
 }
 
@@ -1382,13 +1757,17 @@ function txIconOf(t) {
   if (t.type === "in") return "💰";
   return catIcon(t.cat);
 }
-function txRow(t) {
+function txRow(t, withDate) {
   var st = effectiveStatus(t), tagInfo = STATUS[st] || STATUS.done;
   var sign = t.type === "in" ? "+" : t.type === "out" ? "−" : "";
   var klass = t.type === "in" ? "in" : t.type === "out" ? "out" : "move";
   var shown = t.type === "out" ? (netSpend(t) || moneyOut(t) || t.amt) : t.amt;
   var bits = [];
+  /* When a row is not sitting under a day heading it must carry its own date,
+     or you cannot tell when it happened. */
+  if (withDate) bits.push(dayName(t.date));
   if (!t.noTime && t.time) bits.push(fTime(t.time));
+  else if (withDate && t.noTime) bits.push("time not noted");
   if (t.type === "out" || t.type === "in") bits.push(t.cat || "");
   if (t.type === "out") {
     var payBit = t.how === "app" ? (appName(t.appId) || "app") : howLabel(t.how);
@@ -1548,10 +1927,10 @@ var NAV = [
 /* which top-level item a page belongs under */
 var NAV_HOME = {
   history: ["history"],
-  insights: ["insights", "stats", "reports", "merch", "repeats", "health", "moneyback", "review"],
+  insights: ["insights", "stats", "reports", "merch", "repeats", "health", "moneyback", "review", "cat", "week"],
   more: ["more", "money", "accounts", "account", "card", "cycle", "stmt", "funds", "fund",
          "saved", "worth", "cardplan", "perks", "debt", "budget", "bills", "settings",
-         "recovery", "plan", "search", "review"]
+         "recovery", "plan", "search", "review", "cat", "holdings", "watch", "tax", "week", "shared"]
 };
 function navHomeOf(view) {
   var keys = Object.keys(NAV_HOME);
@@ -1566,7 +1945,7 @@ var TITLES = {
   reports:"Reports", settings:"Settings", card:"Credit card", cycle:"Billing cycle", stmt:"Statement",
   account:"Account", funds:"Mutual funds", fund:"Fund", insights:"Insights", merch:"Where you shop", plan:"Plan ahead", repeats:"Repeats & small charges",
   health:"Money health", worth:"What you are worth", debt:"Getting clear of debt",
-  recovery:"Keeping your data safe", moneyback:"Money back, fees and failures", search:"Search", review:"Your month", saved:"Money set aside", cardplan:"Which card to use", perks:"Card perks"
+  recovery:"Keeping your data safe", moneyback:"Money back, fees and failures", search:"Search", review:"Your month", cat:"Category", holdings:"What you hold", watch:"What moved", tax:"Tax saving", week:"Your week", shared:"Who owes whom", saved:"Money set aside", cardplan:"Which card to use", perks:"Card perks"
 };
 
 function drawNav() {
@@ -1588,12 +1967,14 @@ function sidebarHtml(here) {
     { v:"home", label:"Home", icon:"🏠", kids: [] },
     { v:"history", label:"Activity", icon:"🧾", kids: [] },
     { v:"insights", label:"Insights", icon:"📊", kids: [
-      ["insights", "What changed"], ["stats", "Stats & calendar"],
+      ["insights", "What changed"], ["week", "Your week"], ["stats", "Stats & calendar"],
       ["merch", "Where you shop"], ["repeats", "Repeats & charges"],
       ["health", "Money health"], ["moneyback", "Refunds & fees"],
       ["review", "Your month"], ["reports", "Reports"]] },
     { v:"more", label:"More", icon:"☰", kids: [
       ["money", "Your money"], ["accounts", "Accounts, cards & apps"],
+      ["holdings", "What you hold"], ["watch", "What moved"], ["tax", "Tax saving"],
+      ["shared", "Who owes whom"],
       ["worth", "What you are worth"], ["funds", "Mutual funds"],
       ["saved", "Money set aside"], ["cardplan", "Which card to use"],
       ["debt", "Getting clear of debt"], ["plan", "Plan ahead"],
@@ -1621,6 +2002,7 @@ function sidebarHtml(here) {
 function render() {
   drawNav();
   paintPrivacy();
+  paintTheme();
   if (typeof paintInstall === "function") paintInstall();
   var fn = {
     home: pageHome, history: pageHistory, stats: pageStats, more: pageMore,
@@ -1630,9 +2012,20 @@ function render() {
     account: pageAccount, funds: pageFunds, fund: pageFund,
     insights: pageInsights, merch: pageMerchants, plan: pagePlan, repeats: pageRepeats,
     health: pageHealth, worth: pageWorth, debt: pageDebt, recovery: pageRecovery,
-    moneyback: pageMoneyBack, search: pageSearch, review: pageReview, saved: pageSaved, cardplan: pageCardPlan, perks: pagePerks
+    moneyback: pageMoneyBack, search: pageSearch, review: pageReview, cat: pageCat,
+    holdings: pageHoldings, watch: pageWatch, tax: pageTax, week: pageWeek,
+    shared: pageShared, saved: pageSaved, cardplan: pageCardPlan, perks: pagePerks
   }[ui.view] || pageHome;
-  el("app").innerHTML = fn();
+  /* A page that throws must never blank the whole app. It shows what went
+     wrong, keeps the navigation alive, and offers a way out with the data
+     untouched — losing a screen is recoverable, losing your entries is not. */
+  try {
+    el("app").innerHTML = fn();
+  } catch (err) {
+    el("app").innerHTML = crashPage(err, ui.view);
+    try { logChange("error", ui.view + ": " + (err && err.message)); saveLocalOnly(); }
+    catch (e2) {}
+  }
   /* Only jump to the top when you have actually moved to a different page.
      Toggling an eye or opening a section must leave you where you were. */
   var movedPage = ui.view !== ui.lastView;
@@ -1644,6 +2037,28 @@ function render() {
 function reRender() {
   ui.keepScroll = true;
   render();
+}
+/** Shown when a screen fails to draw. Your data is not touched. */
+function crashPage(err, view) {
+  var msg = err && err.message ? String(err.message) : "something unexpected";
+  return '<div class="sec"><div class="note bad" role="alert">' +
+    '<span aria-hidden="true">\u26a0\ufe0f</span><div>' +
+    "<b>This screen could not be drawn.</b><br>" +
+    "Your entries are safe \u2014 nothing was changed. Only this one screen failed." +
+    "</div></div>" +
+    '<div class="card"><table>' +
+    row2("Screen", view || "unknown") +
+    row2("What went wrong", esc(msg)) +
+    row2("Version", BUILD) +
+    "</table>" +
+    '<div class="btns" style="margin-block-start:10px">' +
+    '<button type="button" class="btn" data-act="go" data-view="home">Back to Home</button>' +
+    '<button type="button" class="btn g" data-act="exportJson">Download a backup</button>' +
+    '<button type="button" class="btn g" data-act="go" data-view="recovery">Check my data</button>' +
+    "</div>" +
+    '<p class="hint">If this keeps happening on the same screen, download a backup ' +
+    "before doing anything else. The backup is complete even when a screen is not.</p>" +
+    "</div></div>";
 }
 function backBar(title) {
   return '<div class="sec" style="display:flex;align-items:center;gap:10px;margin-block:14px 6px">' +
@@ -1669,41 +2084,63 @@ function pageHome() {
   }
 
   /* the one number that matters, and what of it is really free */
+  /* Lead with what you have actually done this month — that is the thing this
+     app tracks. What you hold, and what of it is genuinely free, sits under it
+     with its own honest label. */
+  var cmpTop = compare(mk, "", "prev");
   h += '<div class="sec"><p class="hello">' + esc(greeting()) +
     ' \ud83d\udc4b<span class="sub">' + esc(fDateLong(td)) + "</span></p>" +
     '<div class="card hero">' +
     '<div style="display:flex;align-items:center;gap:10px">' +
-    '<div style="flex:1"><span class="lbl">Money you can spend</span>' +
-    '<p class="big">' + maskMoney(spendable(), "total") + "</p></div>" +
-    eyeBtn("total", "your spendable money") + "</div>";
+    '<div style="flex:1"><span class="lbl">Spent this month</span>' +
+    '<p class="big">' + maskMoney(tMonth.spend, "total") + "</p>" +
+    '<p class="sub">' + (cmpTop.ok && cmpTop.diff !== 0
+      ? (cmpTop.diff < 0 ? "\u2193 " + money(Math.abs(cmpTop.diff)) + " less than "
+         : "\u2191 " + money(cmpTop.diff) + " more than ") + esc(cmpTop.label) +
+        (cmpTop.partial ? ", same days in" : "")
+      : cmpTop.ok ? "level with " + esc(cmpTop.label)
+      : "your first month of records") + "</p></div>" +
+    eyeBtn("total", "your money") + "</div>";
+  h += '<div class="rowline" style="margin-block-start:12px;padding-block-start:10px;' +
+    'border-block-start:1px solid var(--border)">' +
+    '<span><span class="lbl">In your accounts</span><br><b>' +
+    maskMoney(spendable(), "total") + "</b></span>" +
+    '<span style="text-align:end"><span class="lbl">Free to spend</span><br><b class="' +
+    (plan.free >= 0 ? "in" : "out") + '">' + maskMoney(plan.free, "total") + "</b></span></div>";
   if (plan.essential > 0 || plan.buffer > 0) {
-    h += '<div class="rowline sub" style="margin-block-start:8px">' +
-      "<span>" + money(plan.essential + plan.buffer) + " already promised</span>" +
-      "<span><b class=\"" + (plan.free >= 0 ? "in" : "out") + "\">" + money(plan.free) +
-      "</b> safe to spend</span></div>";
+    h += '<p class="sub">' + money(plan.essential + plan.buffer) + " of it is already " +
+      "promised" + (plan.essential > 0 ? " to SIPs and bills" : "") +
+      (plan.buffer > 0 ? ", plus the buffer you keep aside" : "") + ".</p>";
   }
   if (plan.knowsPayday) {
     h += '<p class="sub">' +
       (plan.days === 0 ? "Payday is today" : plan.days + " days until payday") +
       (plan.perDay !== null && plan.days > 0
-        ? " \u00b7 about " + money(Math.max(0, plan.perDay)) + " a day" : "") + "</p>";
+        ? " \u00b7 about " + money(Math.max(0, plan.perDay)) + " a day from here" : "") + "</p>";
   }
   h += "</div></div>";
 
   /* today and this month, side by side */
   var todayCount = txOn(td).length;
-  var cmp = compare(mk, "", "prev");
+  var pace = spendingPace(mk);
   h += '<div class="grid">' +
-    '<div class="card"><span class="lbl">Today</span><p class="mid out">' +
+    '<div class="card"><span class="lbl">Today</span><p class="mid">' +
       money(tToday.spend) + "</p>" +
       '<p class="sub">' + todayCount + (todayCount === 1 ? " entry" : " entries") +
       (tToday.in > 0 ? " \u00b7 " + money(tToday.in) + " in" : "") + "</p></div>" +
-    '<div class="card"><span class="lbl">This month</span><p class="mid out">' +
-      money(tMonth.spend) + "</p>" +
-      '<p class="sub">' + (cmp.ok && cmp.pct !== null
-        ? (cmp.diff <= 0 ? "\u2193 " : "\u2191 ") + Math.abs(Math.round(cmp.pct)) +
-          "% against last month"
-        : "spent on things") + "</p></div></div>";
+    '<div class="card"><span class="lbl">A day so far</span><p class="mid">' +
+      money(pace.perDaySoFar) + "</p>" +
+      '<p class="sub">over ' + pace.elapsed + (pace.elapsed === 1 ? " day" : " days") +
+      "</p></div>" +
+    (tMonth.saved > 0
+      ? '<div class="card"><span class="lbl">Into savings</span><p class="mid in">' +
+        money(tMonth.saved) + '</p><p class="sub">this month</p></div>'
+      : "") +
+    (pace.hasBudget && pace.perDayLeft !== null
+      ? '<div class="card"><span class="lbl">Left per day</span><p class="mid">' +
+        money(Math.max(0, pace.perDayLeft)) + '</p><p class="sub">for ' + pace.left +
+        " more days</p></div>"
+      : "") + "</div>";
 
   /* where money went, by what it was for */
   if (tMonth.out > 0) {
@@ -1723,7 +2160,13 @@ function pageHome() {
     }
   }
 
+  h += '<div class="btns" style="margin-block:10px 4px">' +
+    '<button type="button" class="btn g s" data-act="go" data-view="week">' +
+    "\ud83d\udcc5 Your week</button>" +
+    '<button type="button" class="btn g s" data-act="go" data-view="tax">Tax saving</button>' +
+    "</div>";
   h += quickBox();
+  h += sipBlock();
   h += feedBlock(5);
 
   /* what is coming */
@@ -1789,14 +2232,15 @@ function pageHome() {
   if (topCats.length) {
     h += '<div class="sec"><div class="rowline"><h2>Where this month went</h2>' +
       '<button type="button" class="btn g s" data-act="go" data-view="insights">Why</button>' +
-      '</div><div class="card">' + barList(topCats, tMonth.spend) + "</div></div>";
+      '</div><div class="card">' + barList(topCats, tMonth.spend, { drill: true, mk: mk }) +
+      "</div></div>";
   }
 
   /* latest */
   var recent = sortTx(db.tx).slice(0, 6);
   h += '<div class="sec"><div class="rowline"><h2>Latest</h2>' +
     '<button type="button" class="btn g s" data-act="go" data-view="history">See all</button></div>' +
-    '<div class="card">' + (recent.length ? recent.map(txRow).join("")
+    '<div class="card">' + (recent.length ? recent.map(txRowDated).join("")
       : '<p class="empty">Nothing recorded yet.</p>') + "</div></div>";
   return h;
 }
@@ -2084,6 +2528,162 @@ function dupAskSheet() {
     '<button type="button" class="btn g" data-act="dupReplace">Replace the earlier one</button>' +
     '<button type="button" class="btn g" data-act="dupCancel">Cancel</button></div>';
 }
+/* =========================================================
+   BANK ALERTS
+   ---------------------------------------------------------
+   In India every debit, credit, UPI payment and card swipe
+   arrives as a bank SMS or an app notification. Paste one
+   (or fifty) and this reads them. It never guesses what a
+   message does not say, and nothing is saved until you
+   look it over.
+   ========================================================= */
+var SMS_PATTERNS = {
+  /* Rs 450.00 / INR 450 / Rs.450.00 */
+  amount: /(?:rs\.?|inr|₹)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i,
+  /* debited, spent, paid, withdrawn */
+  debit: /\b(debited|debit|spent|paid|withdrawn|purchase|txn of|sent)\b/i,
+  /* credited, received, deposited, refund */
+  credit: /\b(credited|credit|received|deposited|refund(?:ed)?|salary)\b/i,
+  /* a/c XX1234, ac no XXXX1234, card ending 5678 */
+  acct: /\b(?:a\/?c|acct|account|card)\s*(?:no\.?|number|ending|xx+)?\s*[*x]*\s*(\d{3,6})\b/i,
+  /* to VPA / at MERCHANT / towards NAME */
+  toward: /\b(?:to|at|towards|paid to|vpa|from)\s+([A-Za-z0-9@._\- ]{3,40}?)(?=\s+(?:on|ref|upi|txn|avl|a\/c|dated|\.|,|$))/i,
+  /* UPI ref / txn id */
+  ref: /\b(?:upi(?:\/| )?(?:ref)?|ref(?:erence)?|txn(?: id)?|utr)[:\s.\/-]*([0-9]{6,20})\b/i,
+  /* on 03-09-26, on 03/09/2026, dated 03 Sep */
+  date: /\b(?:on|dated)\s+(\d{1,2}[-\/][0-9]{1,2}[-\/]\d{2,4}|\d{1,2}[- ][A-Za-z]{3,9}[- ]?\d{0,4})/i,
+  /* avl bal / available balance */
+  bal: /\b(?:avl|available|a\/c)\s*(?:bal|balance)[:\s.]*(?:rs\.?|inr|₹)?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i,
+  /* a promotional message is not a transaction */
+  junk: /\b(?:offer|cashback up to|win|congratulations|apply now|loan|emi offer|click|otp|one ?time ?password|do not share)\b/i
+};
+/** Which of your accounts a message is about, matched on the last digits. */
+function accountFromSms(text) {
+  var m = String(text || "").match(SMS_PATTERNS.acct);
+  if (!m) return null;
+  var tail = m[1];
+  var hit = null;
+  db.accounts.forEach(function (a) {
+    if (hit || a.archived || !a.last4) return;
+    if (a.last4 === tail || a.last4.slice(-tail.length) === tail ||
+        tail.slice(-a.last4.length) === a.last4) hit = a;
+  });
+  return hit;
+}
+/** Read one bank alert. Returns null when it is not a transaction at all. */
+function readSms(text) {
+  var raw = String(text || "").trim();
+  if (!raw) return null;
+  var s = raw.replace(/\s+/g, " ");
+  /* an OTP or a marketing blast is not money moving */
+  if (SMS_PATTERNS.junk.test(s) && !SMS_PATTERNS.debit.test(s) && !SMS_PATTERNS.credit.test(s)) {
+    return { skip: true, why: "not a transaction", text: raw };
+  }
+  var am = s.match(SMS_PATTERNS.amount);
+  if (!am) return { skip: true, why: "no amount in it", text: raw };
+  var amt = Math.round(parseFloat(am[1].replace(/,/g, "")) * 100);
+  if (!isFinite(amt) || amt <= 0) return { skip: true, why: "no amount in it", text: raw };
+
+  var isDebit = SMS_PATTERNS.debit.test(s);
+  var isCredit = SMS_PATTERNS.credit.test(s);
+  if (!isDebit && !isCredit) return { skip: true, why: "does not say whether money went in or out", text: raw };
+  /* when a message says both, the first one wins \u2014 that is the action */
+  var type = "out";
+  if (isDebit && isCredit) {
+    type = s.search(SMS_PATTERNS.debit) < s.search(SMS_PATTERNS.credit) ? "out" : "in";
+  } else type = isDebit ? "out" : "in";
+
+  var acct = accountFromSms(s);
+  var toward = "";
+  var tm = s.match(SMS_PATTERNS.toward);
+  if (tm) {
+    toward = tm[1].replace(/\s+/g, " ").trim();
+    /* a VPA like name@bank reads better as just the name */
+    if (toward.indexOf("@") > -1) toward = toward.split("@")[0];
+    if (toward.length < 3 || /^\d+$/.test(toward)) toward = "";
+  }
+  var ref = "";
+  var rm = s.match(SMS_PATTERNS.ref);
+  if (rm) ref = rm[1];
+  var date = "";
+  var dm = s.match(SMS_PATTERNS.date);
+  if (dm) date = readWhen(dm[1]) || "";
+  var bal = 0;
+  var bm = s.match(SMS_PATTERNS.bal);
+  if (bm) bal = Math.round(parseFloat(bm[1].replace(/,/g, "")) * 100);
+
+  var cat = "";
+  if (toward) {
+    for (var i = 0; i < CAT_WORDS.length; i++) {
+      if (CAT_WORDS[i].re.test(toward)) { cat = CAT_WORDS[i].cat; break; }
+    }
+  }
+  var how = /\bupi\b/i.test(s) ? "app" : /\bcard\b/i.test(s) ? "card"
+    : /\batm\b/i.test(s) ? "cash" : "bank";
+  var draft = {
+    type: type, amt: amt, cat: cat,
+    acc: acct ? acct.id : "",
+    how: acct && acct.kind === "card" ? "card" : how,
+    appId: "", channel: /\bupi\b/i.test(s) ? "upi" : "",
+    date: date || today(), time: "", merchant: toward,
+    note: toward || raw.slice(0, 60), ref: ref
+  };
+  return {
+    skip: false, draft: draft, text: raw,
+    read: [money(amt), type === "in" ? "money in" : "money out",
+           acct ? acct.name : "", toward, date ? fDate(date) : ""].filter(Boolean),
+    missing: missingBits(draft),
+    balanceSaid: bal,
+    matchedAccount: !!acct
+  };
+}
+/** Read a whole pile of alerts. Same duplicate rules as any other paste. */
+function readSmsBlock(text) {
+  /* messages usually arrive one per line, but a long one can wrap */
+  var chunks = String(text || "").split(/\n\s*\n|\n(?=[A-Z][a-z]*\s*[:\-])|\n/);
+  var plan = { rows: [], skipped: [], unreadable: [], questions: [], count: 0 };
+  var accepted = [];
+  chunks.forEach(function (raw, i) {
+    var line = tidyLine(raw);
+    if (!line || line.length < 12) return;
+    var r = readSms(line);
+    if (!r) return;
+    if (r.skip) { plan.unreadable.push({ line: line, no: i + 1, why: r.why }); return; }
+    var row = { no: i + 1, line: line, draft: r.draft, missing: r.missing,
+                read: r.read, ask: [], keep: true, why: "", pairs: [],
+                ref: r.draft.ref, bal: r.balanceSaid };
+    /* the same bank reference twice is the same payment, always */
+    var dupRef = r.draft.ref && db.tx.some(function (t) { return t.ref && t.ref === r.draft.ref; });
+    var kind = dupRef ? "exact" : "none", hit = null;
+    if (!dupRef) {
+      for (var k = 0; k < db.tx.length; k++) {
+        var kk = duplicateKind(r.draft, db.tx[k]);
+        if (kk === "exact") { hit = db.tx[k]; kind = "exact"; break; }
+        if (kk !== "none" && !hit) { hit = db.tx[k]; kind = kk; }
+      }
+    }
+    for (var j = 0; j < accepted.length; j++) {
+      if (r.draft.ref && accepted[j].draft.ref === r.draft.ref) { kind = "exact"; break; }
+      var kj = duplicateKind(r.draft, accepted[j].draft);
+      if (kj === "exact") { kind = "exact"; break; }
+    }
+    if (kind === "exact") {
+      row.keep = false;
+      row.why = dupRef ? "the same bank reference is already recorded" : "already recorded";
+      plan.skipped.push(row);
+      return;
+    }
+    if (kind !== "none" && hit) {
+      row.pairs.push({ kind: kind, other: hit });
+      plan.questions.push(row);
+    }
+    accepted.push(row);
+    plan.rows.push(row);
+  });
+  plan.count = plan.rows.filter(function (x) { return x.keep; }).length;
+  return plan;
+}
+
 /** Save a parsed draft as a real entry, through the same rules as the form. */
 function saveQuick(d) {
   var t = {
@@ -2091,7 +2691,8 @@ function saveQuick(d) {
     cat: d.cat || "", acc: d.acc || "", to: "", how: d.how || "",
     appId: d.appId || "", channel: d.channel || "",
     date: d.date || today(), time: d.time || "", noTime: false,
-    note: d.note || "", more: false, status: "done", deducted: 0, refunds: [],
+    note: d.note || "", merchant: d.merchant || "", ref: d.ref || "",
+    more: false, status: "done", deducted: 0, refunds: [],
     typedIn: true, createdAt: stamp(), updatedAt: stamp()
   };
   db.tx.push(t);
@@ -2135,6 +2736,11 @@ function clashSheet() {
     '<div class="btns"><button type="button" class="btn" data-act="clashUse">Use the new ones</button>' +
     '<button type="button" class="btn g" data-act="clashKeep">Keep what was there</button></div>';
 }
+
+/** A row for a list with no day headings — it carries its own date.
+    Written as its own function because Array.map passes an index as the
+    second argument, which would otherwise switch this on at random. */
+function txRowDated(t) { return txRow(t, true); }
 
 /* ---------- the type-it-in box ---------- */
 function quickBox() {
@@ -2882,7 +3488,7 @@ function daySheet(iso) {
     (t.saved ? '<div class="card"><span class="lbl">Into savings</span><p class="mid">' +
       money(t.saved) + "</p></div>" : "") + "</div>";
   h += '<div class="card">' + (list.length
-    ? list.map(txRow).join("")
+    ? list.map(txRowDated).join("")
     : '<p class="empty">Nothing recorded on this day.</p>') + "</div>";
   h += '<div class="btns" style="margin-block-start:10px">' +
     '<button type="button" class="btn g" data-act="newMark" data-d="' + esc(iso) + '">Mark this day</button>' +
@@ -3150,9 +3756,35 @@ function monthsBetween(from, to) {
 
 /* ---------- the page ---------- */
 function pageReports() {
+
+  /* ready-made reports, grouped by the question they answer */
+  if (!ui.reportOpen) {
+    var groups = {};
+    REPORT_KINDS.forEach(function (r) {
+      if (!groups[r.group]) groups[r.group] = [];
+      groups[r.group].push(r);
+    });
+    var hh = backBar("Reports");
+    hh += '<div class="card"><p class="sub">Pick a question and it is set up for you, ' +
+      "or build your own below.</p></div>";
+    Object.keys(groups).forEach(function (g) {
+      hh += '<div class="sec"><h2>' + esc(g) + "</h2><div class=\"card\">" +
+        groups[g].map(function (r) {
+          return '<button type="button" class="barrow" data-act="runReport" data-r="' +
+            esc(r.id) + '"><div class="rowline"><span><b>' + esc(r.name) + "</b><br>" +
+            '<span class="sub">' + esc(r.what) + "</span></span>" +
+            '<span class="sub">\u203a</span></div></button>';
+        }).join("") + "</div></div>";
+    });
+    hh += '<div class="btns"><button type="button" class="btn" data-act="reportBuild">' +
+      "Build my own report</button></div>";
+    return hh;
+  }
   if (!ui.report) ui.report = defaultReport();
   var r = ui.report, R = reportData();
   var h = backBar(TITLES.reports);
+  h += '<div class="btns" style="margin-block-end:8px">' +
+    '<button type="button" class="btn g s" data-act="reportList">\u2190 Ready-made reports</button></div>';
 
   /* period */
   h += '<div class="card"><span class="lbl">Reporting period</span>' +
@@ -3477,7 +4109,7 @@ function pageReports() {
   var biggest = R.list.filter(function (t) { return netSpend(t) > 0; })
     .sort(function (a, b) { return netSpend(b) - netSpend(a); }).slice(0, 8);
   if (biggest.length) {
-    h += '<div class="sec"><h2>Biggest single spends</h2><div class="card">' + biggest.map(txRow).join("") + "</div></div>";
+    h += '<div class="sec"><h2>Biggest single spends</h2><div class="card">' + biggest.map(txRowDated).join("") + "</div></div>";
   }
   return h;
 }
@@ -3945,7 +4577,7 @@ function pageCard() {
     row2("Running cycle total", money(act2.net)) +
     "</table>" +
     (act2.rows.length ? '<div style="margin-block-start:10px">' +
-      sortTx(act2.rows).slice(0, 8).map(txRow).join("") + "</div>" :
+      sortTx(act2.rows).slice(0, 8).map(txRowDated).join("") + "</div>" :
       '<p class="empty">Nothing on this card in this cycle yet.</p>') +
     (function () {
       var split = channelSplit(card.id, cycle.from, cycle.to);
@@ -4035,7 +4667,7 @@ function pageCycle() {
     '<button type="button" class="btn g s" data-act="cycleCsv" data-id="' + esc(card.id) + '">Download this cycle</button>' +
     '<button type="button" class="btn g s" data-act="addCharge" data-id="' + esc(card.id) + '">Add a fee, interest or EMI</button>' +
     "</div></div>";
-  h += '<div class="card">' + (a.rows.length ? sortTx(a.rows).map(txRow).join("")
+  h += '<div class="card">' + (a.rows.length ? sortTx(a.rows).map(txRowDated).join("")
     : '<p class="empty">Nothing on this card in this cycle.</p>') + "</div>";
   return h;
 }
@@ -4112,7 +4744,7 @@ function pageStatement() {
     (function () {
       var rows = cardActivity(st.cardId, st.cycleFrom || "", st.closeDate).rows
         .filter(function (t) { return t.type === "out"; });
-      return rows.length ? sortTx(rows).map(txRow).join("")
+      return rows.length ? sortTx(rows).map(txRowDated).join("")
         : '<p class="empty">No card transactions recorded for this cycle.</p>';
     })() + "</div></div>";
 
@@ -7575,6 +8207,10 @@ function pageAccount() {
     '<button type="button" class="btn s" data-act="addFromAcc" data-id="' + esc(a.id) + '">Add an entry</button>' +
     '<button type="button" class="btn g s" data-act="editAcc" data-id="' + esc(a.id) + '">Edit</button>' +
     '<button type="button" class="btn g s" data-act="accCsv" data-id="' + esc(a.id) + '">Download</button>' +
+    (a.kind === "cash" || a.kind === "wallet"
+      ? '<button type="button" class="btn g s" data-act="countCash" data-acc="' + esc(a.id) +
+        '">Count it</button>'
+      : "") +
     "</div></div>";
 
   /* period picker — works now, and keeps working as months build up */
@@ -7598,7 +8234,7 @@ function pageAccount() {
       plus(t.net) + "</p></div></div></div>";
 
   h += '<div class="sec"><h2>Entries</h2><div class="card">' +
-    (list.length ? sortTx(list).map(txRow).join("")
+    (list.length ? sortTx(list).map(txRowDated).join("")
       : '<p class="empty">Nothing in this period yet. Pick a wider range above.</p>') + "</div></div>";
   return h;
 }
@@ -7775,7 +8411,7 @@ function pageFund() {
   }
 
   h += '<div class="sec"><h2>Every payment recorded</h2><div class="card">' +
-    (paidTx.length ? paidTx.map(txRow).join("") : '<p class="empty">Nothing recorded yet.</p>') +
+    (paidTx.length ? paidTx.map(txRowDated).join("") : '<p class="empty">Nothing recorded yet.</p>') +
     "</div></div>";
   return h;
 }
@@ -8415,9 +9051,52 @@ function pageInsights() {
       return chip("insMonth", { m: m }, mLabel(m), "", m === mk);
     }).join("") + "</div></div>";
 
+  /* Three questions first. The numbers underneath support them, rather than
+     asking you to work out the story from a wall of charts. */
+  var topCat = byCategory(txIn(mk))[0];
+  var cmpTop = compare(mk, "", "prev");
+  var paceTop = spendingPace(mk);
+  var qs = [];
+  qs.push({
+    q: "\ud83d\udccd Where did my money go?",
+    a: topCat
+      ? topCat.label + " was your biggest, at " + money(topCat.value) + "."
+      : "Nothing is recorded for " + mLabel(mk) + " yet.",
+    act: topCat ? "openCat" : "go",
+    data: topCat ? ' data-cat="' + esc(topCat.label) + '" data-mk="' + esc(mk) + '"'
+      : ' data-view="history"',
+    cta: topCat ? "Explore " + topCat.label.toLowerCase() : "Add something"
+  });
+  qs.push({
+    q: "\ud83d\udcc8 What changed?",
+    a: cmpTop.ok
+      ? (cmpTop.diff === 0 ? "You are level with " + cmpTop.label + "."
+        : "Spending is " + money(Math.abs(cmpTop.diff)) +
+          (cmpTop.diff < 0 ? " lower than " : " higher than ") + cmpTop.label + ".")
+      : "There is no earlier month to compare against yet.",
+    act: "go", data: ' data-view="review"', cta: "See the month reviewed"
+  });
+  qs.push({
+    q: "\ud83c\udfaf Am I on track?",
+    a: paceTop.hasBudget
+      ? "You have used " + Math.round((paceTop.spent / paceTop.budget) * 100) +
+        "% of your budget with " + paceTop.left +
+        (paceTop.left === 1 ? " day" : " days") + " left."
+      : "No budget is set, so there is nothing to measure against.",
+    act: "go", data: ' data-view="budget"',
+    cta: paceTop.hasBudget ? "See your budget" : "Set a budget"
+  });
+  h += '<div class="sec">' + qs.map(function (x) {
+    return '<div class="card"><b>' + esc(x.q) + "</b>" +
+      '<p class="sub" style="margin-block:6px 8px">' + esc(x.a) + "</p>" +
+      '<button type="button" class="btn g s" data-act="' + x.act + '"' + x.data + ">" +
+      esc(x.cta) + "</button></div>";
+  }).join("") + "</div>";
+
   h += '<div class="btns" style="margin-block-end:6px">' +
     '<button type="button" class="btn g s" data-act="go" data-view="review">' +
-    "See the month reviewed</button></div>";
+    "See the month reviewed</button>" +
+    '<button type="button" class="btn g s" data-act="palettePick">Chart colours</button></div>';
   h += storyBlock(mk);
   h += changedBlock(mk);
 
@@ -8504,6 +9183,128 @@ function pageInsights() {
         ' <button type="button" class="btn g s" data-act="go" data-view="budget">Change these</button>') +
       "</p></div></div>";
   }
+
+  /* ---- charts, each answering one question ---- */
+  var monthList = monthsWithData();
+  var mList = txIn(mk);
+
+  /* 1. is spending going up or down over time? */
+  if (monthList.length >= 2) {
+    var trend = monthList.slice(-8).map(function (m) {
+      return { label: mLabel(m).replace(/ \d{4}$/, ""), value: spendIn(m) };
+    });
+    h += '<div class="sec"><h2>Is it going up or down?</h2><div class="card chartcard">' +
+      '<p class="chartq">Everything you spent, month by month.</p>' +
+      lineChart(trend, { title: "Spending by month" }) + "</div></div>";
+  }
+
+  /* 2. what is the money actually FOR? */
+  var roleHtml = roleChart(mList);
+  if (roleHtml) {
+    h += '<div class="sec"><h2>What was it for?</h2><div class="card chartcard">' +
+      '<p class="chartq">Not what you bought \u2014 whether you had a choice about it.</p>' +
+      roleHtml +
+      '<p class="sub">' + money(cuttable(mList)) + " of " + money(trueSpend(mList)) +
+      " was on things you have some say over." +
+      (Object.keys(db.roles || {}).length ? "" :
+        ' <button type="button" class="btn g s" data-act="go" data-view="budget">Change these</button>') +
+      "</div></div>";
+  }
+
+  /* 3. where in the month does it go? */
+  if (spendIn(mk) > 0) {
+    h += '<div class="sec"><h2>When in the month?</h2><div class="card chartcard">' +
+      '<p class="chartq">Every day of ' + esc(mLabel(mk)) + '. Weekends are marked.</p>' +
+      dayStrip(mk) +
+      '<div style="margin-block-start:14px">' + weekBars(mk) + "</div></div></div>";
+  }
+
+  /* 4. which categories moved, and by how much? */
+  var pairRows = categoryMoves(mk, "prev").slice(0, 6).map(function (c) {
+    return { label: c.cat, now: c.now, was: c.fairBase };
+  });
+  if (pairRows.length) {
+    h += '<div class="sec"><h2>This month against last</h2><div class="card chartcard">' +
+      '<p class="chartq">The solid bar is now, the faded one is the same stretch last month.</p>' +
+      pairBars(pairRows, { nowLabel: "this month", wasLabel: "last month" }) + "</div></div>";
+  }
+
+  /* 5. how you paid */
+  var hows = {};
+  mList.forEach(function (t) {
+    var v = netSpend(t);
+    if (!v) return;
+    var k2 = t.how === "app" ? (appName(t.appId) || "app") : howLabel(t.how);
+    hows[k2] = (hows[k2] || 0) + v;
+  });
+  var howRows = Object.keys(hows).map(function (k2) { return { label: k2, value: hows[k2] }; })
+    .sort(function (a2, b2) { return b2.value - a2.value; });
+  if (howRows.length > 1) {
+    h += '<div class="sec"><h2>How you paid</h2><div class="card chartcard">' +
+      '<p class="chartq">Cash, cards and apps \u2014 a card bill paid later is not counted twice.</p>' +
+      donut(howRows) + "</div></div>";
+  }
+
+  /* 6. where the month is going, as a calendar */
+  if (spendIn(mk) > 0) {
+    h += '<div class="sec"><h2>The month at a glance</h2><div class="card chartcard">' +
+      '<p class="chartq">Darker means a heavier day. Tap any day on Stats to open it.</p>' +
+      heatmap(mk) + "</div></div>";
+  }
+
+  /* 7. how you got from money in to what is left */
+  var st2 = moneyStory(mk);
+  if (!st2.empty && (st2.got > 0 || st2.spent > 0)) {
+    var steps = [];
+    if (st2.got > 0) steps.push({ label: "Money in", value: st2.got });
+    if (st2.spent > 0) steps.push({ label: "Spent on things", value: -st2.spent });
+    if (st2.saved > 0) steps.push({ label: "Into savings", value: -st2.saved });
+    if (st2.cardPaid > 0) steps.push({ label: "Card bills", value: -st2.cardPaid });
+    if (steps.length > 1) {
+      h += '<div class="sec"><h2>How the month added up</h2><div class="card chartcard">' +
+        '<p class="chartq">Each step, in the order it happened to your money.</p>' +
+        waterfall(steps) + "</div></div>";
+    }
+  }
+
+  /* 8. budget, as a dial */
+  var pace2 = spendingPace(mk);
+  if (pace2.hasBudget) {
+    h += '<div class="sec"><h2>How much of your budget is gone</h2>' +
+      '<div class="card chartcard" style="text-align:center">' +
+      '<p class="chartq">Against the ' + money(pace2.budget) + " you set." + "</p>" +
+      gauge(pace2.spent, pace2.budget, "Budget used") +
+      '<p class="sub">' + money(pace2.spent) + " of " + money(pace2.budget) +
+      " \u00b7 " + pace2.left + (pace2.left === 1 ? " day" : " days") + " left</p></div></div>";
+  }
+
+  /* 9. each category over the last few months, side by side */
+  if (monthList.length >= 3) {
+    var topCats2 = byCategory(mList).slice(0, 6);
+    if (topCats2.length) {
+      var series = topCats2.map(function (c) {
+        return { label: c.label,
+          values: monthList.slice(-6).map(function (m) { return spendIn(m, c.label); }) };
+      });
+      h += '<div class="sec"><h2>Each category over time</h2><div class="card chartcard">' +
+        '<p class="chartq">The same shape for each, so they can be compared at a glance.</p>' +
+        sparkRow(series) + "</div></div>";
+    }
+  }
+
+  /* 10. what you keep, over time */
+  if (monthList.length >= 2) {
+    var kept = monthList.slice(-8).map(function (m) {
+      var r2 = byRole(txIn(m));
+      return { label: mLabel(m).replace(/ \d{4}$/, ""), value: r2.savings + r2.investment };
+    });
+    if (kept.some(function (k3) { return k3.value > 0; })) {
+      h += '<div class="sec"><h2>What you keep</h2><div class="card chartcard">' +
+        '<p class="chartq">Money moved into savings and investments each month.</p>' +
+        lineChart(kept, { title: "Saved each month", colour: scaleAt(5) }) + "</div></div>";
+    }
+  }
+
   return h;
 }
 /* ---------- Merchants page ---------- */
@@ -9326,24 +10127,17 @@ function feedItems() {
       act: "filterGaps", cta: "Fill them in", weight: gaps.length
     });
   }
-  /* SIP questions and money warnings */
+  /* SIP questions have their own block on Home, with Yes / Not this month / close.
+     Only the money warnings come through here, so nothing is said twice. */
   sipAlerts().forEach(function (a) {
     if (a.kind === "ask") {
-      out.push({ tone: "blue", rank: 80, title: a.title, body: a.body,
-        act: "payFund", id: a.fundId, cta: "Yes, I paid it", weight: a.amt });
+      return;
     } else if (a.kind === "short") {
       out.push({ tone: "red", rank: 95, title: a.title,
         body: money(a.need) + " of SIPs is set to leave " + accName(a.accId) +
           " soon, but it holds " + maskMoney(a.have, "total") + ". You are " +
           money(a.short) + " short.",
         act: "go", view: "funds", cta: "See the SIPs", weight: a.short });
-    } else {
-      /* a.body quotes the balance, so build a version that respects the eye */
-      out.push({ tone: "green", rank: 20,
-        title: money(a.need) + " leaves " + accName(a.accId) + " soon",
-        body: accName(a.accId) + " holds " + maskMoney(a.have, "total") + ", so this is " +
-          "covered. Nothing is taken by this app \u2014 your bank moves it.",
-        act: "go", view: "funds", cta: "See the SIPs", weight: a.need });
     }
   });
   /* money that has just freed up */
@@ -9621,7 +10415,7 @@ function pageSearch() {
       '<div><span class="lbl">Spent</span><p class="mid out">' + money(t.spend) + "</p></div>" +
       (t.in ? '<div><span class="lbl">Received</span><p class="mid in">' + money(t.in) + "</p></div>" : "") +
       "</div></div>" +
-      '<div class="card">' + hits.slice(0, 40).map(txRow).join("") + "</div>" +
+      '<div class="card">' + hits.slice(0, 40).map(txRowDated).join("") + "</div>" +
       (hits.length > 40 ? '<p class="sub">Showing the first 40. Narrow it down to see fewer.</p>' : "") +
       '<button type="button" class="btn g s" data-act="searchInHistory" data-q="' + esc(q) +
       '">Open these in Activity</button></div>';
@@ -9711,7 +10505,7 @@ function pageReview() {
   var cats = byCategory(txIn(mk)).slice(0, 6);
   if (cats.length) {
     h += '<div class="sec"><h2>Where it went</h2><div class="card">' +
-      barList(cats, st.spent) + "</div></div>";
+      barList(cats, st.spent, { drill: true, mk: mk }) + "</div></div>";
   }
 
   /* what you kept */
@@ -9772,6 +10566,1917 @@ function pageReview() {
     '<button type="button" class="btn g" data-act="go" data-view="insights">See the detail</button>' +
     '<button type="button" class="btn g" data-act="go" data-view="reports">Build a report</button></div>';
   return h;
+}
+
+/** Pick the colours the charts use. Shown as real swatches, not names. */
+function paletteSheet() {
+  return '<div class="shd"><h2>Chart colours</h2>' +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    '<p class="sub">Every set is ordered so neighbouring bars stay apart, and each ' +
+    "was checked against the common forms of colour blindness.</p>" +
+    PALETTES.map(function (p) {
+      var on = p.id === paletteId();
+      return '<button type="button" class="palrow' + (on ? " on" : "") +
+        '" data-act="setPalette" data-p="' + esc(p.id) + '" aria-pressed="' +
+        (on ? "true" : "false") + '">' +
+        '<span class="palswatch">' + p.c.map(function (c) {
+          return '<i style="background:' + c + '"></i>';
+        }).join("") + "</span>" +
+        '<span class="palname"><b>' + esc(p.name) + "</b>" +
+        '<span class="sub">' + esc(p.hint) + "</span></span>" +
+        (on ? '<span class="sub">\u2713</span>' : "") + "</button>";
+    }).join("");
+}
+
+/* ---------- how long a goal will really take ----------
+   From your own recorded saving rate, never from a target you wish for. */
+function savingRate() {
+  var done = monthsWithData().filter(function (m) { return m < mKey(new Date()); });
+  if (!done.length) return null;
+  var use = done.slice(-3);
+  var total = use.reduce(function (s, m) {
+    var r = byRole(txIn(m));
+    return s + r.savings + r.investment;
+  }, 0);
+  var avg = Math.round(total / use.length);
+  return { perMonth: avg, months: use.length, using: use };
+}
+function goalOutlook(g) {
+  var target = Math.round(g.target || 0);
+  var have = Math.round(g.now || g.saved || 0);
+  var left = Math.max(0, target - have);
+  var pct = target > 0 ? Math.min(100, (have / target) * 100) : 0;
+  var rate = savingRate();
+  var out = {
+    goal: g, target: target, have: have, left: left, pct: pct,
+    done: left === 0 && target > 0, knows: false
+  };
+  if (out.done) {
+    out.words = "Reached.";
+    return out;
+  }
+  if (!rate || rate.perMonth <= 0) {
+    out.words = "How long this takes cannot be worked out yet \u2014 no finished month " +
+      "shows money going into savings. It appears once one does.";
+    return out;
+  }
+  out.knows = true;
+  out.perMonth = rate.perMonth;
+  out.basedOn = rate.months;
+  out.months = Math.ceil(left / rate.perMonth);
+  var d = new Date();
+  d.setMonth(d.getMonth() + out.months);
+  out.by = isoOf(d);
+  out.words = "At " + money(rate.perMonth) + " a month \u2014 your average over the last " +
+    rate.months + (rate.months === 1 ? " finished month" : " finished months") + " \u2014 " +
+    "this would take about " + out.months + (out.months === 1 ? " month" : " months") +
+    ", reaching it around " + fDate(out.by) + ".";
+  if (g.by) {
+    var want = Math.round((dateFrom(g.by) - dateFrom(today())) / 86400000 / 30.4);
+    out.wantMonths = want;
+    out.onTrack = out.months <= want;
+    out.needPerMonth = want > 0 ? Math.ceil(left / want) : left;
+    out.words += out.onTrack
+      ? " That is inside the date you set."
+      : " To reach it by " + fDate(g.by) + " you would need about " +
+        money(out.needPerMonth) + " a month instead.";
+  }
+  return out;
+}
+
+/* ---------- fixed deposits and when they mature ---------- */
+function potMaturity(p) {
+  if (!p.maturesOn) return null;
+  var days = Math.round((dateFrom(p.maturesOn) - dateFrom(today())) / 86400000);
+  return {
+    on: p.maturesOn, days: days, due: days <= 0,
+    soon: days > 0 && days <= 30,
+    words: days < 0 ? "Matured " + Math.abs(days) + " days ago, on " + fDate(p.maturesOn)
+      : days === 0 ? "Matures today"
+      : "Matures on " + fDate(p.maturesOn) + ", in " + days +
+        (days === 1 ? " day" : " days")
+  };
+}
+function maturingSoon() {
+  return pots().map(function (p) {
+    var m = potMaturity(p);
+    return m ? { pot: p, m: m } : null;
+  }).filter(function (x) { return x && (x.m.due || x.m.soon); })
+    .sort(function (a, b) { return a.m.days - b.m.days; });
+}
+
+/* =========================================================
+   GOLD AND SILVER
+   ---------------------------------------------------------
+   A rate is only ever shown with the moment it was taken.
+   A number from three weeks ago is not "the price of gold" \u2014
+   it is what gold cost three weeks ago, and this says so.
+   Two ways to get one: type in what you see, or let the app
+   fetch it if you have given it a key to do so.
+   ========================================================= */
+var METALS = [
+  { id:"gold",   name:"Gold",   unit:"gram", icon:"\ud83e\udd47", purity:"24k" },
+  { id:"silver", name:"Silver", unit:"gram", icon:"\ud83e\udd48", purity:"999" }
+];
+var RATE_KEY = "moneytracker.metalkey";
+function metalStore() {
+  if (!db.metals || typeof db.metals !== "object") {
+    db.metals = { rates: [], holdings: [] };
+  }
+  if (!Array.isArray(db.metals.rates)) db.metals.rates = [];
+  if (!Array.isArray(db.metals.holdings)) db.metals.holdings = [];
+  return db.metals;
+}
+/** Write down a rate you saw, with when you saw it. */
+function addRate(metal, perGram, atIso, source) {
+  var amt = Math.round(perGram || 0);
+  if (!amt || !METALS.some(function (m) { return m.id === metal; })) return null;
+  var r = {
+    id: id("rt"), metal: metal, perGram: amt,
+    at: atIso || stamp(), source: String(source || "you typed it in").slice(0, 40)
+  };
+  metalStore().rates.push(r);
+  /* keep the list from growing without limit */
+  metalStore().rates = metalStore().rates
+    .sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); })
+    .slice(-200);
+  save();
+  return r;
+}
+/** The most recent rate for a metal, and how old it is. Null when none. */
+function latestRate(metal) {
+  var all = metalStore().rates.filter(function (r) { return r.metal === metal; })
+    .sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); });
+  if (!all.length) return null;
+  var r = all[0];
+  var days = Math.round((dateFrom(today()) - dateFrom(String(r.at).slice(0, 10))) / 86400000);
+  return {
+    rate: r, perGram: r.perGram, at: r.at, source: r.source, days: days,
+    fresh: days <= 1,
+    words: days <= 0 ? "taken today" : days === 1 ? "taken yesterday"
+      : "taken " + days + " days ago, on " + fDate(String(r.at).slice(0, 10))
+  };
+}
+/** How a rate has moved, from what you have recorded. */
+function rateTrend(metal, n) {
+  var all = metalStore().rates.filter(function (r) { return r.metal === metal; })
+    .sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); })
+    .slice(-(n || 12));
+  return all.map(function (r) {
+    return { label: fDate(String(r.at).slice(0, 10)).replace(/, \d{4}$/, ""),
+             value: r.perGram, at: r.at };
+  });
+}
+/** What you hold. Grams, because that is how it is bought here. */
+function addHolding(o) {
+  var h = {
+    id: id("hg"), metal: o.metal === "silver" ? "silver" : "gold",
+    grams: Math.round((parseFloat(o.grams) || 0) * 1000) / 1000,
+    paid: Math.round(o.paid || 0),
+    boughtOn: o.boughtOn || today(),
+    note: String(o.note || "").slice(0, 60)
+  };
+  if (h.grams <= 0) return null;
+  metalStore().holdings.push(h);
+  save();
+  return h;
+}
+function removeHolding(hid) {
+  metalStore().holdings = metalStore().holdings.filter(function (x) { return x.id !== hid; });
+  save();
+  return true;
+}
+/** What your metal is worth \u2014 only when there is a rate to work from. */
+function metalWorth() {
+  var out = { known: false, total: 0, paid: 0, rows: [], missing: [] };
+  METALS.forEach(function (m) {
+    var held = metalStore().holdings.filter(function (h) { return h.metal === m.id; });
+    if (!held.length) return;
+    var grams = held.reduce(function (s, h) { return s + h.grams; }, 0);
+    var paid = held.reduce(function (s, h) { return s + h.paid; }, 0);
+    var r = latestRate(m.id);
+    var row = { metal: m, grams: grams, paid: paid, held: held, rate: r };
+    if (r) {
+      row.worth = Math.round(grams * r.perGram);
+      row.change = row.worth - paid;
+      out.total += row.worth;
+      out.known = true;
+    } else {
+      out.missing.push(m.name);
+    }
+    out.paid += paid;
+    out.rows.push(row);
+  });
+  return out;
+}
+/* ---------- fetching a rate, if you have set that up ---------- */
+function metalKey() {
+  try { return localStorage.getItem(RATE_KEY) || ""; } catch (e) { return ""; }
+}
+function setMetalKey(k) {
+  try {
+    if (k) localStorage.setItem(RATE_KEY, String(k).trim());
+    else localStorage.removeItem(RATE_KEY);
+    return true;
+  } catch (e) { return false; }
+}
+/** Ask goldapi.io for today's rate. Needs a key, which stays on this device. */
+function fetchRate(metal) {
+  var key = metalKey();
+  if (!key) return Promise.resolve({ ok: false, why: "nokey" });
+  if (typeof fetch !== "function") return Promise.resolve({ ok: false, why: "nofetch" });
+  var sym = metal === "silver" ? "XAG" : "XAU";
+  return fetch("https://www.goldapi.io/api/" + sym + "/INR", {
+    headers: { "x-access-token": key, "Content-Type": "application/json" }
+  }).then(function (r) {
+    if (!r.ok) throw new Error("http " + r.status);
+    return r.json();
+  }).then(function (j) {
+    /* the API quotes per troy ounce; India buys by the gram */
+    var perOunce = j && (j.price || j.price_gram_24k ? null : j.price);
+    var perGram = j && j.price_gram_24k ? j.price_gram_24k
+      : (j && j.price ? j.price / 31.1035 : 0);
+    if (metal === "silver" && j && j.price) perGram = j.price / 31.1035;
+    if (!perGram || !isFinite(perGram)) throw new Error("no price in the reply");
+    var made = addRate(metal, Math.round(perGram * 100), stamp(), "goldapi.io");
+    return { ok: true, rate: made };
+  }).catch(function (e) {
+    return { ok: false, why: "failed", message: e && e.message };
+  });
+}
+
+/* ---------- what a fund is worth ----------
+   A fund's value needs its NAV, and this app has no price feed. So you
+   record the NAV you see in your fund app, and everything is worked out
+   from that \u2014 with the date it came from always shown beside it. */
+function navsFor(fundId) {
+  var f = fund(fundId);
+  if (!f) return [];
+  if (!Array.isArray(f.navs)) f.navs = [];
+  return f.navs;
+}
+function addNav(fundId, value, atIso) {
+  var f = fund(fundId);
+  if (!f) return null;
+  var v = Math.round((parseFloat(value) || 0) * 10000) / 10000;   /* NAVs run to 4 places */
+  if (v <= 0) return null;
+  navsFor(fundId).push({ nav: v, at: atIso || today() });
+  f.navs = navsFor(fundId)
+    .sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); })
+    .slice(-120);
+  save();
+  return f.navs[f.navs.length - 1];
+}
+function latestNav(fundId) {
+  var list = navsFor(fundId);
+  if (!list.length) return null;
+  var last = list[list.length - 1];
+  var days = Math.round((dateFrom(today()) - dateFrom(last.at)) / 86400000);
+  return {
+    nav: last.nav, at: last.at, days: days, fresh: days <= 3,
+    words: days <= 0 ? "as of today" : days === 1 ? "as of yesterday"
+      : "as of " + fDate(last.at) + ", " + days + " days ago"
+  };
+}
+/* ---------- what a SIP should have bought, month by month ----------
+   The fund's own day is the purchase day. A SIP dated on a weekend still
+   goes through on that date, so no day-shifting is applied \u2014 change
+   f.shiftWeekend to true on a fund if yours behaves differently.
+   This works out what SHOULD have happened. It never records anything:
+   the schedule is a calculation, your confirmations are the record. */
+function sipSchedule(f, fromIso, toIso) {
+  if (!f || f.oneOff || !f.sip || !f.day) return [];
+  var start = fromIso || f.since || fundStartMonth(f) + "-01";
+  var end = toIso || today();
+  var out = [], mk = mOf(start), guard = 0;
+  while (guard++ < 240) {
+    var parts = mk.split("-");
+    var d = sipDateFor(f.day, new Date(+parts[0], +parts[1] - 1, 1));
+    if (d && d >= start && d <= end) {
+      var when = d;
+      if (f.shiftWeekend && isWeekend(d)) {
+        /* only if this fund is set to move off a weekend */
+        var probe = dateFrom(d);
+        while (isWeekend(isoOf(probe))) probe.setDate(probe.getDate() + 1);
+        when = isoOf(probe);
+      }
+      out.push({ due: d, on: when, amt: Math.round(f.sip || 0), mk: mk,
+                 weekend: isWeekend(d) });
+    }
+    if (mk >= mOf(end)) break;
+    mk = mShift(mk, 1);
+  }
+  return out;
+}
+/** The NAV that applies on a date: the latest one recorded on or before it. */
+function navOn(fundId, iso) {
+  var best = null;
+  navsFor(fundId).forEach(function (n) {
+    /* on or before the day in question, and never from the future */
+    if (n.at <= iso && n.at <= today() && (!best || n.at > best.at)) best = n;
+  });
+  return best;
+}
+/** Every purchase this fund has made: what you confirmed, plus what the
+    schedule says, without ever counting the same month twice. */
+function fundBuys(f) {
+  if (!f) return [];
+  var byMonth = {};
+  /* a payment you recorded always wins over a scheduled one */
+  db.tx.filter(function (t) { return t.fundId === f.id; }).forEach(function (t) {
+    byMonth[mOf(t.date)] = { on: t.date, amt: Math.round(t.amt || 0),
+                             from: "recorded", id: t.id };
+  });
+  sipSchedule(f).forEach(function (s) {
+    if (byMonth[s.mk]) return;
+    if (sipSkips()[f.id + ":" + s.mk]) return;      /* you said you skipped it */
+    if (s.on > today()) return;                      /* not yet due */
+    byMonth[s.mk] = { on: s.on, amt: s.amt, from: "expected", mk: s.mk };
+  });
+  return Object.keys(byMonth).sort().map(function (k) { return byMonth[k]; });
+}
+/** How much has gone in, counting confirmed and expected separately. */
+function fundPutIn(f) {
+  var buys = fundBuys(f);
+  var confirmed = buys.filter(function (b) { return b.from === "recorded"; })
+    .reduce(function (s, b) { return s + b.amt; }, 0);
+  var expected = buys.filter(function (b) { return b.from === "expected"; })
+    .reduce(function (s, b) { return s + b.amt; }, 0);
+  /* the seeded figure is what you told the app you had already put in */
+  var opening = Math.max(0, Math.round(f.invested || 0) - confirmed);
+  return { confirmed: confirmed, expected: expected, opening: opening,
+           total: opening + confirmed + expected, buys: buys };
+}
+
+/** Units are derived from what you put in and the NAV on that day, where known. */
+function fundUnits(fundId) {
+  var f = fund(fundId);
+  if (!f) return null;
+  if (f.units && f.units > 0) return { units: f.units, from: "you typed it in" };
+  var navs = navsFor(fundId);
+  if (!navs.length) return null;
+  var put = fundPutIn(f);
+  var units = 0, covered = 0, guessed = 0;
+  /* what was already in the fund before tracking began, priced at the
+     earliest NAV there is — the only fair one available for it */
+  if (put.opening > 0) {
+    /* never price anything with a NAV from the future */
+    var first = navs.filter(function (n) { return n.at <= today(); })
+      .sort(function (a2, b2) { return String(a2.at).localeCompare(String(b2.at)); })[0];
+    if (first) {
+      units += (put.opening / 100) / first.nav;
+      covered += put.opening;
+      guessed += put.opening;
+    }
+  }
+  put.buys.forEach(function (b) {
+    var best = navOn(fundId, b.on);
+    if (!best) return;
+    units += (b.amt / 100) / best.nav;
+    covered += b.amt;
+    if (b.from === "expected") guessed += b.amt;
+  });
+  if (units <= 0) return null;
+  return {
+    units: Math.round(units * 10000) / 10000,
+    from: guessed > 0
+      ? "worked out from your SIP schedule and the NAVs you recorded"
+      : "worked out from your recorded payments and NAVs",
+    partial: covered < put.total,
+    coveredPct: put.total ? Math.round((covered / put.total) * 100) : 0,
+    fromSchedule: guessed,
+    confirmed: covered - guessed
+  };
+}
+/** What a fund is worth now, or an honest reason why it cannot be said. */
+function fundWorth(fundId) {
+  var f = fund(fundId);
+  if (!f) return null;
+  var putIn = fundPutIn(f);
+  var put = Math.max(Math.round(f.invested || 0), putIn.total);
+  var nav = latestNav(fundId);
+  if (!nav) {
+    return { known: false, put: put,
+      why: "No NAV recorded for this fund yet, and this app has no price feed. " +
+        "Add the NAV from your fund app and its value appears here." };
+  }
+  var u = fundUnits(fundId);
+  if (!u) {
+    return { known: false, put: put, nav: nav,
+      why: "The NAV is known but the number of units is not. Record the units from " +
+        "your fund app, or add a NAV dated on or before your first payment." };
+  }
+  var worth = Math.round(u.units * nav.nav * 100);
+  return {
+    known: true, put: put, worth: worth, units: u.units, nav: nav,
+    change: worth - put,
+    pct: put > 0 ? ((worth - put) / put) * 100 : 0,
+    unitsFrom: u.from, partial: !!u.partial, coveredPct: u.coveredPct
+  };
+}
+/** Everything you hold that has a market value: funds and metal. */
+function portfolio() {
+  var rows = [], put = 0, worth = 0, unknown = [];
+  funds().forEach(function (f) {
+    var w = fundWorth(f.id);
+    put += Math.round(f.invested || 0);
+    if (w && w.known) {
+      worth += w.worth;
+      rows.push({ kind: "fund", name: f.name, put: w.put, worth: w.worth,
+                  change: w.change, pct: w.pct, nav: w.nav, id: f.id });
+    } else {
+      unknown.push(f.name);
+      rows.push({ kind: "fund", name: f.name, put: Math.round(f.invested || 0),
+                  worth: null, why: w ? w.why : "", id: f.id });
+    }
+  });
+  var m = metalWorth();
+  m.rows.forEach(function (r) {
+    put += r.paid;
+    if (r.worth !== undefined) {
+      worth += r.worth;
+      rows.push({ kind: "metal", name: r.metal.name, put: r.paid, worth: r.worth,
+                  change: r.change, pct: r.paid > 0 ? (r.change / r.paid) * 100 : 0,
+                  grams: r.grams, rate: r.rate, id: r.metal.id });
+    } else {
+      unknown.push(r.metal.name);
+      rows.push({ kind: "metal", name: r.metal.name, put: r.paid, worth: null,
+                  grams: r.grams, why: "No rate recorded yet.", id: r.metal.id });
+    }
+  });
+  return {
+    rows: rows, put: put, worth: worth,
+    change: worth - put,
+    /* only counts the part that can actually be valued */
+    valuedPut: rows.filter(function (r) { return r.worth !== null; })
+      .reduce(function (s, r) { return s + r.put; }, 0),
+    unknown: unknown,
+    complete: !unknown.length
+  };
+}
+
+/* =========================================================
+   WHAT MOVED
+   ---------------------------------------------------------
+   Changes in the rates you track, side by side. It reports
+   direction and size from recorded figures.
+
+   It deliberately does NOT tell you what to buy. A one-day
+   move says nothing about which asset suits you: that turns
+   on your horizon, your tax position, and what you already
+   hold. This app has no view on those, so offering a verdict
+   would be inventing one.
+   ========================================================= */
+var WATCH = [
+  { id:"repo",   name:"RBI repo rate",  kind:"percent", icon:"\ud83c\udfe6",
+    what:"what banks pay to borrow from the RBI" },
+  { id:"gold",   name:"Gold",           kind:"money",   icon:"\ud83e\udd47", what:"per gram" },
+  { id:"silver", name:"Silver",         kind:"money",   icon:"\ud83e\udd48", what:"per gram" }
+];
+function watchStore() {
+  if (!db.watch || typeof db.watch !== "object") db.watch = {};
+  return db.watch;
+}
+function watchList(id2) {
+  var w = watchStore();
+  if (!Array.isArray(w[id2])) w[id2] = [];
+  return w[id2];
+}
+/** Note a figure you saw, with its date. Percentages are stored x100 too. */
+function addWatch(id2, value, atIso, source) {
+  var spec = WATCH.filter(function (x) { return x.id === id2; })[0];
+  if (!spec) return null;
+  var v = Math.round((parseFloat(value) || 0) * 100);
+  if (v <= 0) return null;
+  var at = atIso || today();
+  var list = watchList(id2).filter(function (x) { return x.at !== at; });
+  list.push({ v: v, at: at, source: String(source || "you typed it in").slice(0, 40) });
+  watchStore()[id2] = list.sort(function (a, b) { return a.at < b.at ? -1 : 1; }).slice(-400);
+  /* metals keep their own store so holdings stay valued from one place */
+  if (id2 === "gold" || id2 === "silver") addRate(id2, v, at + "T00:00", source);
+  save();
+  return { v: v, at: at };
+}
+function watchLatest(id2) {
+  var list = watchList(id2);
+  if (!list.length) return null;
+  var last = list[list.length - 1];
+  var prev = list.length > 1 ? list[list.length - 2] : null;
+  var days = Math.round((dateFrom(today()) - dateFrom(last.at)) / 86400000);
+  var diff = prev ? last.v - prev.v : 0;
+  return {
+    v: last.v, at: last.at, source: last.source, days: days, fresh: days <= 1,
+    prev: prev ? prev.v : null, prevAt: prev ? prev.at : "",
+    diff: diff, pct: prev && prev.v ? (diff / prev.v) * 100 : null,
+    since: prev ? Math.round((dateFrom(last.at) - dateFrom(prev.at)) / 86400000) : 0,
+    points: list.length
+  };
+}
+function watchTrend(id2, n) {
+  return watchList(id2).slice(-(n || 14)).map(function (x) {
+    return { label: fDate(x.at).replace(/, \d{4}$/, ""), value: x.v, at: x.at };
+  });
+}
+function fmtWatch(spec, v) {
+  return spec.kind === "percent" ? (v / 100).toFixed(2) + "%" : money(v);
+}
+/** Everything you track, and what each one did. Funds included where a NAV exists. */
+function whatMoved() {
+  var rows = [];
+  WATCH.forEach(function (spec) {
+    var l = watchLatest(spec.id);
+    rows.push({
+      id: spec.id, spec: spec, kind: spec.kind,
+      known: !!l, latest: l,
+      dir: l && l.diff > 0 ? "up" : l && l.diff < 0 ? "down" : "flat"
+    });
+  });
+  funds().forEach(function (f) {
+    var navs = navsFor(f.id);
+    if (navs.length < 1) return;
+    var last = navs[navs.length - 1];
+    var prev = navs.length > 1 ? navs[navs.length - 2] : null;
+    var diff = prev ? last.nav - prev.nav : 0;
+    rows.push({
+      id: f.id, spec: { name: f.name, icon: "\ud83d\udcc8", kind: "nav",
+                        what: "net asset value" },
+      kind: "nav", known: true, fund: f,
+      latest: {
+        v: Math.round(last.nav * 100), at: last.at,
+        prev: prev ? Math.round(prev.nav * 100) : null,
+        diff: Math.round(diff * 100),
+        pct: prev && prev.nav ? (diff / prev.nav) * 100 : null,
+        days: Math.round((dateFrom(today()) - dateFrom(last.at)) / 86400000),
+        fresh: last.at >= yesterday(),
+        since: prev ? Math.round((dateFrom(last.at) - dateFrom(prev.at)) / 86400000) : 0,
+        points: navs.length
+      },
+      dir: diff > 0 ? "up" : diff < 0 ? "down" : "flat"
+    });
+  });
+  var moved = rows.filter(function (r) { return r.known && r.latest.pct !== null; });
+  return {
+    rows: rows,
+    moved: moved.sort(function (a, b) {
+      return Math.abs(b.latest.pct) - Math.abs(a.latest.pct);
+    }),
+    missing: rows.filter(function (r) { return !r.known; }),
+    stale: rows.filter(function (r) { return r.known && r.latest.days > 3; })
+  };
+}
+/** Plain observations. Facts about movement \u2014 not a recommendation. */
+function moveNotes() {
+  var m = whatMoved(), out = [];
+  m.moved.forEach(function (r) {
+    var l = r.latest;
+    var name = r.spec.name;
+    var size = Math.abs(l.pct);
+    var word = size < 0.1 ? "barely moved" : size < 1 ? "moved a little" : "moved sharply";
+    out.push({
+      name: name, icon: r.spec.icon, dir: r.dir, pct: l.pct, days: l.since,
+      text: name + " " + (r.dir === "flat" ? "is unchanged"
+        : r.dir === "up" ? "is up " + size.toFixed(2) + "%" : "is down " + size.toFixed(2) + "%") +
+        (l.since > 1 ? " over " + l.since + " days" : " since the figure before") +
+        ", " + word + ".",
+      stale: !l.fresh,
+      note: l.fresh ? "" : "This figure is " + l.days + " days old."
+    });
+  });
+  return out;
+}
+
+/* =========================================================
+   DEAR OR CHEAP, FOR YOU
+   ---------------------------------------------------------
+   A price alone means nothing. Gold at 7,250 is only high or
+   low against what YOU paid. These work entirely from your
+   own purchases, so nothing here is a market view.
+   ========================================================= */
+/** What one unit of a fund has cost you on average. */
+function costPerUnit(fundId) {
+  var f = fund(fundId);
+  if (!f) return null;
+  var u = fundUnits(fundId);
+  if (!u || u.units <= 0) return null;
+  var put = fundPutIn(f);
+  var total = Math.max(Math.round(f.invested || 0), put.total);
+  if (total <= 0) return null;
+  var avg = (total / 100) / u.units;
+  var nav = latestNav(fundId);
+  var out = {
+    avg: Math.round(avg * 10000) / 10000,
+    units: u.units, put: total, derived: u.from
+  };
+  if (nav) {
+    out.nav = nav.nav;
+    out.navAt = nav.at;
+    out.navDays = nav.days;
+    out.diff = nav.nav - out.avg;
+    out.pct = out.avg > 0 ? (out.diff / out.avg) * 100 : 0;
+    out.cheaper = out.diff < 0;
+    out.words = out.diff === 0
+      ? "Today's NAV is exactly what you have paid on average."
+      : out.cheaper
+        ? "Today's NAV is " + Math.abs(out.pct).toFixed(1) + "% below your average cost of " +
+          out.avg.toFixed(4) + " \u2014 a unit bought now costs less than your average unit."
+        : "Today's NAV is " + out.pct.toFixed(1) + "% above your average cost of " +
+          out.avg.toFixed(4) + " \u2014 a unit bought now costs more than your average unit.";
+  }
+  return out;
+}
+/** The same idea for metal: your average price per gram. */
+function metalBasis(metalId) {
+  var held = metalStore().holdings.filter(function (h) { return h.metal === metalId; });
+  if (!held.length) return null;
+  var grams = held.reduce(function (s, h) { return s + h.grams; }, 0);
+  var paid = held.reduce(function (s, h) { return s + h.paid; }, 0);
+  if (grams <= 0 || paid <= 0) return null;
+  var avg = Math.round(paid / grams);
+  var r = latestRate(metalId);
+  var out = { avg: avg, grams: grams, paid: paid };
+  if (r) {
+    out.now = r.perGram;
+    out.at = r.at;
+    out.days = r.days;
+    out.diff = r.perGram - avg;
+    out.pct = avg > 0 ? (out.diff / avg) * 100 : 0;
+    out.cheaper = out.diff < 0;
+    out.words = out.diff === 0
+      ? "The rate you noted matches your average cost exactly."
+      : out.cheaper
+        ? "The rate you noted is " + Math.abs(out.pct).toFixed(1) + "% below the " +
+          money(avg) + " a gram you have paid on average."
+        : "The rate you noted is " + out.pct.toFixed(1) + "% above the " +
+          money(avg) + " a gram you have paid on average.";
+  }
+  return out;
+}
+/* ---------- how your money is spread, and how far it has drifted ---------- */
+function targetMix() {
+  if (!db.mix || typeof db.mix !== "object") db.mix = {};
+  return db.mix;
+}
+function setTargetMix(kind, pct) {
+  var v = Math.max(0, Math.min(100, parseInt(pct, 10) || 0));
+  targetMix()[kind] = v;
+  save();
+  return v;
+}
+/** What you actually hold, by kind, at recorded values. */
+function allocation() {
+  var buckets = {};
+  var add = function (kind, amt) {
+    if (amt <= 0) return;
+    buckets[kind] = (buckets[kind] || 0) + amt;
+  };
+  funds().forEach(function (f) {
+    var w = fundWorth(f.id);
+    var v = w && w.known ? w.worth : Math.round(f.invested || 0);
+    var kind = /gold/i.test(f.name) || /gold/i.test(f.type || "") ? "Gold fund"
+      : /index|nifty/i.test(f.name + " " + (f.type || "")) ? "Index"
+      : /debt|liquid|bond/i.test(f.name + " " + (f.type || "")) ? "Debt" : "Equity";
+    add(kind, v);
+  });
+  var mw = metalWorth();
+  mw.rows.forEach(function (r) {
+    add(r.metal.name, r.worth !== undefined ? r.worth : r.paid);
+  });
+  add("Set aside", potsTotal());
+  add("In accounts", spendable());
+  var total = Object.keys(buckets).reduce(function (s, k) { return s + buckets[k]; }, 0);
+  var rows = Object.keys(buckets).map(function (k) {
+    var want = targetMix()[k];
+    var have = total > 0 ? (buckets[k] / total) * 100 : 0;
+    return {
+      kind: k, value: buckets[k], pct: have,
+      target: want === undefined ? null : want,
+      drift: want === undefined ? null : have - want
+    };
+  }).sort(function (a, b) { return b.value - a.value; });
+  return {
+    rows: rows, total: total,
+    drifted: rows.filter(function (r) { return r.drift !== null && Math.abs(r.drift) >= 5; }),
+    hasTarget: Object.keys(targetMix()).length > 0
+  };
+}
+/** Observations from your own numbers. Facts, not recommendations. */
+function ownSignals() {
+  var out = [];
+  funds().forEach(function (f) {
+    var c = costPerUnit(f.id);
+    if (!c || c.nav === undefined) return;
+    out.push({
+      name: f.name, kind: "fund", pct: c.pct, cheaper: c.cheaper,
+      text: f.name + ": " + c.words,
+      stale: c.navDays > 3, days: c.navDays
+    });
+  });
+  METALS.forEach(function (m) {
+    var b = metalBasis(m.id);
+    if (!b || b.now === undefined) return;
+    out.push({
+      name: m.name, kind: "metal", pct: b.pct, cheaper: b.cheaper,
+      text: m.name + ": " + b.words,
+      stale: b.days > 3, days: b.days
+    });
+  });
+  var a = allocation();
+  a.drifted.forEach(function (r) {
+    out.push({
+      name: r.kind, kind: "mix", pct: r.drift, cheaper: r.drift < 0,
+      text: r.kind + " is " + Math.abs(r.drift).toFixed(0) + " points " +
+        (r.drift > 0 ? "above" : "below") + " the " + r.target + "% you set \u2014 " +
+        "it is " + r.pct.toFixed(0) + "% of what you hold."
+    });
+  });
+  return out.sort(function (x, y) { return Math.abs(y.pct) - Math.abs(x.pct); });
+}
+
+/* =========================================================
+   TAX-SAVING
+   ---------------------------------------------------------
+   Under the old regime an individual can claim up to
+   Rs 1,50,000 under section 80C. The window closes on
+   31 March, and most people find out in February that they
+   are short. This counts what you have already put in, from
+   your own records, and says what is left.
+
+   It reports amounts. It does not compute your tax, does not
+   know your regime, and does not advise \u2014 those need your
+   full income picture, which this app does not have.
+   ========================================================= */
+var TAX_SECTIONS = [
+  { id:"80c", name:"Section 80C", cap: 15000000, /* Rs 1,50,000 in paise */
+    what:"ELSS funds, PPF, life insurance, EPF, principal on a home loan, tuition fees",
+    note:"The most common one. The cap is shared across everything in it." },
+  { id:"80d", name:"Section 80D", cap: 2500000,  /* Rs 25,000 */
+    what:"health insurance premiums for you and your family",
+    note:"Higher if a parent you cover is a senior citizen. This uses the ordinary cap." },
+  { id:"80ccd", name:"Section 80CCD(1B)", cap: 5000000, /* Rs 50,000 */
+    what:"the extra NPS deduction, over and above 80C",
+    note:"Separate from the 80C cap." }
+];
+function taxTags() {
+  if (!db.taxTags || typeof db.taxTags !== "object") db.taxTags = {};
+  return db.taxTags;
+}
+/** Mark a fund or a category as counting toward a section. */
+function tagForTax(key, section) {
+  if (!key) return false;
+  if (!section) delete taxTags()[key];
+  else if (TAX_SECTIONS.some(function (s) { return s.id === section; })) taxTags()[key] = section;
+  else return false;
+  save();
+  return true;
+}
+function taxTagOf(key) { return taxTags()[key] || ""; }
+/** Everything that counts, for one financial year. */
+function taxYear(startYear) {
+  var y = startYear === undefined ? fyOf(today()) : startYear;
+  var r = fyRange(y);
+  var sections = {};
+  TAX_SECTIONS.forEach(function (s) {
+    sections[s.id] = { spec: s, items: [], total: 0 };
+  });
+  /* fund payments, where the fund is tagged */
+  funds().forEach(function (f) {
+    var sec = taxTagOf("fund:" + f.id);
+    if (!sec || !sections[sec]) return;
+    var paid = db.tx.filter(function (t) {
+      return t.fundId === f.id && t.date >= r.from && t.date <= r.to;
+    }).reduce(function (s2, t) { return s2 + Math.round(t.amt || 0); }, 0);
+    /* a SIP that is scheduled but unconfirmed is shown apart, never added in */
+    var due = sipSchedule(f, r.from, r.to).filter(function (x) {
+      return x.on <= today() &&
+        !db.tx.some(function (t) { return t.fundId === f.id && mOf(t.date) === x.mk; }) &&
+        !sipSkips()[f.id + ":" + x.mk];
+    }).reduce(function (s2, x) { return s2 + x.amt; }, 0);
+    if (paid > 0 || due > 0) {
+      sections[sec].items.push({ name: f.name, kind: "fund", amt: paid, unconfirmed: due,
+                                 id: f.id });
+      sections[sec].total += paid;
+    }
+  });
+  /* categories you have tagged, e.g. Insurance */
+  spendCats().forEach(function (c) {
+    var sec = taxTagOf("cat:" + c);
+    if (!sec || !sections[sec]) return;
+    var paid = db.tx.filter(function (t) {
+      return t.cat === c && t.date >= r.from && t.date <= r.to;
+    }).reduce(function (s2, t) { return s2 + netSpend(t); }, 0);
+    if (paid > 0) {
+      sections[sec].items.push({ name: c, kind: "category", amt: paid, unconfirmed: 0 });
+      sections[sec].total += paid;
+    }
+  });
+  /* pots marked for tax, such as a PPF pot */
+  pots().forEach(function (p) {
+    var sec = taxTagOf("pot:" + p.id);
+    if (!sec || !sections[sec]) return;
+    var added = db.tx.filter(function (t) {
+      return t.potId === p.id && t.date >= r.from && t.date <= r.to;
+    }).reduce(function (s2, t) { return s2 + Math.round(t.amt || 0); }, 0);
+    if (added > 0) {
+      sections[sec].items.push({ name: p.name, kind: "pot", amt: added, unconfirmed: 0 });
+      sections[sec].total += added;
+    }
+  });
+
+  var end = dateFrom(r.to);
+  var daysLeft = Math.round((end - dateFrom(today())) / 86400000);
+  var rows = TAX_SECTIONS.map(function (s) {
+    var g = sections[s.id];
+    var left = Math.max(0, s.cap - g.total);
+    return {
+      spec: s, total: g.total, items: g.items, left: left,
+      pct: s.cap > 0 ? Math.min(100, (g.total / s.cap) * 100) : 0,
+      full: g.total >= s.cap,
+      unconfirmed: g.items.reduce(function (n, i) { return n + (i.unconfirmed || 0); }, 0),
+      perMonthToFill: daysLeft > 0 ? Math.ceil(left / Math.max(1, daysLeft / 30.4)) : left
+    };
+  });
+  return {
+    year: y, label: fyLabel(y), from: r.from, to: r.to,
+    rows: rows, daysLeft: daysLeft, closed: daysLeft < 0,
+    tagged: Object.keys(taxTags()).length,
+    claimed: rows.reduce(function (n, x) { return n + x.total; }, 0)
+  };
+}
+
+/* =========================================================
+   READY-MADE REPORTS
+   ---------------------------------------------------------
+   Twenty questions people actually ask, each already set up.
+   Every one is a real query over your own entries \u2014 pick it
+   and it fills the report filters in for you.
+   ========================================================= */
+var REPORT_KINDS = [
+  { id:"month",     name:"This month",            what:"everything recorded this month",
+    group:"Everyday" },
+  { id:"lastmonth", name:"Last month",            what:"the month just gone", group:"Everyday" },
+  { id:"week",      name:"Last seven days",       what:"the past week", group:"Everyday" },
+  { id:"today",     name:"Today",                 what:"just today", group:"Everyday" },
+  { id:"fy",        name:"This financial year",   what:"1 April to 31 March", group:"Tax & year" },
+  { id:"lastfy",    name:"Last financial year",   what:"the year before", group:"Tax & year" },
+  { id:"tax",       name:"Tax-saving payments",   what:"what counts toward 80C and the rest",
+    group:"Tax & year", view:"tax" },
+  { id:"year",      name:"This calendar year",    what:"January to December", group:"Tax & year" },
+  { id:"cat",       name:"One category",          what:"everything in a single category",
+    group:"Where it went", needs:"cat" },
+  { id:"merch",     name:"By shop",               what:"who you paid, and how much",
+    group:"Where it went", view:"merch" },
+  { id:"acct",      name:"One account",           what:"everything in or out of one account",
+    group:"Where it went", needs:"acc" },
+  { id:"card",      name:"Card spending",         what:"everything paid by credit card",
+    group:"Where it went" },
+  { id:"cash",      name:"Cash only",             what:"what you spent in cash",
+    group:"Where it went" },
+  { id:"big",       name:"Big purchases",         what:"anything over a threshold you set",
+    group:"Where it went", needs:"min" },
+  { id:"fees",      name:"Fees and charges",      what:"what the small charges added up to",
+    group:"Watch for" },
+  { id:"refunds",   name:"Refunds and failures",  what:"money owed back, and payments that failed",
+    group:"Watch for", view:"moneyback" },
+  { id:"subs",      name:"Repeating charges",     what:"subscriptions and anything on a cycle",
+    group:"Watch for", view:"repeats" },
+  { id:"gaps",      name:"Needs more detail",     what:"entries missing something",
+    group:"Watch for", view:"history", filter:{ gaps:"1" } },
+  { id:"invest",    name:"Investments",           what:"SIPs, funds and what you hold",
+    group:"Wealth", view:"holdings" },
+  { id:"worth",     name:"What you are worth",    what:"everything you have, minus what you owe",
+    group:"Wealth", view:"worth" }
+];
+/** Turn a chosen report into report filters and a date range. */
+function reportPreset(id2, extra) {
+  var e = extra || {};
+  var now = new Date(), mk = mKey(now), y = now.getFullYear();
+  var fy = fyOf(today());
+  var out = { from: "", to: "", filters: blankReportFilters(), title: "" };
+  var spec = REPORT_KINDS.filter(function (r) { return r.id === id2; })[0];
+  out.title = spec ? spec.name : "Report";
+  var setMonth = function (m) {
+    out.from = m + "-01";
+    out.to = m + "-" + p2(mDays(m));
+  };
+  switch (id2) {
+    case "month":     setMonth(mk); break;
+    case "lastmonth": setMonth(mShift(mk, -1)); break;
+    case "week": {
+      var d = new Date(); d.setDate(d.getDate() - 6);
+      out.from = isoOf(d); out.to = today();
+      break;
+    }
+    case "today":     out.from = today(); out.to = today(); break;
+    case "fy":        out.from = fyRange(fy).from; out.to = fyRange(fy).to; break;
+    case "lastfy":    out.from = fyRange(fy - 1).from; out.to = fyRange(fy - 1).to; break;
+    case "year":      out.from = y + "-01-01"; out.to = y + "-12-31"; break;
+    case "cat":       setMonth(mk); out.filters.cat = e.cat || ""; break;
+    case "acct":      setMonth(mk); out.filters.acc = e.acc || ""; break;
+    case "card":      setMonth(mk); out.filters.how = "card"; break;
+    case "cash":      setMonth(mk); out.filters.how = "cash"; break;
+    case "big":       setMonth(mk); out.filters.min = e.min || "1000"; break;
+    case "fees":      setMonth(mk); out.filters.q = "fee"; break;
+    default:          setMonth(mk);
+  }
+  return out;
+}
+
+/* =========================================================
+   THE WEEK
+   ---------------------------------------------------------
+   Everything the app knows, assembled on a rhythm rather
+   than scattered across screens. Built for a Sunday sit-down:
+   what happened, what is coming, what still needs an answer.
+   ========================================================= */
+function weekRange(offset) {
+  var d = new Date();
+  d.setDate(d.getDate() - (offset || 0) * 7);
+  /* weeks run Monday to Sunday, as pay and bills tend to */
+  var dow = (d.getDay() + 6) % 7;
+  var start = new Date(d);
+  start.setDate(d.getDate() - dow);
+  var end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return { from: isoOf(start), to: isoOf(end) };
+}
+function weekDigest(offset) {
+  var r = weekRange(offset || 0);
+  var list = db.tx.filter(function (t) { return t.date >= r.from && t.date <= r.to; });
+  var t = totalsFor(list);
+  var prev = weekRange((offset || 0) + 1);
+  var prevList = db.tx.filter(function (x) { return x.date >= prev.from && x.date <= prev.to; });
+  var prevSpend = totalsFor(prevList).spend;
+
+  /* each day, so a heavy day stands out */
+  var days = [];
+  var d = dateFrom(r.from);
+  for (var i = 0; i < 7; i++) {
+    var iso = isoOf(d);
+    days.push({ date: iso, label: DOW[i], value: iso <= today() ? spentOn(iso) : 0,
+                future: iso > today() });
+    d.setDate(d.getDate() + 1);
+  }
+  var spentDays = days.filter(function (x) { return !x.future; });
+  var quiet = spentDays.filter(function (x) { return x.value === 0; }).length;
+  var busiest = spentDays.slice().sort(function (a, b) { return b.value - a.value; })[0];
+
+  /* what is coming in the next seven days */
+  var soon = new Date();
+  soon.setDate(soon.getDate() + 7);
+  var due = commitments(today(), isoOf(soon));
+
+  /* what still needs an answer */
+  var asks = [];
+  sipAsk().forEach(function (x) {
+    asks.push({ what: "Did you pay " + x.fund.name + "?", amt: Math.round(x.fund.sip || 0),
+                act: "payFund", id: x.fund.id });
+  });
+  var gaps = db.tx.filter(function (x) { return txMissing(x).length; });
+  if (gaps.length) {
+    asks.push({ what: gaps.length + (gaps.length === 1 ? " entry needs" : " entries need") +
+      " more detail", act: "quickFilter", q: "gaps" });
+  }
+  cards().forEach(function (c) {
+    var m = cardMoney(c);
+    if (m.statementRemaining > 0) {
+      asks.push({ what: c.name + " bill is waiting", amt: m.statementRemaining,
+                  act: "payCard", id: c.id });
+    }
+  });
+
+  var cats = byCategory(list).slice(0, 4);
+  return {
+    from: r.from, to: r.to, offset: offset || 0,
+    list: list, totals: t, spend: t.spend, prevSpend: prevSpend,
+    diff: t.spend - prevSpend,
+    pct: prevSpend > 0 ? ((t.spend - prevSpend) / prevSpend) * 100 : null,
+    days: days, quiet: quiet, busiest: busiest && busiest.value > 0 ? busiest : null,
+    due: due, dueTotal: due.reduce(function (s, x) { return s + x.amt; }, 0),
+    asks: asks, cats: cats, count: list.length,
+    isThisWeek: (offset || 0) === 0,
+    perDay: spentDays.length ? Math.round(t.spend / spentDays.length) : 0
+  };
+}
+
+/* =========================================================
+   COUNTING WHAT IS ACTUALLY THERE
+   ---------------------------------------------------------
+   Cash is where tracking quietly fails: a chai here, a tip
+   there, none of it written down. Counting the notes in your
+   wallet and comparing is the only way to find the drift.
+   The difference is recorded as its own entry so the history
+   stays honest \u2014 it is never quietly absorbed.
+   ========================================================= */
+function lastCount(accId) {
+  var list = db.tx.filter(function (t) { return t.recount && t.acc === accId; });
+  if (!list.length) return null;
+  var last = sortTx(list)[0];
+  return { on: last.date, diff: Math.round(last.amt || 0),
+           was: last.type === "out" ? "short" : "over",
+           days: Math.round((dateFrom(today()) - dateFrom(last.date)) / 86400000) };
+}
+/** Compare a counted figure with what the app thinks. Nothing saved yet. */
+function checkCount(accId, counted) {
+  var a = acc(accId);
+  if (!a) return null;
+  var think = balance(accId);
+  var real = Math.round(counted || 0);
+  var diff = real - think;
+  return {
+    acc: a, think: think, real: real, diff: diff,
+    match: diff === 0,
+    short: diff < 0,
+    words: diff === 0
+      ? "Exactly right \u2014 what you counted matches what is recorded."
+      : diff < 0
+        ? "There is " + money(Math.abs(diff)) + " less than recorded. Usually that means " +
+          "something was spent without being written down."
+        : "There is " + money(diff) + " more than recorded. Usually that means money came " +
+          "in without being written down, or an amount was entered too high."
+  };
+}
+/** Record the difference as a real entry, so the history explains itself. */
+function applyCount(accId, counted, note) {
+  var c = checkCount(accId, counted);
+  if (!c) return null;
+  if (c.match) {
+    /* still worth noting that you checked */
+    db.tx.push({
+      id: id("t"), type: "move", amt: 0, cat: "", acc: accId, to: "", how: "cash",
+      appId: "", channel: "", date: today(), time: hm(new Date()), noTime: false,
+      note: note || "Counted, and it matched", recount: true, status: "done",
+      deducted: 0, refunds: [], createdAt: stamp(), updatedAt: stamp()
+    });
+    save();
+    return { made: null, checked: true, diff: 0 };
+  }
+  var t = {
+    id: id("t"), type: c.diff < 0 ? "out" : "in", amt: Math.abs(c.diff),
+    cat: c.diff < 0 ? "Other" : "Other", acc: accId, to: "", how: "cash",
+    appId: "", channel: "", date: today(), time: hm(new Date()), noTime: false,
+    note: note || (c.diff < 0 ? "Counted the cash \u2014 " + money(Math.abs(c.diff)) +
+      " unaccounted for" : "Counted the cash \u2014 " + money(c.diff) + " more than recorded"),
+    recount: true, status: "done", deducted: 0, refunds: [],
+    createdAt: stamp(), updatedAt: stamp()
+  };
+  db.tx.push(t);
+  save();
+  return { made: t, checked: true, diff: c.diff };
+}
+/** Accounts worth counting: cash and wallets, where drift happens. */
+function countable() {
+  return db.accounts.filter(function (a) {
+    return !a.archived && (a.kind === "cash" || a.kind === "wallet");
+  });
+}
+
+/* ---------- one category, in full ---------- */
+function pageCat() {
+  var cat = ui.catName || "";
+  var mk = ui.catMonth || mKey(new Date());
+  if (!cat) { ui.view = "insights"; return pageInsights(); }
+  var list = txIn2(mk, cat);
+  var spent = list.reduce(function (s, t) { return s + netSpend(t); }, 0);
+  var cmp = compare(mk, cat, "prev");
+  var why = explainChange(mk, cat);
+  var h = '<div class="sec" style="display:flex;align-items:center;gap:10px;margin-block:14px 6px">' +
+    '<button type="button" class="ib" data-act="go" data-view="insights" aria-label="Back">\u2190</button>' +
+    "<h2>" + catIcon(cat) + " " + esc(cat) + "</h2></div>";
+
+  h += '<div class="card"><span class="lbl">' + esc(mLabel(mk)) + "</span>" +
+    '<p class="big">' + maskMoney(spent, "total") + "</p>" +
+    (cmp.ok
+      ? '<p class="' + (cmp.diff < 0 ? "in" : cmp.diff > 0 ? "out" : "sub") + '">' +
+        (cmp.diff === 0 ? "level with " + esc(cmp.label)
+          : (cmp.diff < 0 ? "\u2193 " : "\u2191 ") + money(Math.abs(cmp.diff)) +
+            (cmp.pct !== null ? " (" + Math.abs(Math.round(cmp.pct)) + "%)" : "") +
+            " against " + esc(cmp.label)) + "</p>"
+      : '<p class="sub">' + esc(cmp.why || "no earlier month to compare") + "</p>") +
+    '<p class="sub">' + list.length + (list.length === 1 ? " purchase" : " purchases") +
+    (list.length ? " \u00b7 " + money(Math.round(spent / list.length)) + " on average" : "") +
+    "</p>" +
+    '<p class="sub">This is ' + roleInfo(roleOf(cat)).label.toLowerCase() + " spending." +
+    "</p></div>";
+
+  if (why) {
+    h += '<div class="note info"><span aria-hidden="true">\ud83d\udd0e</span><div>' +
+      "<b>Why it moved</b><br>" + esc(why.plain) + "</div></div>";
+  }
+
+  /* month by month, from what is recorded */
+  var months = monthsWithData().slice(-6);
+  if (months.length > 1) {
+    var rows = months.map(function (m) {
+      return { label: mLabel(m).replace(/ \d{4}$/, ""), value: spendIn(m, cat) };
+    });
+    var top = Math.max.apply(null, rows.map(function (r) { return r.value; }).concat([1]));
+    h += '<div class="sec"><h2>Month by month</h2><div class="card">' +
+      barList(rows, top) + "</div></div>";
+  }
+
+  /* where it went inside this category */
+  var byShop = {};
+  list.forEach(function (t) {
+    var k = merchantKey(t) || "Not named";
+    byShop[k] = (byShop[k] || 0) + netSpend(t);
+  });
+  var shops = Object.keys(byShop).map(function (k) { return { label: k, value: byShop[k] }; })
+    .sort(function (a, b) { return b.value - a.value; });
+  if (shops.length > 1) {
+    h += '<div class="sec"><h2>Where it went</h2><div class="card">' +
+      barList(shops.slice(0, 8), spent) + "</div></div>";
+  }
+
+  /* how it was paid */
+  var byHow = {};
+  list.forEach(function (t) {
+    var k = t.how === "app" ? (appName(t.appId) || "app") : howLabel(t.how);
+    byHow[k] = (byHow[k] || 0) + netSpend(t);
+  });
+  var hows = Object.keys(byHow).map(function (k) { return { label: k, value: byHow[k] }; })
+    .sort(function (a, b) { return b.value - a.value; });
+  if (hows.length > 1) {
+    h += '<div class="sec"><h2>How you paid</h2><div class="card">' +
+      barList(hows, spent) + "</div></div>";
+  }
+
+  h += '<div class="sec"><div class="rowline"><h2>Every entry</h2>' +
+    '<button type="button" class="btn g s" data-act="catInHistory" data-cat="' + esc(cat) +
+    '" data-mk="' + esc(mk) + '">Open in Activity</button></div><div class="card">' +
+    (list.length ? sortTx(list).map(txRowDated).join("")
+      : '<p class="empty">Nothing recorded for ' + esc(cat.toLowerCase()) + " in " +
+        esc(mLabel(mk)) + ".</p>") + "</div></div>";
+
+  var w = whatIf(cat, "percent", 20);
+  if (w.possible) {
+    h += '<div class="sec"><h2>If you cut this back</h2><div class="card">' +
+      "<table>" +
+      row2("Cutting 20%", "saves " + money(w.monthly) + " a month") +
+      row2("Over a year", "about " + money(w.yearly) + " \u2014 an estimate") +
+      "</table>" +
+      '<p class="sub">' + esc(w.why) + " Nothing has been changed.</p>" +
+      '<button type="button" class="btn s" data-act="wiSave" data-cat="' + esc(cat) +
+      '" data-amt="' + w.suggestedBudget + '">Set a ' + money(w.suggestedBudget) +
+      " budget</button></div></div>";
+  }
+  return h;
+}
+
+/* =========================================================
+   THINGS EVERY KIND OF USER NEEDS
+   ---------------------------------------------------------
+   Repeat an entry            fast repetitive recording
+   Money lent and owed        informal debts between people
+   Financial year             India runs April to March
+   Keyboard shortcuts         hands stay on the keys
+   Edit history               what changed, and when
+   ========================================================= */
+
+/* ---------- repeat something you buy often ---------- */
+/** The things you record most, so recording them again is one tap. */
+function frequentEntries(limit) {
+  var seen = {};
+  db.tx.forEach(function (t) {
+    if (t.type !== "out" || t.potId || t.fundId) return;
+    var name = merchantKey(t) || t.cat;
+    if (!name) return;
+    var key = name + "|" + Math.round(t.amt) + "|" + (t.acc || "") + "|" + (t.cat || "");
+    if (!seen[key]) {
+      seen[key] = { name: name, amt: Math.round(t.amt), acc: t.acc, cat: t.cat,
+                    how: t.how, appId: t.appId, channel: t.channel, n: 0, last: t.date };
+    }
+    seen[key].n++;
+    if (t.date > seen[key].last) seen[key].last = t.date;
+  });
+  return Object.keys(seen).map(function (k) { return seen[k]; })
+    .filter(function (x) { return x.n >= 2; })
+    .sort(function (a, b) { return b.n - a.n || (a.last < b.last ? 1 : -1); })
+    .slice(0, limit || 6);
+}
+/** Record the same thing again, today. Never silently — you see it happen. */
+function repeatEntry(t) {
+  if (!t) return null;
+  var copy = {
+    id: id("t"), type: t.type, amt: Math.round(t.amt), cat: t.cat, acc: t.acc,
+    to: t.to || "", how: t.how, appId: t.appId || "", channel: t.channel || "",
+    date: today(), time: hm(new Date()), noTime: false,
+    note: t.note || "", merchant: t.merchant || "",
+    status: "done", deducted: 0, refunds: [],
+    repeatOf: t.id, createdAt: stamp(), updatedAt: stamp()
+  };
+  db.tx.push(copy);
+  save();
+  return copy;
+}
+
+/* ---------- money lent and owed ---------- */
+function debts() {
+  if (!Array.isArray(db.debts)) db.debts = [];
+  return db.debts;
+}
+function addDebt(o) {
+  var d = {
+    id: id("dbt"), who: String(o.who || "").slice(0, 40).trim(),
+    dir: o.dir === "owe" ? "owe" : "lent",   /* lent = they owe you */
+    amt: Math.round(o.amt || 0), date: o.date || today(),
+    note: String(o.note || "").slice(0, 80),
+    accId: o.accId || "", settled: [], createdAt: stamp()
+  };
+  if (!d.who || d.amt <= 0) return null;
+  debts().push(d);
+  save();
+  return d;
+}
+function settleDebt(did, amount, dateIso) {
+  var d = debts().filter(function (x) { return x.id === did; })[0];
+  if (!d) return null;
+  var amt = Math.round(amount || 0);
+  if (amt <= 0) return null;
+  d.settled.push({ amt: amt, date: dateIso || today() });
+  save();
+  return d;
+}
+function removeDebt(did) {
+  db.debts = debts().filter(function (x) { return x.id !== did; });
+  save();
+  return true;
+}
+function debtLeft(d) {
+  var back = (d.settled || []).reduce(function (s, x) { return s + Math.round(x.amt || 0); }, 0);
+  return Math.max(0, Math.round(d.amt) - back);
+}
+function debtSummary() {
+  var list = debts();
+  var owedToYou = 0, youOwe = 0, open = [];
+  list.forEach(function (d) {
+    var left = debtLeft(d);
+    if (left <= 0) return;
+    open.push(d);
+    if (d.dir === "lent") owedToYou += left; else youOwe += left;
+  });
+  var byWho = {};
+  open.forEach(function (d) {
+    var k = d.who;
+    if (!byWho[k]) byWho[k] = { who: k, net: 0, items: [] };
+    byWho[k].net += d.dir === "lent" ? debtLeft(d) : -debtLeft(d);
+    byWho[k].items.push(d);
+  });
+  return {
+    owedToYou: owedToYou, youOwe: youOwe, net: owedToYou - youOwe,
+    open: open, all: list,
+    people: Object.keys(byWho).map(function (k) { return byWho[k]; })
+      .sort(function (a, b) { return Math.abs(b.net) - Math.abs(a.net); })
+  };
+}
+
+/* ---------- the Indian financial year ---------- */
+/** FY 2026-27 runs 1 April 2026 to 31 March 2027. */
+function fyOf(iso) {
+  var d = dateFrom(iso || today());
+  var y = d.getFullYear();
+  return d.getMonth() >= 3 ? y : y - 1;
+}
+function fyLabel(startYear) {
+  return "FY " + startYear + "\u2013" + String(startYear + 1).slice(2);
+}
+function fyRange(startYear) {
+  return { from: startYear + "-04-01", to: (startYear + 1) + "-03-31" };
+}
+function fysWithData() {
+  var seen = {};
+  db.tx.forEach(function (t) { if (t.date) seen[fyOf(t.date)] = 1; });
+  return Object.keys(seen).map(Number).sort();
+}
+function fySummary(startYear) {
+  var r = fyRange(startYear);
+  var list = db.tx.filter(function (t) { return t.date >= r.from && t.date <= r.to; });
+  var t = totalsFor(list);
+  var byMonth = {};
+  list.forEach(function (x) {
+    var m = mOf(x.date);
+    byMonth[m] = (byMonth[m] || 0) + netSpend(x);
+  });
+  var months = [];
+  for (var i = 0; i < 12; i++) {
+    var mk2 = mShift(startYear + "-04", i);
+    months.push({ label: mLabel(mk2).replace(/ \d{4}$/, ""), value: byMonth[mk2] || 0, mk: mk2 });
+  }
+  return {
+    year: startYear, label: fyLabel(startYear), from: r.from, to: r.to,
+    list: list, totals: t, months: months,
+    cats: byCategory(list), fees: feesInYear(String(startYear)),
+    monthsRecorded: Object.keys(byMonth).length
+  };
+}
+
+/* ---------- what changed, and when ---------- */
+/** A short history, so an edit is never invisible. Capped so it cannot grow forever. */
+function logChange(kind, what) {
+  if (!Array.isArray(db.log)) db.log = [];
+  db.log.unshift({ at: stamp(), kind: kind, what: String(what || "").slice(0, 120) });
+  db.log = db.log.slice(0, 200);
+}
+function changeLog() { return Array.isArray(db.log) ? db.log : []; }
+
+/* ---------- Holdings: what you own, and what it is worth ---------- */
+function pageHoldings() {
+  var p = portfolio();
+  var h = backBar("What you hold");
+
+  h += '<div class="card hero"><div style="display:flex;align-items:center;gap:10px">' +
+    '<div style="flex:1"><span class="lbl">Put in so far</span>' +
+    '<p class="big">' + maskMoney(p.put, "hold") + "</p>" +
+    (p.rows.some(function (r) { return r.worth !== null; })
+      ? '<p class="sub">Worth ' + maskMoney(p.worth, "hold") + " on the rates you have " +
+        "recorded \u00b7 <b class=\"" + (p.change >= 0 ? "in" : "out") + "\">" +
+        plus(p.change) + "</b></p>"
+      : '<p class="sub">No rates recorded yet, so nothing can be valued.</p>') +
+    "</div>" + eyeBtn("hold", "what you hold") + "</div></div>";
+
+  if (p.unknown.length) {
+    h += '<div class="note info"><span aria-hidden="true">\u2139\ufe0f</span><div>' +
+      "<b>" + p.unknown.length + (p.unknown.length === 1 ? " holding has" : " holdings have") +
+      " no rate recorded.</b><br>This app works offline and has no price feed, so it " +
+      "cannot know today's value on its own. Add what you see in your fund app or " +
+      "jeweller's rate, and it is valued from then on.<br>" +
+      '<span class="sub">' + esc(p.unknown.join(", ")) + "</span></div></div>";
+  }
+
+  /* metals */
+  var mw = metalWorth();
+  h += '<div class="sec"><h2>Gold and silver</h2>';
+  METALS.forEach(function (m) {
+    var r = latestRate(m.id);
+    var row = mw.rows.filter(function (x) { return x.metal.id === m.id; })[0];
+    h += '<div class="card"><div class="rowline"><b>' + m.icon + " " + esc(m.name) +
+      '</b><span class="sub">' + esc(m.purity) + " \u00b7 per gram</span></div>";
+    if (r) {
+      h += '<p class="mid">' + money(r.perGram) + '</p>' +
+        '<p class="sub">' + esc(r.words) + " \u00b7 from " + esc(r.source) +
+        (r.fresh ? "" : ' \u00b7 <span class="warnc">this is not a live price</span>') + "</p>";
+      var t = rateTrend(m.id, 12);
+      if (t.length >= 2) {
+        h += lineChart(t, { title: m.name + " rate", colour: scaleAt(m.id === "gold" ? 1 : 7),
+          showAverage: false });
+      }
+    } else {
+      h += '<p class="sub">No rate recorded yet.</p>';
+    }
+    if (row && row.grams) {
+      h += "<table style=\"margin-block-start:8px\">" +
+        row2("You hold", row.grams + " g") +
+        row2("You paid", money(row.paid)) +
+        (row.worth !== undefined
+          ? row2("Worth at that rate", money(row.worth) + " \u00b7 " + plus(row.change))
+          : "") + "</table>";
+    }
+    h += '<div class="btns" style="margin-block-start:8px">' +
+      '<button type="button" class="btn s" data-act="addRate" data-m="' + m.id + '">' +
+      "Record today's rate</button>" +
+      '<button type="button" class="btn g s" data-act="addHolding" data-m="' + m.id + '">' +
+      "Add what you hold</button>" +
+      (metalKey()
+        ? '<button type="button" class="btn g s" data-act="fetchRate" data-m="' + m.id +
+          '">Fetch it</button>'
+        : "") + "</div></div>";
+  });
+  h += '<p class="hint">Rates can be fetched automatically if you add a key from a ' +
+    "price service in Settings. Without one, type in what you see \u2014 the app will " +
+    "always tell you how old a rate is rather than pretending it is live.</p></div>";
+
+  /* funds */
+  h += '<div class="sec"><h2>Mutual funds</h2>';
+  funds().forEach(function (f) {
+    var w = fundWorth(f.id);
+    h += '<div class="card"><div class="rowline"><b>' + esc(f.name) + "</b>" +
+      "<span>" + maskMoney(f.invested, "hold") + "</span></div>";
+    if (w && w.known) {
+      h += '<div class="rowline"><span class="sub">' + w.units.toFixed(3) + " units \u00b7 NAV " +
+        w.nav.nav.toFixed(4) + "</span>" +
+        '<span class="' + (w.change >= 0 ? "in" : "out") + '"><b>' + money(w.worth) +
+        "</b> \u00b7 " + plus(w.change) + " (" + (w.pct >= 0 ? "+" : "") +
+        w.pct.toFixed(1) + "%)</span></div>" +
+        '<p class="sub">' + esc(w.nav.words) +
+        (w.nav.fresh ? "" : " \u2014 not a live price") + "</p>" +
+        (w.partial
+          ? '<p class="sub warnc">Only ' + w.coveredPct + "% of your payments could be " +
+            "matched to a NAV, so the unit count is a partial figure.</p>"
+          : "");
+      var nt = navsFor(f.id).slice(-12).map(function (n) {
+        return { label: fDate(n.at).replace(/, \d{4}$/, ""), value: Math.round(n.nav * 100) };
+      });
+      if (nt.length >= 2) {
+        h += lineChart(nt, { title: f.name + " NAV", colour: scaleAt(2), showAverage: false });
+      }
+    } else {
+      h += '<p class="sub">' + esc(w ? w.why : "Nothing to value yet.") + "</p>";
+    }
+    h += '<div class="btns" style="margin-block-start:8px">' +
+      '<button type="button" class="btn s" data-act="addNav" data-id="' + esc(f.id) + '">' +
+      "Record the NAV</button>" +
+      '<button type="button" class="btn g s" data-act="openFund" data-id="' + esc(f.id) +
+      '">Details</button></div></div>";'.slice(0, -1);
+  });
+  h += "</div>";
+  return h;
+}
+function ratesSheet(metal) {
+  var m = METALS.filter(function (x) { return x.id === metal; })[0] || METALS[0];
+  var r = latestRate(m.id);
+  return '<div class="shd"><h2>' + m.icon + " " + esc(m.name) + " rate</h2>" +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    (r ? '<p class="sub">Last recorded: ' + money(r.perGram) + " per gram, " +
+      esc(r.words) + ".</p>" : '<p class="sub">Nothing recorded for ' +
+      esc(m.name.toLowerCase()) + " yet.</p>") +
+    '<form data-form="rate"><input type="hidden" name="metal" value="' + esc(m.id) + '">' +
+    '<div class="two"><div class="f"><label for="rtAmt">Price for one gram</label>' +
+    '<input id="rtAmt" name="perGram" type="number" inputmode="decimal" step="0.01" min="0" ' +
+    'required placeholder="e.g. 7250"></div>' +
+    '<div class="f"><label for="rtDate">As of</label>' +
+    '<input id="rtDate" name="at" type="date" max="' + today() + '" value="' + today() + '"></div></div>' +
+    '<div class="f"><label for="rtSrc">Where from (optional)</label>' +
+    '<input id="rtSrc" name="source" placeholder="jeweller, bank app, news"></div>' +
+    '<p class="hint">The date matters as much as the price. Every figure worked out ' +
+    "from this rate will carry the date it came from.</p>" +
+    '<button type="submit" class="btn full">Save this rate</button></form>';
+}
+function holdingSheet(metal) {
+  var m = METALS.filter(function (x) { return x.id === metal; })[0] || METALS[0];
+  var held = metalStore().holdings.filter(function (x) { return x.metal === m.id; });
+  var h = '<div class="shd"><h2>Your ' + esc(m.name.toLowerCase()) + "</h2>" +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>';
+  if (held.length) {
+    h += "<table>" + held.map(function (x) {
+      return "<tr><td>" + x.grams + " g" + (x.note ? '<br><span class="sub">' +
+        esc(x.note) + "</span>" : "") + '</td><td class="n">' + money(x.paid) + "</td>" +
+        '<td class="sub">' + esc(fDate(x.boughtOn)) + "</td>" +
+        '<td class="n"><button type="button" class="btn g s" data-act="delHolding" data-id="' +
+        esc(x.id) + '">Remove</button></td></tr>';
+    }).join("") + "</table>";
+  }
+  h += '<form data-form="holding"><input type="hidden" name="metal" value="' + esc(m.id) + '">' +
+    '<div class="two"><div class="f"><label for="hgG">How many grams</label>' +
+    '<input id="hgG" name="grams" type="number" inputmode="decimal" step="0.001" min="0" required></div>' +
+    '<div class="f"><label for="hgP">What you paid</label>' +
+    '<input id="hgP" name="paid" type="number" inputmode="decimal" min="0"></div></div>' +
+    '<div class="two"><div class="f"><label for="hgD">Bought on</label>' +
+    '<input id="hgD" name="boughtOn" type="date" max="' + today() + '" value="' + today() + '"></div>' +
+    '<div class="f"><label for="hgN">What it is (optional)</label>' +
+    '<input id="hgN" name="note" placeholder="chain, coin, bond"></div></div>' +
+    '<button type="submit" class="btn full">Add it</button></form>';
+  return h;
+}
+function navSheet(fundId) {
+  var f = fund(fundId);
+  if (!f) return "";
+  var last = latestNav(fundId);
+  return '<div class="shd"><h2>NAV</h2>' +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    '<p class="sub">' + esc(f.name) + "</p>" +
+    (last ? '<p class="sub">Last recorded: ' + last.nav.toFixed(4) + ", " +
+      esc(last.words) + ".</p>" : "") +
+    '<form data-form="nav"><input type="hidden" name="id" value="' + esc(f.id) + '">' +
+    '<div class="two"><div class="f"><label for="nvV">NAV</label>' +
+    '<input id="nvV" name="nav" type="number" inputmode="decimal" step="0.0001" min="0" ' +
+    'required placeholder="e.g. 82.4517"></div>' +
+    '<div class="f"><label for="nvD">As of</label>' +
+    '<input id="nvD" name="at" type="date" max="' + today() + '" value="' + today() + '"></div></div>' +
+    '<div class="f"><label for="nvU">Units you hold (optional)</label>' +
+    '<input id="nvU" name="units" type="number" inputmode="decimal" step="0.0001" min="0" value="' +
+    (f.units || "") + '" placeholder="from your fund app"></div>' +
+    '<p class="hint">If you give the units, the value is exact. Without them the app ' +
+    "works units out from your payments and the NAVs you have recorded, and says so.</p>" +
+    '<button type="submit" class="btn full">Save</button></form>';
+}
+
+/* ---------- Rate watch ---------- */
+function pageWatch() {
+  var m = whatMoved();
+  var notes = moveNotes();
+  var h = backBar("What moved");
+
+  h += '<div class="card"><p class="sub">Figures you have recorded, and what each one ' +
+    "did since the figure before it. Nothing here is fetched on its own \u2014 what you " +
+    "write down is what it knows.</p></div>";
+
+  if (notes.length) {
+    h += '<div class="sec"><h2>Since you last noted them</h2>' +
+      notes.map(function (n) {
+        return '<div class="feed ' + (n.dir === "up" ? "amber" : n.dir === "down" ? "green" : "blue") +
+          '"><div class="feedbody"><b>' + n.icon + " " + esc(n.text) + "</b>" +
+          (n.note ? '<p class="sub">' + esc(n.note) + "</p>" : "") + "</div></div>";
+      }).join("") + "</div>";
+  }
+
+  h += '<div class="sec"><h2>What you track</h2>';
+  m.rows.forEach(function (r) {
+    var l = r.latest;
+    h += '<div class="card"><div class="rowline"><b>' + r.spec.icon + " " + esc(r.spec.name) +
+      '</b><span class="sub">' + esc(r.spec.what || "") + "</span></div>";
+    if (!r.known) {
+      h += '<p class="sub">Nothing recorded yet.</p>';
+    } else {
+      var shown = r.kind === "nav" ? (l.v / 100).toFixed(4) : fmtWatch(r.spec, l.v);
+      h += '<p class="mid">' + esc(shown) + "</p>" +
+        '<p class="sub">' + (l.days <= 0 ? "noted today" : l.days === 1 ? "noted yesterday"
+          : "noted " + l.days + " days ago, on " + fDate(l.at)) +
+        (l.fresh ? "" : ' \u00b7 <span class="warnc">not a live figure</span>') + "</p>";
+      if (l.prev !== null) {
+        var pct = l.pct === null ? 0 : l.pct;
+        h += '<p class="' + (l.diff > 0 ? "out" : l.diff < 0 ? "in" : "sub") + '">' +
+          (l.diff === 0 ? "unchanged"
+            : (l.diff > 0 ? "\u2191 up " : "\u2193 down ") + Math.abs(pct).toFixed(2) + "%") +
+          (l.since > 0 ? '<span class="sub"> over ' + l.since +
+            (l.since === 1 ? " day" : " days") + "</span>" : "") + "</p>";
+      }
+      var t = r.kind === "nav"
+        ? navsFor(r.id).slice(-14).map(function (n) {
+            return { label: fDate(n.at).replace(/, \d{4}$/, ""), value: Math.round(n.nav * 100) };
+          })
+        : watchTrend(r.id, 14);
+      if (t.length >= 2) {
+        h += lineChart(t, { title: r.spec.name, showAverage: false,
+          colour: scaleAt(r.id === "gold" ? 1 : r.id === "silver" ? 7 : 2) });
+      }
+    }
+    h += '<div class="btns" style="margin-block-start:8px">' +
+      (r.kind === "nav"
+        ? '<button type="button" class="btn s" data-act="addNav" data-id="' + esc(r.id) + '">Note the NAV</button>'
+        : '<button type="button" class="btn s" data-act="noteWatch" data-w="' + esc(r.id) + '">Note today\u2019s figure</button>') +
+      "</div></div>";
+  });
+  h += "</div>";
+
+  /* what your own numbers say — the useful half of "should I buy today" */
+  var sig = ownSignals();
+  if (sig.length) {
+    h += '<div class="sec"><h2>Against what you have paid</h2>' +
+      '<div class="card"><p class="sub">A price on its own means nothing. These compare ' +
+      "today's figures with your own average cost, which is the part that actually " +
+      "concerns you.</p></div>" +
+      sig.slice(0, 8).map(function (x) {
+        return '<div class="feed ' + (x.kind === "mix" ? "blue" : x.cheaper ? "green" : "amber") +
+          '"><div class="feedbody"><b>' + esc(x.text) + "</b>" +
+          (x.stale ? '<p class="sub">That figure is ' + x.days + " days old.</p>" : "") +
+          "</div></div>";
+      }).join("") + "</div>";
+  }
+
+  /* how it is spread */
+  var alloc = allocation();
+  if (alloc.total > 0) {
+    h += '<div class="sec"><h2>How your money is spread</h2><div class="card chartcard">' +
+      '<p class="chartq">At the values you have recorded. Anything unvalued is counted ' +
+      "at what you put in.</p>" +
+      barList(alloc.rows.map(function (r) {
+        return { label: r.kind + (r.target !== null ? " (want " + r.target + "%)" : ""),
+                 value: r.value };
+      }), alloc.total) +
+      (alloc.drifted.length
+        ? '<p class="sub">' + alloc.drifted.length +
+          (alloc.drifted.length === 1 ? " part has" : " parts have") +
+          " drifted more than 5 points from what you set.</p>"
+        : alloc.hasTarget
+          ? '<p class="sub in">Everything is within 5 points of the mix you set.</p>'
+          : '<p class="sub">Set a target mix and this will show you when it drifts.</p>') +
+      "</div></div>";
+  }
+
+  h += '<div class="note info"><span aria-hidden="true">\u2696\ufe0f</span><div>' +
+    "<b>Why this does not tell you what to buy.</b><br>" +
+    "A day's move says nothing about which of these suits you. That depends on how " +
+    "long you can leave the money, your tax position, and what you already hold \u2014 " +
+    "none of which this app knows. It shows you what moved, accurately, and leaves " +
+    "the decision where it belongs.<br><br>" +
+    "What it <b>can</b> tell you honestly: gold and silver are stores of value that " +
+    "pay you nothing while you hold them; a repo-rate cut usually means deposit rates " +
+    "fall too; equity funds move far more in a day than either, which matters only if " +
+    "you might need the money soon.</div></div>";
+  return h;
+}
+function watchSheet(id2) {
+  var spec = WATCH.filter(function (x) { return x.id === id2; })[0];
+  if (!spec) return "";
+  var l = watchLatest(id2);
+  return '<div class="shd"><h2>' + spec.icon + " " + esc(spec.name) + "</h2>" +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    (l ? '<p class="sub">Last noted: ' + esc(fmtWatch(spec, l.v)) + " on " +
+      esc(fDate(l.at)) + ".</p>" : '<p class="sub">Nothing noted yet.</p>') +
+    '<form data-form="watch"><input type="hidden" name="id" value="' + esc(id2) + '">' +
+    '<div class="two"><div class="f"><label for="wtV">' +
+    (spec.kind === "percent" ? "Rate, as a percentage" : "Price for one gram") + "</label>" +
+    '<input id="wtV" name="value" type="number" inputmode="decimal" step="0.01" min="0" ' +
+    'required placeholder="' + (spec.kind === "percent" ? "e.g. 5.50" : "e.g. 7250") + '"></div>' +
+    '<div class="f"><label for="wtD">As of</label>' +
+    '<input id="wtD" name="at" type="date" max="' + today() + '" value="' + today() + '"></div></div>' +
+    '<div class="f"><label for="wtS">Where from (optional)</label>' +
+    '<input id="wtS" name="source" placeholder="RBI site, bank app, news"></div>' +
+    '<p class="hint">Note it whenever you happen to see it. Two figures are enough for ' +
+    "this to start showing you the direction of travel.</p>" +
+    '<button type="submit" class="btn full">Save</button></form>';
+}
+
+/* ---------- Tax saving ---------- */
+function pageTax() {
+  var ty = taxYear(ui.taxYear === undefined ? undefined : ui.taxYear);
+  var years = fysWithData();
+  var h = backBar("Tax saving");
+
+  if (years.length > 1) {
+    h += '<div class="chips" style="margin-block-end:12px">' +
+      years.slice(-4).reverse().map(function (y) {
+        return chip("taxYear", { y: y }, fyLabel(y), "", y === ty.year);
+      }).join("") + "</div>";
+  }
+
+  h += '<div class="card"><span class="lbl">' + esc(ty.label) + " \u00b7 " +
+    esc(fDate(ty.from)) + " to " + esc(fDate(ty.to)) + "</span>" +
+    '<p class="big">' + maskMoney(ty.claimed, "tax") + "</p>" +
+    '<p class="sub">counted so far across every section</p>' +
+    eyeBtn("tax", "what you have claimed") +
+    (ty.closed
+      ? '<p class="sub">This year has closed.</p>'
+      : '<p class="sub"><b>' + ty.daysLeft + " days</b> until " + esc(fDate(ty.to)) +
+        ", when the window shuts.</p>") + "</div>";
+
+  if (!ty.tagged) {
+    h += '<div class="note info"><span aria-hidden="true">\ud83c\udff7\ufe0f</span><div>' +
+      "<b>Nothing is marked as tax-saving yet.</b><br>This app cannot tell an ELSS fund " +
+      "from any other fund, or an insurance premium from an ordinary bill \u2014 only you " +
+      "know which is which. Mark them below and this fills itself in from what you " +
+      "already record.</div></div>";
+  }
+
+  ty.rows.forEach(function (r) {
+    h += '<div class="card"><div class="rowline"><b>' + esc(r.spec.name) + "</b>" +
+      "<span>" + money(r.total) + " of " + money(r.spec.cap) + "</span></div>" +
+      '<div class="bar"><i class="' + (r.full ? "" : r.pct > 60 ? "w" : "o") +
+      '" style="inline-size:' + r.pct.toFixed(1) + '%"></i></div>' +
+      '<div class="rowline sub"><span>' + r.pct.toFixed(0) + "% used</span><span>" +
+      (r.full ? '<span class="in">fully used</span>'
+        : money(r.left) + " still available") + "</span></div>" +
+      '<p class="sub">' + esc(r.spec.what) + "</p>";
+    if (r.items.length) {
+      h += "<table style=\"margin-block-start:8px\">" + r.items.map(function (i) {
+        return "<tr><td>" + esc(i.name) +
+          (i.unconfirmed ? '<br><span class="warnc sub">' + money(i.unconfirmed) +
+            " expected but not confirmed</span>" : "") +
+          '</td><td class="n">' + money(i.amt) + "</td></tr>";
+      }).join("") + "</table>";
+    }
+    if (!r.full && !ty.closed && r.left > 0 && ty.daysLeft > 0) {
+      h += '<p class="sub">To use all of it you would need about <b>' +
+        money(r.perMonthToFill) + "</b> a month for the rest of the year.</p>";
+    }
+    if (r.unconfirmed > 0) {
+      h += '<div class="note"><span aria-hidden="true">\u2757</span><div>' +
+        money(r.unconfirmed) + " of SIPs is expected but you have not confirmed it. " +
+        "Only confirmed payments are counted here.<br>" +
+        '<button type="button" class="btn g s" data-act="go" data-view="funds" ' +
+        'style="margin-block-start:6px">Confirm them</button></div></div>';
+    }
+    h += '<p class="sub">' + esc(r.spec.note) + "</p></div>";
+  });
+
+  /* what you can mark */
+  h += '<div class="sec"><h2>What counts</h2><div class="card">' +
+    '<p class="sub">Mark anything that qualifies. Nothing is assumed \u2014 an ELSS fund ' +
+    "looks identical to any other fund from the outside.</p><table>" +
+    funds().map(function (f) {
+      return "<tr><td>\ud83d\udcc8 " + esc(f.name) + "</td><td>" +
+        taxSelect("fund:" + f.id) + "</td></tr>";
+    }).join("") +
+    pots().map(function (p) {
+      return "<tr><td>\ud83c\udfe6 " + esc(p.name) + "</td><td>" +
+        taxSelect("pot:" + p.id) + "</td></tr>";
+    }).join("") +
+    spendCats().map(function (c) {
+      return "<tr><td>" + catIcon(c) + " " + esc(c) + "</td><td>" +
+        taxSelect("cat:" + c) + "</td></tr>";
+    }).join("") + "</table></div></div>";
+
+  h += '<div class="note info"><span aria-hidden="true">\u2696\ufe0f</span><div>' +
+    "<b>What this is not.</b><br>These are the amounts you have put in, counted against " +
+    "the ordinary caps. It does not work out your tax, does not know whether the old or " +
+    "new regime suits you, and cannot see your salary or your employer's EPF. For the " +
+    "actual return, take these figures to whoever files it.</div></div>";
+  return h;
+}
+function taxSelect(key) {
+  var cur2 = taxTagOf(key);
+  return '<select data-tax-key="' + esc(key) + '" aria-label="Which section this counts under">' +
+    '<option value="">Does not count</option>' +
+    TAX_SECTIONS.map(function (s) {
+      return '<option value="' + s.id + '"' + (s.id === cur2 ? " selected" : "") + ">" +
+        esc(s.name) + "</option>";
+    }).join("") + "</select>";
+}
+
+/* ---------- The week ---------- */
+function pageWeek() {
+  var w = weekDigest(ui.weekBack || 0);
+  var h = backBar("Your week");
+
+  h += '<div class="chips" style="margin-block-end:12px">' +
+    [[0, "This week"], [1, "Last week"], [2, "Two weeks ago"], [3, "Three weeks ago"]]
+      .map(function (x) {
+        return chip("weekBack", { w: x[0] }, x[1], "", (ui.weekBack || 0) === x[0]);
+      }).join("") + "</div>";
+
+  h += '<div class="card hero"><span class="lbl">' + esc(fDate(w.from)) + " to " +
+    esc(fDate(w.to)) + "</span>" +
+    '<p class="big">' + maskMoney(w.spend, "total") + "</p>" +
+    '<p class="sub">' + w.count + (w.count === 1 ? " entry" : " entries") +
+    (w.perDay ? " \u00b7 about " + money(w.perDay) + " a day" : "") + "</p>" +
+    (w.pct !== null
+      ? '<p class="' + (w.diff <= 0 ? "in" : "out") + '">' +
+        (w.diff === 0 ? "level with the week before"
+          : (w.diff < 0 ? "\u2193 " + money(Math.abs(w.diff)) + " less than"
+             : "\u2191 " + money(w.diff) + " more than") + " the week before") + "</p>"
+      : '<p class="sub">no earlier week to compare against</p>') +
+    eyeBtn("total", "this week") + "</div>";
+
+  /* the shape of the week */
+  var max = Math.max.apply(null, w.days.map(function (d) { return d.value; }).concat([1]));
+  h += '<div class="card chartcard"><span class="lbl">Day by day</span>' +
+    '<div class="wkbars" style="margin-block-start:10px">' + w.days.map(function (d, i) {
+      return '<div class="wk"><div class="wkcol"><i style="block-size:' +
+        (d.future ? 0 : (d.value / max) * 100).toFixed(1) + '%;background:' +
+        (isWeekend(d.date) ? scaleAt(1) : "var(--accent)") + '" title="' +
+        esc(fDate(d.date) + ": " + (d.future ? "not yet" : plainMoney(d.value))) + '"></i></div>' +
+        '<span class="sub">' + esc(d.label) + "</span>" +
+        '<b class="sub">' + (d.future ? "\u2014" : d.value ? shortMoney(d.value) : "0") +
+        "</b></div>";
+    }).join("") + "</div>" +
+    '<p class="sub" style="margin-block-start:8px">' +
+    (w.quiet ? w.quiet + (w.quiet === 1 ? " day" : " days") + " you spent nothing" : "") +
+    (w.busiest ? (w.quiet ? " \u00b7 " : "") + esc(w.busiest.label) + " cost the most, " +
+      money(w.busiest.value) : "") + "</p></div>";
+
+  /* what needs answering */
+  if (w.asks.length && w.isThisWeek) {
+    h += '<div class="sec"><h2>Waiting on you</h2>' + w.asks.map(function (a) {
+      return '<div class="feed amber"><div class="feedbody"><b>' + esc(a.what) + "</b>" +
+        (a.amt ? '<p class="sub">' + money(a.amt) + "</p>" : "") +
+        '<button type="button" class="btn g s" data-act="' + esc(a.act) + '"' +
+        (a.id ? ' data-id="' + esc(a.id) + '"' : "") +
+        (a.q ? ' data-q="' + esc(a.q) + '"' : "") + ">Sort it</button></div></div>";
+    }).join("") + "</div>";
+  }
+
+  /* where it went */
+  if (w.cats.length) {
+    h += '<div class="sec"><h2>Where it went</h2><div class="card">' +
+      barList(w.cats, w.spend, { drill: true, mk: mOf(w.from) }) + "</div></div>";
+  }
+
+  /* what is coming */
+  if (w.due.length && w.isThisWeek) {
+    h += '<div class="sec"><h2>The next seven days</h2><div class="card">' +
+      '<p class="sub">' + money(w.dueTotal) + " is already promised.</p><table>" +
+      w.due.map(function (x) {
+        return "<tr><td>" + esc(x.what) + '<br><span class="sub">' + esc(fDate(x.date)) +
+          (x.sure ? "" : " \u00b7 expected") + '</span></td><td class="n">' +
+          money(x.amt) + "</td></tr>";
+      }).join("") + "</table></div></div>";
+  }
+
+  /* the entries themselves */
+  h += '<div class="sec"><div class="rowline"><h2>Everything this week</h2>' +
+    '<button type="button" class="btn g s" data-act="weekInHistory" data-f="' + esc(w.from) +
+    '" data-t="' + esc(w.to) + '">Open in Activity</button></div><div class="card">' +
+    (w.list.length ? sortTx(w.list).map(txRowDated).join("")
+      : '<p class="empty">Nothing recorded this week.</p>') + "</div></div>";
+  return h;
+}
+
+/* ---------- Shared expenses page ---------- */
+function pageShared() {
+  var sum = debtSummary();
+  var h = backBar("Who owes whom");
+
+  h += '<div class="grid">' +
+    '<div class="card"><span class="lbl">Owed to you</span><p class="mid in">' +
+      maskMoney(sum.owedToYou, "debt") + "</p></div>" +
+    '<div class="card"><span class="lbl">You owe</span><p class="mid out">' +
+      maskMoney(sum.youOwe, "debt") + "</p></div>" +
+    '<div class="card"><span class="lbl">Net</span><p class="mid ' +
+      (sum.net >= 0 ? "in" : "out") + '">' + maskMoney(Math.abs(sum.net), "debt") + "</p>" +
+      '<p class="sub">' + (sum.net > 0 ? "in your favour" : sum.net < 0 ? "against you"
+        : "all square") + "</p></div></div>" +
+    eyeBtn("debt", "what is owed");
+
+  h += '<div class="note info"><span aria-hidden="true">\u2139\ufe0f</span><div>' +
+    "This is a record of what was agreed between people. It never moves money and it " +
+    "does not touch your balances \u2014 when someone actually pays you back, record " +
+    "that as money coming in and mark it settled here.</div></div>";
+
+  if (sum.people.length) {
+    h += '<div class="sec"><h2>By person</h2>' + sum.people.map(function (p) {
+      return '<div class="card"><div class="rowline"><b>' + esc(p.who) + "</b>" +
+        '<span class="' + (p.net > 0 ? "in" : p.net < 0 ? "out" : "sub") + '">' +
+        (p.net === 0 ? "square" : (p.net > 0 ? "owes you " : "you owe ") +
+          money(Math.abs(p.net))) + "</span></div>" +
+        "<table>" + p.items.map(function (d2) {
+          var left = debtLeft(d2);
+          return "<tr><td>" + esc(d2.note || (d2.dir === "lent" ? "lent" : "borrowed")) +
+            '<br><span class="sub">' + esc(fDate(d2.date)) +
+            (d2.settled.length ? " \u00b7 " + money(Math.round(d2.amt) - left) + " settled" : "") +
+            '</span></td><td class="n">' + money(left) + "</td>" +
+            '<td class="n"><button type="button" class="btn g s" data-act="settleDebt" data-id="' +
+            esc(d2.id) + '">Settle</button></td></tr>';
+        }).join("") + "</table></div>";
+    }).join("") + "</div>";
+  } else {
+    h += '<div class="card"><p class="empty">Nothing outstanding between you and anyone.</p></div>';
+  }
+
+  h += '<div class="btns" style="margin-block-start:12px">' +
+    '<button type="button" class="btn" data-act="newDebt" data-dir="lent">I lent someone money</button>' +
+    '<button type="button" class="btn g" data-act="newDebt" data-dir="owe">I borrowed money</button></div>';
+  return h;
+}
+function debtSheet(dir) {
+  var lent = dir !== "owe";
+  return '<div class="shd"><h2>' + (lent ? "Money you lent" : "Money you borrowed") + "</h2>" +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    '<form data-form="debt"><input type="hidden" name="dir" value="' + (lent ? "lent" : "owe") + '">' +
+    '<div class="two"><div class="f"><label for="dbWho">' +
+    (lent ? "Who owes you" : "Who you owe") + "</label>" +
+    '<input id="dbWho" name="who" required placeholder="a name" autocomplete="off"></div>' +
+    '<div class="f"><label for="dbAmt">How much</label>' +
+    '<input id="dbAmt" name="amt" type="number" inputmode="decimal" min="0" required></div></div>' +
+    '<div class="two"><div class="f"><label for="dbDate">When</label>' +
+    '<input id="dbDate" name="date" type="date" max="' + today() + '" value="' + today() + '"></div>' +
+    '<div class="f"><label for="dbNote">What for (optional)</label>' +
+    '<input id="dbNote" name="note" placeholder="dinner, cab, tickets"></div></div>' +
+    '<p class="hint">This is a note between the two of you. It changes no balance \u2014 ' +
+    "if the money actually left your account, record that separately as an expense.</p>" +
+    '<button type="submit" class="btn full">Note it</button></form>';
+}
+function settleSheet(did) {
+  var d = debts().filter(function (x) { return x.id === did; })[0];
+  if (!d) return "";
+  var left = debtLeft(d);
+  return '<div class="shd"><h2>Settle up</h2>' +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    '<p class="sub">' + esc(d.who) + " \u00b7 " +
+    (d.dir === "lent" ? "owes you " : "you owe ") + money(left) + "</p>" +
+    '<form data-form="settle"><input type="hidden" name="id" value="' + esc(d.id) + '">' +
+    '<div class="two"><div class="f"><label for="stAmt">How much was settled</label>' +
+    '<input id="stAmt" name="amt" type="number" inputmode="decimal" min="0" required value="' +
+    toMajor(left) + '"></div>' +
+    '<div class="f"><label for="stDate">When</label>' +
+    '<input id="stDate" name="date" type="date" max="' + today() + '" value="' + today() + '"></div></div>' +
+    '<p class="hint">Part payments are fine \u2014 the rest stays outstanding.</p>' +
+    '<button type="submit" class="btn full">Mark it settled</button></form>' +
+    '<button type="button" class="btn g full" data-act="delDebt" data-id="' + esc(d.id) +
+    '" style="margin-block-start:8px">Remove this note entirely</button>';
+}
+
+/** Count what is really there, and reconcile. */
+function countSheet(accId) {
+  var a = acc(accId) || countable()[0];
+  if (!a) return "";
+  var last = lastCount(a.id);
+  return '<div class="shd"><h2>Count your ' + esc(a.name.toLowerCase()) + "</h2>" +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    '<p class="sub">Count the notes and coins, and put the figure in. Nothing is ' +
+    "revealed until you do \u2014 so this is a real check, not a nudge toward the " +
+    "answer the app expects.</p>" +
+    (last
+      ? '<p class="sub">Last counted ' + (last.days === 0 ? "today" : last.days + " days ago") +
+        (last.diff ? ", and it was " + money(last.diff) + " " + last.was : ", and it matched") +
+        ".</p>"
+      : "") +
+    '<form data-form="count"><input type="hidden" name="acc" value="' + esc(a.id) + '">' +
+    '<div class="f"><label for="ctAmt">What you actually counted</label>' +
+    '<input id="ctAmt" name="counted" type="number" inputmode="decimal" min="0" required ' +
+    'autocomplete="off" placeholder="add up the notes"></div>' +
+    '<div class="f"><label for="ctNote">A note (optional)</label>' +
+    '<input id="ctNote" name="note" placeholder="e.g. after the weekend"></div>' +
+    '<p class="hint">If the figures differ, the gap is recorded as its own entry so your ' +
+    "history explains itself. Nothing is quietly adjusted.</p>" +
+    '<button type="submit" class="btn full">Compare</button></form>';
+}
+function countResultSheet(res, accId) {
+  var a = acc(accId);
+  var c = res;
+  return '<div class="shd"><h2>' + (c.match ? "It matched" : "There is a difference") + "</h2>" +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    "<table>" +
+    row2("What the app had", money(c.think)) +
+    row2("What you counted", money(c.real)) +
+    row2("Difference", c.diff === 0 ? "none" : plus(c.diff)) +
+    "</table>" +
+    '<div class="note ' + (c.match ? "ok" : "") + '"><span aria-hidden="true">' +
+    (c.match ? "\u2705" : "\u2139\ufe0f") + "</span><div>" + esc(c.words) + "</div></div>" +
+    '<div class="btns"><button type="button" class="btn" data-act="countApply" data-acc="' +
+    esc(accId) + '" data-amt="' + c.real + '">' +
+    (c.match ? "Note that I checked" : "Record the difference") + "</button>" +
+    '<button type="button" class="btn g" data-act="closeSheet">Leave it</button></div>' +
+    (c.match ? "" : '<p class="hint">Recording it keeps every later figure correct. ' +
+      "Leaving it means your balance stays wrong until something else is corrected.</p>");
 }
 
 /* ---------- Money Health page ---------- */
@@ -10740,6 +13445,16 @@ function pageBudget() {
         '<div class="bar"><i style="inline-size:' + Math.min(100, pc).toFixed(1) + '%"></i></div>' +
         '<div class="rowline sub"><span>' + pc.toFixed(0) + "% there</span><span>" +
         money(Math.max(0, g.target - g.now)) + " to go</span></div>" +
+        (function () {
+          var o = goalOutlook(g);
+          return '<p class="sub" style="margin-block-start:8px">' +
+            (o.done ? "\ud83c\udf89 " : o.knows ? "" : "\u2139\ufe0f ") + esc(o.words) + "</p>" +
+            (o.knows && o.wantMonths !== undefined
+              ? '<p class="sub">' + (o.onTrack
+                  ? '<span class="in">On track for the date you set.</span>'
+                  : '<span class="warnc">Behind the date you set.</span>') + "</p>"
+              : "");
+        })() +
         '<div class="btns" style="margin-block-start:10px">' +
         '<button type="button" class="btn s" data-act="addToGoal" data-id="' + esc(g.id) + '">Add money</button>' +
         '<button type="button" class="btn g s" data-act="delGoal" data-id="' + esc(g.id) + '">Remove</button></div></div>';
@@ -10836,6 +13551,19 @@ function pageSettings() {
     '<p class="hint">' + (db.settings.pin
       ? "Asks for your PIN again when you come back after this long."
       : "This needs a PIN first \u2014 set one below and it starts working.") + "</p></div>";
+
+  h += '<div class="card"><h3>Why this works the way it does</h3>' +
+    '<table>' +
+    "<tr><td>\u2705 Every figure traces to something you recorded</td></tr>" +
+    "<tr><td>\u2705 When it cannot know something, it says so</td></tr>" +
+    "<tr><td>\u2705 Nothing is ever moved, paid or invested for you</td></tr>" +
+    "<tr><td>\u2705 Your data is yours: one file, exportable, no account</td></tr>" +
+    "<tr><td>\u2705 No ads, no loan offers, nothing sold to you</td></tr>" +
+    "<tr><td>\u2705 Works with no connection at all</td></tr>" +
+    "</table>" +
+    '<p class="hint">Free trackers usually earn their living from lending offers or ' +
+    "your data. This one has no business model, which is why it can afford to tell " +
+    "you when it does not know something.</p></div>";
 
   h += '<div class="card"><h3>Version</h3><table>' +
     row2("This page", BUILD) +
@@ -12272,10 +15000,50 @@ function removeDemo() {
 /* =========================================================
    15. WHAT HAPPENS WHEN YOU TAP THINGS
    ========================================================= */
+/** Which theme is actually painted right now, auto resolved to a real one. */
+function themeNow() {
+  var t = db.settings.theme || "auto";
+  if (t !== "auto") return t;
+  try {
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+  } catch (e) {}
+  return "light";
+}
 function applyTheme() {
   var t = db.settings.theme || "auto";
   if (t === "auto") document.documentElement.removeAttribute("data-theme");
   else document.documentElement.setAttribute("data-theme", t);
+  /* keep the browser chrome in step, and the button honest */
+  var meta = document.querySelector && document.querySelector('meta[name="theme-color"]');
+  if (meta && meta.setAttribute) {
+    meta.setAttribute("content", themeNow() === "dark" ? "#161a20" : "#0d6e66");
+  }
+  paintTheme();
+}
+/** Light → Dark → Follow the system, and say which one you landed on. */
+function cycleTheme() {
+  var order = ["light", "dark", "auto"];
+  var at = order.indexOf(db.settings.theme || "auto");
+  db.settings.theme = order[(at + 1) % order.length];
+  save();
+  applyTheme();
+  toast(db.settings.theme === "auto"
+    ? "Following your device \u2014 " + themeNow() + " right now"
+    : db.settings.theme === "dark" ? "Dark" : "Light");
+  if (ui.view === "settings") render();
+  return db.settings.theme;
+}
+/** The button shows what a press will do, not a fixed icon. */
+function paintTheme() {
+  var b = el("themeBtn");
+  if (!b) return;
+  var mode = db.settings.theme || "auto";
+  var icon = mode === "light" ? "\u2600\ufe0f" : mode === "dark" ? "\ud83c\udf19" : "\ud83c\udf17";
+  var says = mode === "light" ? "Light" : mode === "dark" ? "Dark" : "Following your device";
+  var next = mode === "light" ? "dark" : mode === "dark" ? "your device" : "light";
+  b.innerHTML = icon;
+  b.setAttribute("title", says + " \u2014 tap for " + next);
+  b.setAttribute("aria-label", says + ". Tap to switch to " + next + ".");
 }
 function openAdd(type, date) {
   ui.draft = newDraft(type, date);
@@ -12909,6 +15677,71 @@ function act(name, d) {
       else { closeSheet(); toast("There is no earlier copy to go back to"); }
       return;
     case "extraPay": ui.extraPay = parseInt(d.a, 10) || 0; render(); return;
+    case "reportBuild": ui.reportOpen = true; render(); return;
+    case "reportList": ui.reportOpen = false; render(); return;
+    case "runReport": {
+      var spec = REPORT_KINDS.filter(function (r) { return r.id === d.r; })[0];
+      if (!spec) return;
+      if (spec.view) {
+        if (spec.filter) ui.filters = Object.assign(blankFilters(), spec.filter);
+        ui.view = spec.view; render(); return;
+      }
+      var pre = reportPreset(d.r, {});
+      ui.report = defaultReport();
+      ui.report.from = pre.from;
+      ui.report.to = pre.to;
+      ui.report.range = "custom";
+      ui.report.filters = pre.filters;
+      ui.reportOpen = true;
+      render();
+      toast(pre.title);
+      return;
+    }
+    case "countCash": openSheet(countSheet(d.acc)); return;
+    case "countApply": {
+      var res = applyCount(d.acc, parseInt(d.amt, 10) || 0);
+      closeSheet(); render();
+      toast(res && res.diff ? money(Math.abs(res.diff)) + " difference recorded"
+        : "Noted that you checked");
+      return;
+    }
+    case "newDebt": openSheet(debtSheet(d.dir)); return;
+    case "settleDebt": openSheet(settleSheet(d.id)); return;
+    case "delDebt":
+      removeDebt(d.id); closeSheet(); render(); toast("Removed"); return;
+    case "weekBack": ui.weekBack = parseInt(d.w, 10) || 0; render(); return;
+    case "weekInHistory":
+      ui.filters = Object.assign(blankFilters(), { from: d.f, to: d.t });
+      ui.view = "history"; render(); return;
+    case "taxYear": ui.taxYear = parseInt(d.y, 10); render(); return;
+    case "noteWatch": openSheet(watchSheet(d.w)); return;
+    case "addRate": openSheet(ratesSheet(d.m)); return;
+    case "addHolding": openSheet(holdingSheet(d.m)); return;
+    case "delHolding":
+      removeHolding(d.id); openSheet(holdingSheet(d.m || "gold")); render();
+      toast("Removed"); return;
+    case "addNav": openSheet(navSheet(d.id)); return;
+    case "fetchRate": {
+      toast("Fetching\u2026");
+      fetchRate(d.m).then(function (r) {
+        if (r.ok) { render(); toast("Rate updated"); }
+        else if (r.why === "nokey") toast("Add a price-service key in Settings first");
+        else toast("Could not fetch it \u2014 type it in instead");
+      });
+      return;
+    }
+    case "palettePick": openSheet(paletteSheet()); return;
+    case "setPalette":
+      if (setPalette(d.p)) { closeSheet(); render(); toast(palette().name + " colours"); }
+      return;
+    case "openCat":
+      ui.catName = d.cat; ui.catMonth = d.mk || mKey(new Date());
+      ui.view = "cat"; render(); return;
+    case "catInHistory":
+      ui.filters = Object.assign(blankFilters(), {
+        cat: d.cat, from: d.mk + "-01", to: d.mk + "-" + p2(mDays(d.mk))
+      });
+      ui.view = "history"; render(); return;
     case "revMonth": ui.revMonth = d.m; render(); return;
     case "openSearch": ui.searchQ = ""; ui.view = "search"; render(); return;
     case "searchAgain": ui.searchQ = d.q; ui.view = "search"; render(); return;
@@ -13366,6 +16199,61 @@ function submitForm(kind, form) {
         : "Target switched off");
       return;
     }
+    case "count": {
+      var chk = checkCount(f.acc, toMinor(f.counted));
+      if (!chk) { toast("Pick an account"); return; }
+      ui.countNote = f.note || "";
+      openSheet(countResultSheet(chk, f.acc));
+      return;
+    }
+    case "debt": {
+      var made = addDebt({ who: f.who, dir: f.dir, amt: toMinor(f.amt),
+        date: f.date, note: f.note });
+      if (!made) { toast("Enter a name and an amount"); return; }
+      closeSheet(); render();
+      toast(made.dir === "lent" ? esc(made.who) + " owes you " + money(made.amt)
+        : "You owe " + esc(made.who) + " " + money(made.amt));
+      return;
+    }
+    case "settle": {
+      var st2 = settleDebt(f.id, toMinor(f.amt), f.date);
+      if (!st2) { toast("Enter an amount"); return; }
+      closeSheet(); render();
+      toast(debtLeft(st2) > 0 ? money(debtLeft(st2)) + " still outstanding" : "All square");
+      return;
+    }
+    case "watch": {
+      var wm = addWatch(f.id, f.value, f.at || today(), f.source);
+      if (!wm) { toast("Enter a figure"); return; }
+      closeSheet(); render();
+      toast("Noted");
+      return;
+    }
+    case "rate": {
+      var made = addRate(f.metal, toMinor(f.perGram), f.at ? f.at + "T00:00" : stamp(), f.source);
+      if (!made) { toast("Enter a price"); return; }
+      closeSheet(); render();
+      toast(money(made.perGram) + " a gram, noted");
+      return;
+    }
+    case "holding": {
+      var hg = addHolding({ metal: f.metal, grams: f.grams, paid: toMinor(f.paid),
+        boughtOn: f.boughtOn, note: f.note });
+      if (!hg) { toast("Enter how many grams"); return; }
+      closeSheet(); render();
+      toast(hg.grams + " g added");
+      return;
+    }
+    case "nav": {
+      var fN = fund(f.id);
+      if (!fN) return;
+      if (f.units) fN.units = Math.round((parseFloat(f.units) || 0) * 10000) / 10000;
+      var nv = addNav(f.id, f.nav, f.at || today());
+      if (!nv) { toast("Enter the NAV"); return; }
+      save(); closeSheet(); render();
+      toast("NAV noted");
+      return;
+    }
     case "dayMark": {
       if (!f.date) { toast("Pick a day first"); return; }
       var mkAmt = f.amt ? toMinor(f.amt) : 0;
@@ -13708,6 +16596,14 @@ function onChange(e) {
     toast(lockAfter() ? "Locks after " + lockAfter() + " minutes away" : "Will not lock on its own");
     return;
   }
+  if (t.getAttribute && t.getAttribute("data-tax-key")) {
+    var tk = t.getAttribute("data-tax-key");
+    if (tagForTax(tk, t.value)) {
+      render();
+      toast(t.value ? "Counted under " + t.value.toUpperCase() : "No longer counted");
+    }
+    return;
+  }
   if (t.getAttribute && t.getAttribute("data-role-cat")) {
     var rc = t.getAttribute("data-role-cat");
     if (setRole(rc, t.value)) {
@@ -13724,8 +16620,46 @@ function onChange(e) {
   if (t.getAttribute && (t.getAttribute("data-f") || t.getAttribute("data-field"))) onInput(e);
   if (t.getAttribute && t.getAttribute("data-s")) grabSetup();
 }
+/* Keyboard shortcuts. They only fire when you are not typing into something,
+   so they can never eat a character you meant for a field. */
+var KEYS = [
+  { k:"a", what:"Add something",     run: function () { act("addAny", {}); } },
+  { k:"/", what:"Search",            run: function () { act("openSearch", {}); } },
+  { k:"h", what:"Home",              run: function () { act("go", { view:"home" }); } },
+  { k:"t", what:"Activity",          run: function () { act("go", { view:"history" }); } },
+  { k:"i", what:"Insights",          run: function () { act("go", { view:"insights" }); } },
+  { k:"m", what:"Your money",        run: function () { act("go", { view:"money" }); } },
+  { k:"p", what:"Hide every amount", run: function () { act("privacyToggle", {}); } },
+  { k:"?", what:"This list",         run: function () { openSheet(shortcutSheet()); } }
+];
+function typingInto(node) {
+  if (!node || !node.tagName) return false;
+  var tag = String(node.tagName).toLowerCase();
+  return tag === "input" || tag === "textarea" || tag === "select" ||
+    node.isContentEditable === true;
+}
+function shortcutSheet() {
+  return '<div class="shd"><h2>Keyboard shortcuts</h2>' +
+    '<button type="button" class="ib grow" data-act="closeSheet" aria-label="Close">\u2715</button></div>' +
+    "<table>" + KEYS.map(function (x) {
+      return "<tr><td><kbd>" + esc(x.k) + "</kbd></td><td>" + esc(x.what) + "</td></tr>";
+    }).join("") + '<tr><td><kbd>Esc</kbd></td><td>Close what is open</td></tr></table>' +
+    '<p class="hint">Shortcuts are ignored while you are typing, so they never ' +
+    "swallow a character.</p>";
+}
 function onKey(e) {
   if (e.key === "Escape" && !el("scrim").classList.contains("hidden")) { closeSheet(); ui.draft = null; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (typingInto(e.target)) return;
+  if (!el("scrim").classList.contains("hidden")) return;
+  var key = String(e.key || "").toLowerCase();
+  for (var i2 = 0; i2 < KEYS.length; i2++) {
+    if (KEYS[i2].k === key || (KEYS[i2].k === "?" && e.key === "?")) {
+      if (e.preventDefault) e.preventDefault();
+      KEYS[i2].run();
+      return;
+    }
+  }
 }
 
 function boot() {
@@ -13748,13 +16682,7 @@ function boot() {
   listen(document, "input", onInput);
   listen(document, "change", onChange);
   listen(document, "keydown", onKey);
-  listen(el("themeBtn"), "click", function () {
-    var order = ["auto", "light", "dark"];
-    db.settings.theme = order[(order.indexOf(db.settings.theme || "auto") + 1) % 3];
-    save(); applyTheme();
-    toast(db.settings.theme === "auto" ? "Following your phone" : db.settings.theme === "dark" ? "Dark" : "Light");
-    if (ui.view === "settings") render();
-  });
+  listen(el("themeBtn"), "click", function () { cycleTheme(); });
 
   var testing = typeof window !== "undefined" && window.__MT_TEST__;
   /* Only ever seed a truly empty app. Once you have your own entries,
@@ -13842,6 +16770,7 @@ return {
              sipDateFor: sipDateFor, sipFunds: sipFunds, sipBlock: sipBlock,
              setFund: function (x) { ui.fundId = x; }, fundHistory: fundHistory, fundRecord: fundRecord, sipRecord: sipRecord,
              fundStartMonth: fundStartMonth,
+             readSms: readSms, readSmsBlock: readSmsBlock, accountFromSms: accountFromSms,
              readBlock: readBlock, commitBlock: commitBlock, undoImport: undoImport,
              duplicateKind: duplicateKind, tidyLine: tidyLine,
              hasWord: hasWord, saveQuick: saveQuick,
@@ -13856,9 +16785,45 @@ return {
              feedItems: feedItems, feedBlock: feedBlock, greeting: greeting,
              addAnySheet: addAnySheet, creditPoolBlock: creditPoolBlock,
              fold: fold, isOpen: isOpen, toggleFold: toggleFold, reRender: reRender,
+             cycleTheme: cycleTheme, themeNow: themeNow, applyTheme: applyTheme,
              privacyOn: privacyOn, setPrivacy: setPrivacy, lockAfter: lockAfter,
              setLockAfter: setLockAfter, shouldLock: shouldLock, touchActivity: touchActivity,
              checkForUpdate: checkForUpdate,
+             KEYS: KEYS, typingInto: typingInto, crashPage: crashPage,
+             PALETTES: PALETTES, palette: palette, setPalette: setPalette, paletteId: paletteId,
+             gauge: gauge, heatmap: heatmap, waterfall: waterfall, sparkRow: sparkRow,
+             lineChart: lineChart, pairBars: pairBars, dayStrip: dayStrip,
+             roleChart: roleChart, weekBars: weekBars, shortMoney: shortMoney, scaleAt: scaleAt,
+             pageWatch: pageWatch, watchSheet: watchSheet,
+             pageHoldings: pageHoldings, ratesSheet: ratesSheet, navSheet: navSheet,
+             pageTax: pageTax,
+             pageShared: pageShared, debtSheet: debtSheet,
+             pageWeek: pageWeek,
+             countSheet: countSheet,
+             checkCount: checkCount, applyCount: applyCount, lastCount: lastCount,
+             countable: countable,
+             weekDigest: weekDigest, weekRange: weekRange,
+             REPORT_KINDS: REPORT_KINDS, reportPreset: reportPreset,
+             TAX_SECTIONS: TAX_SECTIONS, taxYear: taxYear, tagForTax: tagForTax,
+             taxTagOf: taxTagOf, taxTags: taxTags,
+             costPerUnit: costPerUnit, metalBasis: metalBasis, allocation: allocation,
+             ownSignals: ownSignals, targetMix: targetMix, setTargetMix: setTargetMix,
+             WATCH: WATCH, addWatch: addWatch, watchLatest: watchLatest, watchTrend: watchTrend,
+             whatMoved: whatMoved, moveNotes: moveNotes, fmtWatch: fmtWatch, watchList: watchList,
+             sipSchedule: sipSchedule, navOn: navOn, fundBuys: fundBuys, fundPutIn: fundPutIn,
+             addNav: addNav, latestNav: latestNav, navsFor: navsFor, fundUnits: fundUnits,
+             fundWorth: fundWorth, portfolio: portfolio,
+             METALS: METALS, addRate: addRate, latestRate: latestRate, rateTrend: rateTrend,
+             addHolding: addHolding, removeHolding: removeHolding, metalWorth: metalWorth,
+             metalKey: metalKey, setMetalKey: setMetalKey, fetchRate: fetchRate,
+             metalStore: metalStore,
+             savingRate: savingRate, goalOutlook: goalOutlook,
+             potMaturity: potMaturity, maturingSoon: maturingSoon,
+             frequentEntries: frequentEntries, repeatEntry: repeatEntry,
+             debts: debts, addDebt: addDebt, settleDebt: settleDebt, removeDebt: removeDebt,
+             debtLeft: debtLeft, debtSummary: debtSummary,
+             fyOf: fyOf, fyLabel: fyLabel, fyRange: fyRange, fysWithData: fysWithData,
+             fySummary: fySummary, logChange: logChange, changeLog: changeLog,
              storyBlock: storyBlock, changedBlock: changedBlock,
              rememberSearch: rememberSearch,
              pageSearch: pageSearch, dataHealthBlock: dataHealthBlock,
