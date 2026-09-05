@@ -157,6 +157,24 @@ input[type=checkbox]{inline-size:20px;block-size:20px;min-block-size:20px;margin
 .story .storygap{color:var(--muted);font-weight:500;font-size:14.5px}
 .story .storyarrow{text-align:center;color:var(--muted);font-size:15px;
   margin-block:9px;opacity:.55}
+.intro{display:flex;gap:9px;align-items:flex-start;background:var(--accent-soft);
+  border:1px solid var(--accent);border-radius:12px;padding:10px 12px;
+  margin-block:12px 4px;font-size:13.5px;line-height:1.45}
+.intro .ib{margin-inline-start:auto;flex:0 0 auto;font-size:12px;opacity:.7}
+.moregroup{border:1px solid var(--border);border-radius:14px;margin-block-end:8px;
+  overflow:hidden;background:var(--surface)}
+.morehead{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  inline-size:100%;background:none;border:0;padding:13px 14px;text-align:start;
+  cursor:pointer;color:inherit;font:inherit}
+.morehead b{font-size:14.5px}
+.morearrow{color:var(--muted);font-size:13px}
+.moretiles{border-block-start:1px solid var(--border)}
+.moretile{display:flex;gap:12px;align-items:center;inline-size:100%;background:none;
+  border:0;border-block-end:1px solid var(--border);padding:12px 14px;text-align:start;
+  cursor:pointer;color:inherit;font:inherit}
+.moretile:last-child{border-block-end:0}
+.moretile:active{background:var(--surface-2)}
+.moreicon{font-size:22px;flex:0 0 auto;inline-size:28px;text-align:center}
 .newbar{background:linear-gradient(135deg,var(--accent-soft),var(--surface));
   border:1px solid var(--accent);border-radius:16px;padding:12px}
 .newmain{display:flex;gap:12px;align-items:center;inline-size:100%;background:none;
@@ -548,7 +566,7 @@ var MT = (function () {
    1. BASICS
    ========================================================= */
 var KEY = "moneytracker";
-var BUILD = "2026-09-05.4";  /* shown in Settings so you can tell which copy you are running */
+var BUILD = "2026-09-05.7";  /* shown in Settings so you can tell which copy you are running */
 var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 var DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 var COLORS = ["#0f766e","#f59e0b","#5b5bd6","#d92d20","#0ea5e9","#0b8a5f","#db2777","#65a30d","#ea580c","#64748b"];
@@ -569,10 +587,16 @@ var DEFAULT_CATS = [
   { n:"Food", k:"out" }, { n:"Groceries", k:"out" }, { n:"Travel", k:"out" }, { n:"Fuel", k:"out" },
   { n:"Shopping", k:"out" }, { n:"Bills", k:"out" }, { n:"Rent", k:"out" }, { n:"Health", k:"out" },
   { n:"Education", k:"out" }, { n:"Fun", k:"out" }, { n:"Subscriptions", k:"out" },
-  { n:"Savings", k:"out" }, { n:"Loan/EMI", k:"out" }, { n:"Other", k:"out" },
+  { n:"Savings", k:"out" }, { n:"Loan/EMI", k:"out" },
+  { n:"Donations", k:"out" }, { n:"Other", k:"out" },
   { n:"Salary", k:"in" }, { n:"Side income", k:"in" }, { n:"Interest", k:"in" },
   { n:"Gift", k:"in" }, { n:"Other", k:"in" }
 ];
+/* A prepaid wallet holds a balance the way cash does: money moves into it
+   first, and spending from it draws that balance down. Treating it as a
+   payment app instead would lose the balance entirely. */
+var WALLET_WORDS = /\b(uber|ola|paytm|amazon pay|phonepe|freecharge|mobikwik)\s*(wallet|balance|cash|money)\b/i;
+
 var HOWS = [
   { id:"cash",  label:"Cash",         icon:"💵" },
   { id:"app",   label:"Payment app",  icon:"📱" },
@@ -2083,10 +2107,13 @@ var NAV = [
 /* which top-level item a page belongs under */
 var NAV_HOME = {
   history: ["history"],
-  insights: ["insights", "stats", "reports", "merch", "repeats", "health", "moneyback", "review", "cat", "week"],
+  insights: ["insights", "stats", "reports", "merch", "repeats", "health", "moneyback",
+             "review", "cat", "week", "explore", "rephub", "visuals", "timeline",
+             "builder", "monthreview", "yearreview", "loyalty", "unknown", "merchant"],
   more: ["more", "money", "accounts", "account", "card", "cycle", "stmt", "funds", "fund",
          "saved", "worth", "cardplan", "perks", "debt", "budget", "bills", "settings",
-         "recovery", "plan", "search", "review", "cat", "holdings", "watch", "tax", "week", "shared"]
+         "recovery", "plan", "search", "review", "cat", "holdings", "watch", "tax", "week",
+         "shared", "statements", "emis", "security", "credit", "credithealth", "gaps"]
 };
 function navHomeOf(view) {
   var keys = Object.keys(NAV_HOME);
@@ -2101,7 +2128,37 @@ var TITLES = {
   reports:"Reports", settings:"Settings", card:"Credit card", cycle:"Billing cycle", stmt:"Statement",
   account:"Account", funds:"Mutual funds", fund:"Fund", insights:"Insights", merch:"Where you shop", plan:"Plan ahead", repeats:"Repeats & small charges",
   health:"Money health", worth:"What you are worth", debt:"Getting clear of debt",
-  recovery:"Keeping your data safe", moneyback:"Money back, fees and failures", search:"Search", review:"Your month", cat:"Category", holdings:"What you hold", watch:"What moved", tax:"Tax saving", week:"Your week", shared:"Who owes whom", saved:"Money set aside", cardplan:"Which card to use", perks:"Card perks"
+  recovery:"Keeping your data safe", moneyback:"Money back, fees and failures", search:"Search", review:"Your month", cat:"Category", holdings:"What you hold", watch:"What moved", tax:"Tax saving", week:"Your week", shared:"Who owes whom", saved:"Money set aside", cardplan:"Which card to use", perks:"Card perks",
+  explore:"Explore", rephub:"Reports", visuals:"Ways to look at it",
+  timeline:"Your history", builder:"Build a report", monthreview:"Month in review",
+  yearreview:"Year against last", loyalty:"Habits", unknown:"What is not known",
+  merchant:"Shop", statements:"Statements", emis:"Instalments",
+  security:"Security & privacy", credit:"Credit in use", credithealth:"Credit health",
+  gaps:"What is missing"
+};
+
+/* One sentence per screen, saying what question it answers. Shown at the top
+   so nobody has to work out what a page is for by reading its charts. */
+var PURPOSE = {
+  explore: "Drag the strip to any stretch of time. Every figure below moves with it, and every one of them opens.",
+  rephub: "Five rooms rather than thirty charts on one page.",
+  visuals: "The same figures drawn several ways. Every chart has its exact numbers one tap away.",
+  timeline: "Every month you have recorded, and how completely each one is recorded.",
+  builder: "Ask for a specific figure instead of hunting for a chart that happens to show it.",
+  monthreview: "One month, told back to you.",
+  yearreview: "This year against last, comparing only the months present in both.",
+  loyalty: "Where repeat money goes, and whether paying by app costs you more.",
+  unknown: "The gaps in what this app can tell you, listed rather than hidden.",
+  statements: "Upload a bank or card statement. It is read on this device and nothing is added until you have seen it.",
+  credit: "How much of your credit is in use, counting a shared limit once.",
+  credithealth: "What affects your credit, what this app can see, and what no app can.",
+  emis: "What is paid, what is due, and when each plan ends.",
+  security: "What this app protects against, and what it does not.",
+  gaps: "Everything this app does not do, and why.",
+  merch: "Every shop you have paid, and what you spend there.",
+  worth: "Everything you own, less everything you owe.",
+  health: "Where you stand, and what is coming.",
+  insights: "What changed this month, and why."
 };
 
 function drawNav() {
@@ -2127,6 +2184,7 @@ function sidebarHtml(here) {
       ["timeline", "Your history"], ["builder", "Build a report"],
       ["monthreview", "Month in review"], ["yearreview", "Year against last"],
       ["loyalty", "Habits"], ["unknown", "What is not known"],
+      ["statements", "Statements"],
       ["insights", "What changed"], ["week", "Your week"], ["stats", "Stats & calendar"],
       ["merch", "Where you shop"], ["repeats", "Repeats & charges"],
       ["health", "Money health"], ["moneyback", "Refunds & fees"],
@@ -2191,7 +2249,18 @@ function render() {
      wrong, keeps the navigation alive, and offers a way out with the data
      untouched — losing a screen is recoverable, losing your entries is not. */
   try {
-    el("app").innerHTML = fn();
+    /* One sentence at the top of a screen, saying what question it answers.
+       Added here rather than in each page so no screen can be missed. It is
+       dismissible: once you know what a screen is for, it stops repeating. */
+    var intro = "";
+    var why = PURPOSE[ui.view];
+    if (why && !(db.settings.introDone || {})[ui.view]) {
+      intro = '<div class="intro"><span aria-hidden="true">\ud83d\udca1</span>' +
+        "<span>" + esc(why) + "</span>" +
+        '<button type="button" class="ib s" data-act="introDone" data-v="' +
+        esc(ui.view) + '" aria-label="Got it, stop showing this">\u2715</button></div>';
+    }
+    el("app").innerHTML = intro + fn();
   } catch (err) {
     el("app").innerHTML = crashPage(err, ui.view);
     try { logChange("error", ui.view + ": " + (err && err.message)); saveLocalOnly(); }
@@ -2262,8 +2331,9 @@ function pageHome() {
     "<span><b>Explore</b><small>Drag one strip \u2014 every figure moves with " +
     "it. Tap any number to open it.</small></span></button>" +
     '<div class="newrow">' +
-    [["rephub", "Reports"], ["credit", "Credit in use"],
-     ["visuals", "Charts"], ["unknown", "What is not known"]]
+    [["statements", "Upload a statement"], ["rephub", "Reports"],
+     ["credit", "Credit in use"], ["visuals", "Charts"],
+     ["unknown", "What is not known"]]
       .map(function (x) {
         return '<button type="button" class="newchip" data-act="go" ' +
           'data-view="' + x[0] + '">' + esc(x[1]) + "</button>";
@@ -3899,39 +3969,129 @@ function daySheet(iso) {
 
 /* ---------- More (hub) ---------- */
 function pageMore() {
-  var items = [
-    ["explore", "🔭", "Explore", "Drag one strip and every figure moves with it"],
-    ["rephub", "📈", "Reports", "Overview, spending, trends, wealth, review"],
-    ["visuals", "🌊", "Ways to look at it", "Year orbit, cash-flow river, calendar, pulse"],
-    ["credit", "💳", "Credit in use", "One ring per pool, shared limits counted once"],
-    ["timeline", "📜", "Your history", "Every month, and how well each is recorded"],
-    ["loyalty", "🔁", "Habits", "Where repeat money goes, and what convenience costs"],
-    ["unknown", "🕳️", "What this app does not know", "The gaps, stated rather than hidden"],
-    ["health", "❤️", "Money health", "Everything at a glance, and what is coming"],
-    ["insights", "💡", "Insights", "What changed this month, and why"],
-    ["plan", "🗓️", "Plan ahead", "Safe to spend, salary cycle, what-if"],
-    ["repeats", "🔁", "Repeats & small charges", "Subscriptions and fees that add up"],
-    ["merch", "🏪", "Where you shop", "Every shop, and what you spend there"],
-    ["worth", "⚖️", "What you are worth", "Everything you have, minus what you owe"],
-    ["moneyback", "↩️", "Money back, fees and failures", "Refunds owed, charges paid, payments that failed"],
-    ["debt", "🏦", "Getting clear of debt", "Instalments, bills and paying extra"],
-    ["money", "🏦", "Accounts & cards", "Bank, cash, wallets and credit cards"],
-    ["budget", "🎯", "Budget & goals", "Monthly limits and what you're saving for"],
-    ["bills", "📅", "Bills & repeats", "Rent, EMIs, subscriptions"],
-    ["cardplan", "🎯", "Which card to use", "Get the longest time before you pay"],
-    ["perks", "🎁", "Card perks", "What each card gives you, and what is left"],
-    ["funds", "📈", "Mutual funds", "Your SIPs and what you have put in"],
-    ["saved", "🏛️", "Money set aside", "Fixed deposits and savings pots"],
-    ["monthreview", "📆", "Month in review", "One month, told back to you"],
-    ["builder", "🛠️", "Build a report", "Pick a metric, a breakdown and a period"],
-    ["recovery", "🛡️", "Keeping your data safe", "Check, restore and back up"],
-    ["settings", "⚙️", "Settings & backup", "Theme, PIN, export, import"]
+  var groups = [
+    { label: "Look at your money", why: "Ways to see what has happened",
+      items: [
+        ["explore", "\ud83d\udd2d", "Explore",
+         "Drag one strip and every figure moves with it"],
+        ["rephub", "\ud83d\udcc8", "Reports",
+         "Overview, spending, trends, wealth, review"],
+        ["visuals", "\ud83c\udf0a", "Ways to look at it",
+         "Year orbit, cash-flow river, calendar, pulse"],
+        ["timeline", "\ud83d\udcdc", "Your history",
+         "Every month, and how well each is recorded"],
+        ["builder", "\ud83d\udee0\ufe0f", "Build a report",
+         "Pick a metric, a breakdown and a period"],
+        ["monthreview", "\ud83d\udcc6", "Month in review",
+         "One month, told back to you"]
+      ] },
+    { label: "Get your data in", why: "Statements and what came from where",
+      items: [
+        ["statements", "\ud83d\udcc4", "Statements",
+         "Upload a bank or card statement and read it here"],
+        ["unknown", "\ud83d\udd73\ufe0f", "What this app does not know",
+         "The gaps, stated rather than hidden"]
+      ] },
+    { label: "What you owe", why: "Cards, credit and instalments",
+      items: [
+        ["credit", "\ud83d\udcb3", "Credit in use",
+         "One ring per pool, shared limits counted once"],
+        ["credithealth", "\u2764\ufe0f", "Credit health",
+         "What matters, and what no app can see"],
+        ["cardplan", "\ud83c\udfaf", "Which card to use",
+         "Get the longest time before you pay"],
+        ["perks", "\ud83c\udf81", "Card perks",
+         "What each card gives you, and what is left"],
+        ["emis", "\ud83d\udcc5", "Instalments",
+         "What is paid, what is due, and when it ends"],
+        ["debt", "\ud83c\udfe6", "Getting clear of debt",
+         "Instalments, bills and paying extra"]
+      ] },
+    { label: "What you own", why: "Savings, funds and what it all adds to",
+      items: [
+        ["worth", "\u2696\ufe0f", "What you are worth",
+         "Everything you have, minus what you owe"],
+        ["funds", "\ud83d\udcc8", "Mutual funds",
+         "Your SIPs and what you have put in"],
+        ["saved", "\ud83c\udfdb\ufe0f", "Money set aside",
+         "Fixed deposits and savings pots"],
+        ["holdings", "\ud83d\udcbc", "What you hold",
+         "Everything, in one list"],
+        ["tax", "\ud83d\udcdd", "Tax saving",
+         "What you have put into each section"]
+      ] },
+    { label: "Habits and patterns", why: "What you keep doing",
+      items: [
+        ["loyalty", "\ud83d\udd01", "Habits",
+         "Where repeat money goes, and what convenience costs"],
+        ["merch", "\ud83c\udfea", "Where you shop",
+         "Every shop, and what you spend there"],
+        ["repeats", "\ud83d\udd04", "Repeats & small charges",
+         "Subscriptions and fees that add up"],
+        ["moneyback", "\u21a9\ufe0f", "Money back, fees and failures",
+         "Refunds owed, charges paid, payments that failed"],
+        ["insights", "\ud83d\udca1", "Insights",
+         "What changed this month, and why"],
+        ["health", "\u2764\ufe0f", "Money health",
+         "Everything at a glance, and what is coming"]
+      ] },
+    { label: "Set things up", why: "Accounts, limits and plans",
+      items: [
+        ["money", "\ud83c\udfe6", "Accounts & cards",
+         "Bank, cash, wallets and credit cards"],
+        ["budget", "\ud83c\udfaf", "Budget & goals",
+         "Monthly limits and what you are saving for"],
+        ["bills", "\ud83d\udcc5", "Bills & repeats",
+         "Rent, EMIs, subscriptions"],
+        ["plan", "\ud83d\uddd3\ufe0f", "Plan ahead",
+         "Safe to spend, salary cycle, what-if"],
+        ["shared", "\ud83e\udd1d", "Who owes whom",
+         "Money split with other people"]
+      ] },
+    { label: "Your data", why: "Safety, privacy and backups",
+      items: [
+        ["security", "\ud83d\udd12", "Security & privacy",
+         "What this protects against, and what it does not"],
+        ["recovery", "\ud83d\udee1\ufe0f", "Keeping your data safe",
+         "Check, restore and back up"],
+        ["gaps", "\ud83d\udccb", "What is missing",
+         "Everything this app does not do, and why"],
+        ["settings", "\u2699\ufe0f", "Settings & backup",
+         "Theme, PIN, export, import"]
+      ] }
   ];
-  return '<div class="sec"><h2>More</h2>' + items.map(function (x) {
-    return '<button type="button" class="card" style="inline-size:100%;text-align:start;display:flex;gap:12px;align-items:center" ' +
-      'data-act="go" data-view="' + x[0] + '"><span style="font-size:24px" aria-hidden="true">' + x[1] + "</span>" +
-      "<span><b>" + esc(x[2]) + '</b><br><span class="sub">' + esc(x[3]) + "</span></span></button>";
-  }).join("") + "</div>";
+
+  var open = ui.moreOpen === undefined ? "" : ui.moreOpen;
+  var tile = function (x) {
+    return '<button type="button" class="moretile" data-act="go" data-view="' +
+      esc(x[0]) + '"><span class="moreicon" aria-hidden="true">' + x[1] +
+      "</span><span><b>" + esc(x[2]) + '</b><br><span class="sub">' +
+      esc(x[3]) + "</span></span></button>";
+  };
+
+  var h = '<div class="sec"><h2>Everything</h2>' +
+    '<p class="sub">' + groups.reduce(function (n, g) {
+      return n + g.items.length; }, 0) +
+    " screens, grouped by what you are trying to do. Tap a heading to open " +
+    "it.</p>" +
+    '<button type="button" class="btn g s full" data-act="openSearch" ' +
+    'style="margin-block-end:12px">\ud83d\udd0d Search for a screen or an ' +
+    "entry</button>";
+
+  h += groups.map(function (g, i) {
+    var isOpen = open === "" ? i < 2 : open === String(i);
+    return '<div class="moregroup">' +
+      '<button type="button" class="morehead" data-act="moreGroup" data-g="' +
+      i + '" aria-expanded="' + (isOpen ? "true" : "false") + '">' +
+      "<span><b>" + esc(g.label) + '</b><br><span class="sub">' +
+      esc(g.why) + " \u00b7 " + g.items.length + " screens</span></span>" +
+      '<span class="morearrow" aria-hidden="true">' +
+      (isOpen ? "\u25be" : "\u25b8") + "</span></button>" +
+      (isOpen ? '<div class="moretiles">' + g.items.map(tile).join("") + "</div>"
+              : "") + "</div>";
+  }).join("");
+
+  return h + "</div>";
 }
 
 /* =========================================================
@@ -5428,7 +5588,11 @@ var CAT_WORDS = [
   { re:/\b(rent)\b/i, cat:"Rent" },
 
   { re:/\b(netflix|spotify|hotstar|prime|subscription)\b/i, cat:"Subscriptions" },
-  { re:/\b(parcel|courier|post|shipping|delivery charge)\b/i, cat:"Travel" }
+  { re:/\b(parcel|courier|post|shipping|delivery charge)\b/i, cat:"Travel" },
+  /* giving money away is not shopping and not "other" \u2014 it is its own
+     thing, and lumping it in makes a spending breakdown say less */
+  { re:/\b(donation|donate|charity|temple|priest|beggar|begger|alms|offering|dakshina|hundi)\b/i,
+    cat:"Donations" }
 ];
 var HOW_WORDS = [
   { re:/\bcash\b/i, how:"cash" },
@@ -5552,10 +5716,13 @@ function hasWord(hay, word) {
   return false;
 }
 /** Score every account and card against the words. Returns matches, not a guess. */
-function matchAccounts(text) {
+/** Which account the text names. `mustHold` rules out a credit card: money
+    cannot leave one, so a card bill paid "from hdfc" means the bank, not the
+    card that shares its name. */
+function matchAccounts(text, mustHold) {
   var s = String(text || "").toLowerCase();
-  var wantsCard = /\bcredit\b|\bcard\b/.test(s);
-  var wantsBank = /\bsavings?\b|\baccount\b|\bdebit\b/.test(s);
+  var wantsCard = !mustHold && (/\bcredit\b|\bcard\b/.test(s));
+  var wantsBank = /\bsavings?\b|\baccount\b|\bdebit\b/.test(s) || !!mustHold;
   var hits = [];
   db.accounts.forEach(function (a) {
     if (a.archived) return;
@@ -5572,6 +5739,8 @@ function matchAccounts(text) {
     });
     if (a.last4 && hasWord(s, a.last4)) score += 5;
     if (!score) return;
+    /* a source of money is never a credit card, whatever the words say */
+    if (mustHold && a.kind === "card") return;
     if (wantsCard) score += a.kind === "card" ? 3 : -3;
     if (wantsBank) score += a.kind === "card" ? -3 : 3;
     if (score > 0) hits.push({ acc: a, score: score });
@@ -5728,7 +5897,10 @@ function readLine(text, base) {
     if (CHANNEL_WORDS[k].re.test(s)) { d.channel = CHANNEL_WORDS[k].ch; break; }
   }
 
-  var hits = matchAccounts(accountText);
+  /* Paying a card bill: the account named is where the money came FROM, and
+     that can only be somewhere holding money. Without this, "card bill paid
+     from hdfc savings" resolves to the HDFC credit card being paid off. */
+  var hits = matchAccounts(accountText, d.type === "bill");
   if (hits.length === 1 || (hits.length > 1 && hits[0].score > hits[1].score)) {
     d.acc = hits[0].acc.id;
     read.push(hits[0].acc.name);
@@ -6550,7 +6722,11 @@ function seedData() {
     A({ id:"a_pnb",  name:"PNB Savings",  kind:"bank", bank:"PNB", subtype:"savings",
         open: toMinor(2434.20), minBalance: toMinor(2000) }),
     A({ id:"a_cash", name:"Cash", kind:"cash",
-        open: toMinor(650) + toMinor(30) + toMinor(30) + toMinor(49) + toMinor(30) })
+        open: toMinor(650) + toMinor(30) + toMinor(30) + toMinor(49) + toMinor(30) }),
+    /* A prepaid wallet holds a balance, so it is an account rather than a
+       payment method. Its opening figure is what was in it before the first
+       recorded spend, so the running balance lands on what the app shows. */
+    A({ id:"a_uber", name:"Uber wallet", kind:"cash", open: toMinor(252.44) })
   ];
 
   /* Money set aside by hand — not spending, not a daily deduction. */
@@ -9240,6 +9416,61 @@ function wireOffline() {
 }
 
 /* ---------- searching everything ---------- */
+/** Screens matching what was typed. Searching for "credit" should find the
+    credit screen, not only entries with the word in a note. */
+function findScreens(q) {
+  var s = String(q || "").trim().toLowerCase();
+  if (s.length < 2) return [];
+  var extra = {
+    explore: "drag strip slider timeline period range scrub",
+    rephub: "report reports charts summary",
+    visuals: "chart charts graph graphs orbit river calendar pulse picture",
+    timeline: "history months coverage past",
+    builder: "custom report metric breakdown compare",
+    monthreview: "month review summary recap",
+    yearreview: "year annual compare last year",
+    loyalty: "habit habits merchant shop repeat convenience",
+    unknown: "missing gaps unknown holes incomplete honest",
+    statements: "statement upload import pdf csv excel bank file read",
+    credit: "credit card limit utilisation utilization ring pool owe",
+    credithealth: "cibil score credit health bureau report",
+    emis: "emi instalment installment loan repayment",
+    security: "security privacy safe lock password encrypt threat",
+    gaps: "missing not built limits honest what cannot",
+    money: "account accounts bank card wallet cash",
+    budget: "budget goal limit target saving",
+    bills: "bill bills rent subscription recurring due",
+    settings: "setting settings backup theme pin export import",
+    worth: "net worth assets owe total",
+    funds: "fund funds mutual sip investment nav",
+    saved: "deposit fd pot saving set aside",
+    tax: "tax 80c 80d saving deduction",
+    holdings: "holding holdings own",
+    plan: "plan ahead safe to spend forecast future",
+    debt: "debt loan owe clear payoff",
+    merch: "shop shops merchant store where",
+    insights: "insight why changed",
+    health: "health overview glance",
+    week: "week weekly",
+    recovery: "backup restore recover safe data",
+    history: "activity entries transactions list all",
+    home: "home start overview"
+  };
+  var out = [];
+  Object.keys(TITLES).forEach(function (v) {
+    var title = String(TITLES[v] || "");
+    var hay = (title + " " + (PURPOSE[v] || "") + " " + (extra[v] || "")).toLowerCase();
+    if (hay.indexOf(s) < 0) return;
+    /* a title match ranks above a mention buried in the description */
+    var rank = title.toLowerCase().indexOf(s) === 0 ? 0
+      : title.toLowerCase().indexOf(s) > -1 ? 1 : 2;
+    out.push({ view: v, title: title, why: PURPOSE[v] || "", rank: rank });
+  });
+  return out.sort(function (a, b) {
+    return a.rank - b.rank || a.title.localeCompare(b.title);
+  }).slice(0, 6);
+}
+
 /** Look through notes, shops, amounts, categories, accounts and apps. */
 function searchAll(q) {
   var s = String(q || "").trim().toLowerCase();
@@ -11080,7 +11311,22 @@ function pageSearch() {
   h += '<div class="card"><div class="f"><label for="sq">Look for anything</label>' +
     '<input id="sq" data-f="searchQ" type="search" value="' + esc(q) +
     '" placeholder="swiggy, 450, food, hdfc, sep 3" autocomplete="off"></div>' +
-    '<p class="hint">Notes, shops, amounts, categories, accounts, cards, apps and dates.</p></div>';
+    '<p class="hint">Screens as well as entries \u2014 notes, shops, amounts, ' +
+    "categories, accounts, cards, apps and dates. Type \u201ccredit\u201d or " +
+    "\u201cstatement\u201d to jump straight to a screen.</p></div>";
+
+  var screens = findScreens(q);
+  if (screens.length) {
+    h += '<div class="sec"><h2>Screens</h2><div class="card">' +
+      screens.map(function (x) {
+        return '<button type="button" class="moretile" data-act="go" ' +
+          'data-view="' + esc(x.view) + '">' +
+          '<span class="moreicon" aria-hidden="true">\u2192</span>' +
+          "<span><b>" + esc(x.title) + "</b>" +
+          (x.why ? '<br><span class="sub">' + esc(x.why) + "</span>" : "") +
+          "</span></button>";
+      }).join("") + "</div></div>";
+  }
 
   if (!q.trim()) {
     var recent = (db.settings.recentSearch || []).slice(0, 6);
@@ -15873,10 +16119,641 @@ function pdfContentText(content) {
 }
 /** Read a PDF's text. Returns what was found and how confident that is.
     A scanned page has no text objects at all; that is reported, never faked. */
-function readPdf(bytes) {
+/** Decrypt every stream with the file key, then read the result exactly as
+    an ordinary PDF. Nothing about the password survives this function. */
+function unlockPdf(bytes, latin, info, password) {
+  var keyReady = info.r >= 5
+    ? pdfPasswordWorksAsync(info, password).then(function (ok) {
+        if (!ok) throw new Error("pdf-wrong-password");
+        return pdfKey256(info, password);
+      })
+    : Promise.resolve().then(function () {
+        if (!pdfPasswordWorks(info, password)) throw new Error("pdf-wrong-password");
+        return pdfKeyFromPassword(info, password);
+      });
+
+  return keyReady.then(function (fileKey) {
+    if (!fileKey) throw new Error("pdf-wrong-password");
+    var aes = info.method === "aes128" || info.method === "aes256";
+    var out = [], jobs = [];
+    /* every stream, with the object number it belongs to, because the key
+       differs per object on everything before AES-256 */
+    var re = /(\d+)\s+(\d+)\s+obj\b/g, m, marks = [];
+    while ((m = re.exec(latin))) {
+      marks.push({ num: +m[1], gen: +m[2], at: m.index });
+    }
+    var ownerOf = function (at) {
+      var best = null;
+      for (var i = 0; i < marks.length; i++) {
+        if (marks[i].at < at) best = marks[i]; else break;
+      }
+      return best || { num: 0, gen: 0 };
+    };
+
+    var sre = /(^|[^a-zA-Z])stream\r?\n?/g, sm;
+    while ((sm = sre.exec(latin))) {
+      var startAt = sm.index + sm[1].length;
+      var from = sm.index + sm[0].length;
+      var endAt = latin.indexOf("endstream", from);
+      if (endAt < 0) break;
+      var owner = ownerOf(startAt);
+      var raw = bytes.slice(from, endAt);
+      var head = latin.slice(Math.max(0, startAt - 500), startAt);
+      jobs.push({ raw: raw, head: head, owner: owner });
+      sre.lastIndex = endAt;
+    }
+
+    var work = jobs.map(function (j) {
+      if (info.method === "none") return Promise.resolve(j.raw);
+      if (info.method === "aes256") {
+        return aesDecrypt(fileKey, j.raw);
+      }
+      var k = objectKey(fileKey, j.owner.num, j.owner.gen, aes);
+      if (aes) return aesDecrypt(k, j.raw);
+      return Promise.resolve(rc4(k, j.raw));
+    });
+
+    return Promise.all(work).then(function (clear) {
+      /* the decrypted streams are read exactly as an ordinary PDF's are */
+      return Promise.all(clear.map(function (data) {
+        return inflateAny(data)
+          .then(function (out) {
+            var t = new TextDecoder("latin1").decode(out);
+            return /BT[\s\S]*?ET|\bTj\b|\bTJ\b/.test(t) ? pdfContentText(t) : "";
+          })
+          .catch(function () {
+            var t = bytesToLatin1(data);
+            return /BT[\s\S]*?ET|\bTj\b|\bTJ\b/.test(t) ? pdfContentText(t) : "";
+          });
+      }));
+    }).then(function (texts) {
+      var pages = (latin.match(/\/Type\s*\/Page\b/g) || []).length;
+      var out = pdfSummary(texts, pages, 0, false);
+      out.unlocked = true;
+      out.lockMethod = info.method;
+      out.lockRevision = info.r;
+      return out;
+    });
+  });
+}
+
+/* ================= Opening a locked statement =================
+   Banks send statements locked with a password. Telling you to go and make an
+   unprotected copy first is honest but useless \u2014 so this opens them.
+
+   The password is used to derive a key, the key is checked against the file,
+   and then it is dropped. It is never stored, never saved, never synced. */
+
+/* ---- MD5, needed for the standard security handler ---- */
+function md5Bytes(input) {
+  var S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
+           5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
+           4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
+           6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+  var K = [];
+  for (var i = 0; i < 64; i++) {
+    K[i] = (Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296)) | 0;
+  }
+  var msg = Array.prototype.slice.call(input);
+  var bitLen = msg.length * 8;
+  msg.push(0x80);
+  while (msg.length % 64 !== 56) msg.push(0);
+  for (i = 0; i < 8; i++) msg.push((bitLen / Math.pow(2, 8 * i)) & 0xff);
+
+  var a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+  var rot = function (x, c) { return ((x << c) | (x >>> (32 - c))) | 0; };
+
+  for (var off = 0; off < msg.length; off += 64) {
+    var M = [];
+    for (var j = 0; j < 16; j++) {
+      M[j] = msg[off + j * 4] | (msg[off + j * 4 + 1] << 8) |
+             (msg[off + j * 4 + 2] << 16) | (msg[off + j * 4 + 3] << 24);
+    }
+    var A = a0, B = b0, C = c0, D = d0;
+    for (i = 0; i < 64; i++) {
+      var F, g;
+      if (i < 16) { F = (B & C) | (~B & D); g = i; }
+      else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) % 16; }
+      else if (i < 48) { F = B ^ C ^ D; g = (3 * i + 5) % 16; }
+      else { F = C ^ (B | ~D); g = (7 * i) % 16; }
+      F = (F + A + K[i] + M[g]) | 0;
+      A = D; D = C; C = B;
+      B = (B + rot(F, S[i])) | 0;
+    }
+    a0 = (a0 + A) | 0; b0 = (b0 + B) | 0; c0 = (c0 + C) | 0; d0 = (d0 + D) | 0;
+  }
+  var out = new Uint8Array(16);
+  [a0, b0, c0, d0].forEach(function (v, k) {
+    out[k * 4] = v & 0xff; out[k * 4 + 1] = (v >>> 8) & 0xff;
+    out[k * 4 + 2] = (v >>> 16) & 0xff; out[k * 4 + 3] = (v >>> 24) & 0xff;
+  });
+  return out;
+}
+
+/* ---- RC4, used by every revision before AES ---- */
+function rc4(key, data) {
+  var S = new Uint8Array(256), i, j = 0, t;
+  for (i = 0; i < 256; i++) S[i] = i;
+  for (i = 0; i < 256; i++) {
+    j = (j + S[i] + key[i % key.length]) & 255;
+    t = S[i]; S[i] = S[j]; S[j] = t;
+  }
+  var out = new Uint8Array(data.length);
+  i = 0; j = 0;
+  for (var k = 0; k < data.length; k++) {
+    i = (i + 1) & 255;
+    j = (j + S[i]) & 255;
+    t = S[i]; S[i] = S[j]; S[j] = t;
+    out[k] = data[k] ^ S[(S[i] + S[j]) & 255];
+  }
+  return out;
+}
+
+/* the padding every PDF password is extended with */
+var PDF_PAD = new Uint8Array([
+  0x28,0xBF,0x4E,0x5E,0x4E,0x75,0x8A,0x41,0x64,0x00,0x4E,0x56,0xFF,0xFA,0x01,0x08,
+  0x2E,0x2E,0x00,0xB6,0xD0,0x68,0x3E,0x80,0x2F,0x0C,0xA9,0xFE,0x64,0x53,0x69,0x7A]);
+
+function padPassword(pw) {
+  var bytes = [];
+  var s = String(pw || "");
+  for (var i = 0; i < s.length && bytes.length < 32; i++) {
+    bytes.push(s.charCodeAt(i) & 0xff);
+  }
+  var out = new Uint8Array(32);
+  out.set(bytes.slice(0, 32), 0);
+  for (i = bytes.length; i < 32; i++) out[i] = PDF_PAD[i - bytes.length];
+  return out;
+}
+
+function hexToBytes(h) {
+  var s = String(h || "").replace(/[^0-9a-fA-F]/g, "");
+  var out = new Uint8Array(Math.floor(s.length / 2));
+  for (var i = 0; i < out.length; i++) {
+    out[i] = parseInt(s.substr(i * 2, 2), 16);
+  }
+  return out;
+}
+function latinToBytes(s) {
+  var out = new Uint8Array(s.length);
+  for (var i = 0; i < s.length; i++) out[i] = s.charCodeAt(i) & 0xff;
+  return out;
+}
+
+/** Read the /Encrypt dictionary and the file id. Everything the key needs. */
+function readEncryptInfo(latin) {
+  var enc = latin.match(/\/Encrypt\b/);
+  if (!enc) return { encrypted: false };
+
+  /* the encryption dictionary itself, wherever it sits in the file */
+  var dict = "";
+  var ref = latin.match(/\/Encrypt\s+(\d+)\s+(\d+)\s*R/);
+  if (ref) {
+    var at = latin.search(new RegExp("(^|[^0-9])" + ref[1] + "\\s+" + ref[2] + "\\s+obj"));
+    if (at >= 0) dict = latin.slice(at, at + 2400);
+  }
+  if (!dict) {
+    var inline = latin.indexOf("/Encrypt");
+    dict = latin.slice(inline, inline + 2400);
+  }
+
+  var str = function (name) {
+    var mHex = dict.match(new RegExp("/" + name + "\\s*<([0-9a-fA-F\\s]+)>"));
+    if (mHex) return hexToBytes(mHex[1]);
+    var mLit = dict.match(new RegExp("/" + name + "\\s*\\(((?:\\\\.|[^)])*)\\)"));
+    if (!mLit) return null;
+    /* a literal string can escape bytes; unescape before using them */
+    var raw = mLit[1].replace(/\\([nrtbf()\\]|[0-7]{1,3})/g, function (_, c) {
+      if (c === "n") return "\n"; if (c === "r") return "\r";
+      if (c === "t") return "\t"; if (c === "b") return "\b";
+      if (c === "f") return "\f";
+      if (/^[0-7]+$/.test(c)) return String.fromCharCode(parseInt(c, 8));
+      return c;
+    });
+    return latinToBytes(raw);
+  };
+  var num = function (name, dflt) {
+    var m = dict.match(new RegExp("/" + name + "\\s+(-?\\d+)"));
+    return m ? parseInt(m[1], 10) : dflt;
+  };
+
+  var v = num("V", 0), r = num("R", 0);
+  var length = num("Length", 40);
+  var method = "rc4";
+  if (v >= 4) {
+    var cf = dict.match(/\/CFM\s*\/(\w+)/);
+    if (cf) {
+      if (/AESV2/i.test(cf[1])) { method = "aes128"; length = 128; }
+      else if (/AESV3/i.test(cf[1])) { method = "aes256"; length = 256; }
+      else if (/None/i.test(cf[1])) method = "none";
+    }
+  }
+  if (r >= 5) { method = "aes256"; length = 256; }
+
+  /* the first element of the file id, which the key derivation folds in */
+  var idBytes = new Uint8Array(0);
+  var idm = latin.match(/\/ID\s*\[\s*<([0-9a-fA-F\s]+)>/);
+  if (idm) idBytes = hexToBytes(idm[1]);
+
+  return {
+    encrypted: true,
+    v: v, r: r, length: length, method: method,
+    O: str("O"), U: str("U"),
+    OE: str("OE"), UE: str("UE"),
+    P: num("P", 0),
+    encryptMetadata: !/\/EncryptMetadata\s+false/i.test(dict),
+    id: idBytes,
+    /* a handler this app does not implement is said outright */
+    supported: (r >= 2 && r <= 4) || r === 5 || r === 6
+  };
+}
+
+/** The file key, from a password. Algorithm 2 of the PDF specification. */
+function pdfKeyFromPassword(info, pw) {
+  var pad = padPassword(pw);
+  var n = Math.max(5, Math.floor((info.length || 40) / 8));
+  var parts = [];
+  var push = function (arr) {
+    for (var i = 0; i < arr.length; i++) parts.push(arr[i]);
+  };
+  push(pad);
+  push(info.O || new Uint8Array(32));
+  var p = info.P | 0;
+  parts.push(p & 0xff, (p >> 8) & 0xff, (p >> 16) & 0xff, (p >> 24) & 0xff);
+  push(info.id || new Uint8Array(0));
+  if (info.r >= 4 && !info.encryptMetadata) parts.push(255, 255, 255, 255);
+
+  var key = md5Bytes(new Uint8Array(parts));
+  if (info.r >= 3) {
+    for (var i = 0; i < 50; i++) key = md5Bytes(key.slice(0, n));
+  }
+  return key.slice(0, n);
+}
+
+/** Is this the right password? Algorithm 6, without decrypting anything. */
+function pdfPasswordWorks(info, pw) {
+  if (!info.U) return false;
+  if (info.r === 2) {
+    var k2 = pdfKeyFromPassword(info, pw);
+    var want = rc4(k2, PDF_PAD);
+    for (var i = 0; i < 32; i++) if (want[i] !== info.U[i]) return false;
+    return true;
+  }
+  if (info.r === 3 || info.r === 4) {
+    var key = pdfKeyFromPassword(info, pw);
+    var seedParts = [];
+    for (i = 0; i < PDF_PAD.length; i++) seedParts.push(PDF_PAD[i]);
+    var idb = info.id || new Uint8Array(0);
+    for (i = 0; i < idb.length; i++) seedParts.push(idb[i]);
+    var block = md5Bytes(new Uint8Array(seedParts));
+    block = rc4(key, block);
+    for (i = 1; i <= 19; i++) {
+      var kx = new Uint8Array(key.length);
+      for (var j = 0; j < key.length; j++) kx[j] = key[j] ^ i;
+      block = rc4(kx, block);
+    }
+    /* only the first 16 bytes are meaningful for R3 and R4 */
+    for (i = 0; i < 16; i++) if (block[i] !== info.U[i]) return false;
+    return true;
+  }
+  return false;
+}
+
+/** R5 and R6 use SHA-256 rather than MD5, so the check has to wait on it. */
+function pdfPasswordWorksAsync(info, pw) {
+  if (info.r < 5) return Promise.resolve(pdfPasswordWorks(info, pw));
+  if (!info.U || info.U.length < 48 || !cryptoOk()) return Promise.resolve(false);
+  var pwBytes = latinToBytes(String(pw || ""));
+  var salt = info.U.slice(32, 40);
+  var joined = new Uint8Array(pwBytes.length + 8);
+  joined.set(pwBytes, 0); joined.set(salt, pwBytes.length);
+  return sha256(joined).then(function (hash) {
+    if (info.r === 5) {
+      for (var i = 0; i < 32; i++) if (hash[i] !== info.U[i]) return false;
+      return true;
+    }
+    /* R6 hardens the hash; the full round is what the file was made with */
+    return hash26(hash, pwBytes, new Uint8Array(0)).then(function (h) {
+      for (var i = 0; i < 32; i++) if (h[i] !== info.U[i]) return false;
+      return true;
+    });
+  }).catch(function () { return false; });
+}
+
+function cryptoOk() {
+  try {
+    return typeof crypto !== "undefined" && crypto.subtle &&
+      typeof crypto.subtle.digest === "function";
+  } catch (e) { return false; }
+}
+function sha256(bytes) {
+  return crypto.subtle.digest("SHA-256", bytes).then(function (b) {
+    return new Uint8Array(b);
+  });
+}
+function shaN(bits, bytes) {
+  return crypto.subtle.digest("SHA-" + bits, bytes).then(function (b) {
+    return new Uint8Array(b);
+  });
+}
+/** Algorithm 2.B, the hardened hash R6 files are built with. */
+function hash26(k, pwBytes, extra) {
+  var round = 0;
+  var step = function (K) {
+    var one = new Uint8Array(pwBytes.length + K.length + extra.length);
+    one.set(pwBytes, 0); one.set(K, pwBytes.length);
+    one.set(extra, pwBytes.length + K.length);
+    var k1 = new Uint8Array(one.length * 64);
+    for (var i = 0; i < 64; i++) k1.set(one, i * one.length);
+    return crypto.subtle.importKey("raw", K.slice(0, 16), { name: "AES-CBC" },
+        false, ["encrypt"])
+      .then(function (ck) {
+        return crypto.subtle.encrypt({ name: "AES-CBC", iv: K.slice(16, 32) }, ck, k1);
+      })
+      .then(function (buf) {
+        /* WebCrypto pads on encrypt; the specification wants it unpadded, so
+           the extra final block is dropped */
+        var e = new Uint8Array(buf).slice(0, k1.length);
+        var sum = 0;
+        for (var i = 0; i < 16; i++) sum += e[i];
+        var pick = sum % 3;
+        return shaN(pick === 0 ? 256 : pick === 1 ? 384 : 512, e)
+          .then(function (nk) {
+            round += 1;
+            if (round >= 64 && e[e.length - 1] <= round - 32) {
+              return nk.slice(0, 32);
+            }
+            if (round > 300) return nk.slice(0, 32);
+            return step(nk);
+          });
+      });
+  };
+  return step(k);
+}
+
+/** The key R5 and R6 files actually encrypt their contents with. */
+function pdfKey256(info, pw) {
+  if (!info.U || info.U.length < 48 || !info.UE || !cryptoOk()) {
+    return Promise.resolve(null);
+  }
+  var pwBytes = latinToBytes(String(pw || ""));
+  var keySalt = info.U.slice(40, 48);
+  var joined = new Uint8Array(pwBytes.length + 8);
+  joined.set(pwBytes, 0); joined.set(keySalt, pwBytes.length);
+  var first = info.r === 5
+    ? sha256(joined)
+    : sha256(joined).then(function (h) {
+        return hash26(h, pwBytes, new Uint8Array(0));
+      });
+  return first.then(function (ikey) {
+    return crypto.subtle.importKey("raw", ikey, { name: "AES-CBC" }, false, ["decrypt"]);
+  }).then(function (ck) {
+    /* the file key is stored encrypted with no padding and a zero iv */
+    var padded = new Uint8Array(info.UE.length + 16);
+    padded.set(info.UE, 0);
+    return crypto.subtle.decrypt(
+      { name: "AES-CBC", iv: new Uint8Array(16) }, ck, padded
+    ).catch(function () {
+      return crypto.subtle.importKey("raw", new Uint8Array(32), { name: "AES-CBC" },
+        false, ["decrypt"]).then(function () { return null; });
+    });
+  }).then(function (buf) {
+    return buf ? new Uint8Array(buf).slice(0, 32) : null;
+  }).catch(function () { return null; });
+}
+
+/** The key for one object, which differs per object before AES-256. */
+function objectKey(fileKey, num, gen, aes) {
+  if (!fileKey) return null;
+  var parts = [];
+  for (var i = 0; i < fileKey.length; i++) parts.push(fileKey[i]);
+  parts.push(num & 0xff, (num >> 8) & 0xff, (num >> 16) & 0xff);
+  parts.push(gen & 0xff, (gen >> 8) & 0xff);
+  if (aes) parts.push(0x73, 0x41, 0x6c, 0x54);
+  var k = md5Bytes(new Uint8Array(parts));
+  return k.slice(0, Math.min(16, fileKey.length + 5));
+}
+
+function aesDecrypt(key, data) {
+  if (!cryptoOk() || data.length <= 16) return Promise.resolve(new Uint8Array(0));
+  var iv = data.slice(0, 16), body = data.slice(16);
+  if (body.length % 16 !== 0) body = body.slice(0, body.length - (body.length % 16));
+  if (!body.length) return Promise.resolve(new Uint8Array(0));
+  return crypto.subtle.importKey("raw", key, { name: "AES-CBC" }, false, ["decrypt"])
+    .then(function (ck) {
+      return crypto.subtle.decrypt({ name: "AES-CBC", iv: iv }, ck, body);
+    })
+    .then(function (b) { return new Uint8Array(b); })
+    .catch(function () {
+      /* a stream whose padding does not verify is still worth reading */
+      return crypto.subtle.importKey("raw", key, { name: "AES-CBC" }, false, ["decrypt"])
+        .then(function (ck) {
+          var trimmed = body.slice(0, body.length - 16);
+          if (!trimmed.length) return new Uint8Array(0);
+          return crypto.subtle.decrypt({ name: "AES-CBC", iv: iv }, ck, body)
+            .catch(function () { return new ArrayBuffer(0); });
+        })
+        .then(function (b) { return new Uint8Array(b); })
+        .catch(function () { return new Uint8Array(0); });
+    });
+}
+
+/* ================= Locking a report you download =================
+   The same standard security handler, used the other way round. RC4 128-bit
+   (revision 3) is chosen because every PDF reader in existence opens it, and
+   a report nobody can open is worse than one that is not locked. */
+
+/** Build the /O entry from an owner password. Algorithm 3. */
+function makeOwnerEntry(ownerPw, userPw, n) {
+  var key = md5Bytes(padPassword(ownerPw));
+  for (var i = 0; i < 50; i++) key = md5Bytes(key);
+  key = key.slice(0, n);
+  var out = rc4(key, padPassword(userPw));
+  for (i = 1; i <= 19; i++) {
+    var kx = new Uint8Array(key.length);
+    for (var j = 0; j < key.length; j++) kx[j] = key[j] ^ i;
+    out = rc4(kx, out);
+  }
+  return out;
+}
+
+/** Build the /U entry, which is what a reader checks a password against. */
+function makeUserEntry(fileKey, idBytes) {
+  var parts = [];
+  for (var i = 0; i < PDF_PAD.length; i++) parts.push(PDF_PAD[i]);
+  for (i = 0; i < idBytes.length; i++) parts.push(idBytes[i]);
+  var block = md5Bytes(new Uint8Array(parts));
+  block = rc4(fileKey, block);
+  for (i = 1; i <= 19; i++) {
+    var kx = new Uint8Array(fileKey.length);
+    for (var j = 0; j < fileKey.length; j++) kx[j] = fileKey[j] ^ i;
+    block = rc4(kx, block);
+  }
+  var out = new Uint8Array(32);
+  out.set(block.slice(0, 16), 0);
+  /* the remaining bytes are arbitrary; padding keeps them stable */
+  out.set(PDF_PAD.slice(0, 16), 16);
+  return out;
+}
+
+function randomId() {
+  var b = new Uint8Array(16);
+  try {
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+      crypto.getRandomValues(b);
+      return b;
+    }
+  } catch (e) {}
+  for (var i = 0; i < 16; i++) b[i] = Math.floor(Math.random() * 256);
+  return b;
+}
+
+function bytesToHex(b) {
+  var s = "";
+  for (var i = 0; i < b.length; i++) {
+    s += (b[i] < 16 ? "0" : "") + b[i].toString(16);
+  }
+  return s;
+}
+
+/** Take a PDF this app built and lock it with a password.
+    Only works on our own output, whose structure is known. */
+function lockPdf(bytes, password) {
+  var latin = bytesToLatin1(bytes);
+  if (latin.slice(0, 5) !== "%PDF-") {
+    return { ok: false, why: "That is not a PDF this app made." };
+  }
+  if (/\/Encrypt\b/.test(latin)) {
+    return { ok: false, why: "That file is already locked." };
+  }
+  var pw = String(password || "");
+  if (!pw) return { ok: false, why: "No password was given." };
+
+  var n = 16;               /* 128-bit */
+  var P = -3904;            /* printing and copying allowed, editing not */
+  var idBytes = randomId();
+  var O = makeOwnerEntry(pw, pw, n);
+
+  var parts = [];
+  var push = function (a) { for (var i = 0; i < a.length; i++) parts.push(a[i]); };
+  push(padPassword(pw));
+  push(O);
+  parts.push(P & 0xff, (P >> 8) & 0xff, (P >> 16) & 0xff, (P >> 24) & 0xff);
+  push(idBytes);
+  var key = md5Bytes(new Uint8Array(parts));
+  for (var i = 0; i < 50; i++) key = md5Bytes(key.slice(0, n));
+  var fileKey = key.slice(0, n);
+  var U = makeUserEntry(fileKey, idBytes);
+
+  /* every object, so each stream can be encrypted with its own key */
+  var marks = [];
+  var re = /(\d+)\s+(\d+)\s+obj\b/g, m;
+  while ((m = re.exec(latin))) {
+    marks.push({ num: +m[1], gen: +m[2], at: m.index });
+  }
+  if (!marks.length) return { ok: false, why: "That PDF has no objects to lock." };
+  var ownerOf = function (at) {
+    var best = marks[0];
+    for (var k = 0; k < marks.length; k++) {
+      if (marks[k].at <= at) best = marks[k]; else break;
+    }
+    return best;
+  };
+
+  /* rebuild the file with encrypted streams, tracking where each object
+     lands so the cross-reference table stays correct */
+  var out = [];
+  var at = 0;
+  var sre = /(^|[^a-zA-Z])stream\r?\n?/g, sm;
+  var pieces = [];
+  while ((sm = sre.exec(latin))) {
+    var startAt = sm.index + sm[1].length;
+    var from = sm.index + sm[0].length;
+    var endAt = latin.indexOf("endstream", from);
+    if (endAt < 0) break;
+    pieces.push({ head: from, tail: endAt, owner: ownerOf(startAt) });
+    sre.lastIndex = endAt;
+  }
+
+  var body = [];
+  pieces.forEach(function (p) {
+    body.push({ text: latin.slice(at, p.head) });
+    var raw = bytes.slice(p.head, p.tail);
+    var k = objectKey(fileKey, p.owner.num, p.owner.gen, false);
+    body.push({ data: rc4(k, raw) });
+    at = p.tail;
+  });
+  body.push({ text: latin.slice(at) });
+
+  /* stitch it back together as bytes */
+  var total = 0;
+  body.forEach(function (b) {
+    total += b.data ? b.data.length : b.text.length;
+  });
+  var joined = new Uint8Array(total);
+  var w = 0;
+  body.forEach(function (b) {
+    if (b.data) { joined.set(b.data, w); w += b.data.length; }
+    else {
+      for (var i = 0; i < b.text.length; i++) joined[w + i] = b.text.charCodeAt(i) & 0xff;
+      w += b.text.length;
+    }
+  });
+
+  /* append the encryption dictionary and a trailer that points at it */
+  var text = bytesToLatin1(joined);
+  var lastObj = marks.reduce(function (n2, x) { return Math.max(n2, x.num); }, 0);
+  var encNum = lastObj + 1;
+  var encObj = "\n" + encNum + " 0 obj\n<</Filter/Standard/V 2/R 3/Length 128/P " +
+    P + "/O <" + bytesToHex(O) + ">/U <" + bytesToHex(U) + ">>>\nendobj\n";
+
+  var rootM = text.match(/\/Root\s+(\d+)\s+(\d+)\s*R/);
+  if (!rootM) return { ok: false, why: "That PDF has no catalogue to point at." };
+
+  var withEnc = text + encObj;
+  var startxref = withEnc.length;
+  var xref = "xref\n0 1\n0000000000 65535 f \n";
+  var trailer = "trailer\n<</Size " + (encNum + 1) + "/Root " + rootM[1] + " " +
+    rootM[2] + " R/Encrypt " + encNum + " 0 R/ID[<" + bytesToHex(idBytes) +
+    "><" + bytesToHex(idBytes) + ">]/Prev " + firstStartxref(text) + ">>\n" +
+    "startxref\n" + startxref + "\n%%EOF\n";
+
+  var finalText = withEnc + xref + trailer;
+  var outBytes = new Uint8Array(finalText.length);
+  for (i = 0; i < finalText.length; i++) outBytes[i] = finalText.charCodeAt(i) & 0xff;
+
+  return {
+    ok: true,
+    bytes: outBytes,
+    /* said plainly, because "encrypted" means different things to people */
+    words: "Locked with the password you typed. Anyone opening it will be " +
+      "asked for that password.",
+    caveat: "This app cannot recover it. If you forget it, the file cannot " +
+      "be opened \u2014 by you or by anyone."
+  };
+}
+
+function firstStartxref(text) {
+  var m = text.lastIndexOf("startxref");
+  if (m < 0) return 0;
+  var num = text.slice(m + 9, m + 40).match(/\d+/);
+  return num ? num[0] : 0;
+}
+
+function readPdf(bytes, password) {
   var latin = bytesToLatin1(bytes);
   if (latin.slice(0, 5) !== "%PDF-") return Promise.reject(new Error("not-pdf"));
-  if (/\/Encrypt\b/.test(latin)) return Promise.reject(new Error("pdf-locked"));
+
+  var info = readEncryptInfo(latin);
+  if (info.encrypted) {
+    if (!info.supported) {
+      return Promise.reject(new Error("pdf-lock-unsupported"));
+    }
+    if (password === undefined || password === null) {
+      return Promise.reject(new Error("pdf-locked"));
+    }
+    return unlockPdf(bytes, latin, info, password);
+  }
 
   var jobs = [], plain = [];
   /* The keyword must not match inside "endstream", or the scan finds a false
@@ -15984,7 +16861,7 @@ function sniffKind(name, bytes) {
 
 /** Read one chosen file. Always resolves - an unreadable file is a result,
     not a crash, and it says exactly why. */
-function readStatementFile(name, bytes) {
+function readStatementFile(name, bytes, password) {
   var kind = sniffKind(name, bytes);
   var info = STMT_KINDS[kind] || STMT_KINDS.other;
   var base = { name: name, kind: kind, label: info.label, size: bytes ? bytes.length : 0,
@@ -16026,7 +16903,7 @@ function readStatementFile(name, bytes) {
       return base;
     });
   }
-  return readPdf(bytes).then(function (r) {
+  return readPdf(bytes, password).then(function (r) {
     base.text = r.text;
     base.readable = r.readable;
     base.pdf = r;
@@ -16040,10 +16917,27 @@ function readStatementFile(name, bytes) {
     }
     return base;
   }).catch(function (e) {
-    base.why = e && e.message === "pdf-locked"
-      ? "This PDF is password protected. Open it with your password and save an " +
-        "unprotected copy, then upload that. The password is never stored here."
-      : "That file could not be opened as a PDF.";
+    var msg = e && e.message;
+    if (msg === "pdf-locked") {
+      /* not a failure \u2014 a question. The caller asks for the password. */
+      base.locked = true;
+      base.why = "This statement is locked with a password.";
+      return base;
+    }
+    if (msg === "pdf-wrong-password") {
+      base.locked = true;
+      base.wrongPassword = true;
+      base.why = "That password did not open the file.";
+      return base;
+    }
+    if (msg === "pdf-lock-unsupported") {
+      base.locked = true;
+      base.unsupportedLock = true;
+      base.why = "This file is locked in a way this app cannot open. Save an " +
+        "unprotected copy from your bank and upload that instead.";
+      return base;
+    }
+    base.why = "That file could not be opened as a PDF.";
     return base;
   });
 }
@@ -22253,6 +23147,83 @@ function stmtGate(name, size) {
 /** Read the chosen files, one at a time, in the order they were picked.
     Every file is gated on size first, and a failure on one never stops the
     rest. Nothing is saved by any of this. */
+/** Ask for the password. Nothing about it is stored, and it is wiped from
+    memory the moment the file has been read. */
+/** Asked before a PDF is written, never after. */
+function lockAskSheet() {
+  return '<div class="shd"><h2>Lock this report?</h2>' +
+    '<button type="button" class="ib grow" data-act="closeSheet" ' +
+    'aria-label="Close">\u2715</button></div>' +
+    '<div class="wrap">' +
+    '<p class="sub">A PDF can be locked with a password, so it cannot be ' +
+    "opened by anyone who does not have it.</p>" +
+    '<div class="btns" style="flex-direction:column;align-items:stretch">' +
+    '<button type="button" class="btn" data-act="lockYes">' +
+    "Yes \u2014 ask me for a password</button>" +
+    '<button type="button" class="btn g" data-act="lockNo">' +
+    "No \u2014 download it unlocked</button></div>" +
+    '<div class="note info" style="margin-block-start:12px">' +
+    '<span aria-hidden="true">\u2139</span><div>' +
+    "<b>You choose the password, not this app.</b><br>It will not reuse the " +
+    "password from your bank statement, and it will not make one up. If you " +
+    "lock a file and forget the password, nothing here can open it again." +
+    "</div></div></div>";
+}
+
+function lockPasswordSheet() {
+  return '<div class="shd"><h2>Choose a password</h2>' +
+    '<button type="button" class="ib grow" data-act="closeSheet" ' +
+    'aria-label="Close">\u2715</button></div>' +
+    '<div class="wrap">' +
+    '<form data-form="lockPassword"><div class="f">' +
+    '<label for="lockPw">Password for this file</label>' +
+    '<input id="lockPw" name="lockPw" type="password" autocomplete="new-password" ' +
+    'autocapitalize="off" spellcheck="false"></div>' +
+    '<div class="f"><label for="lockPw2">Type it again</label>' +
+    '<input id="lockPw2" name="lockPw2" type="password" ' +
+    'autocomplete="new-password" autocapitalize="off" spellcheck="false"></div>' +
+    '<div class="btns"><button type="submit" class="btn" style="flex:1">' +
+    "Lock and download</button>" +
+    '<button type="button" class="btn g" data-act="closeSheet">Cancel</button>' +
+    "</div></form>" +
+    '<div class="note warn" style="margin-block-start:10px">' +
+    '<span aria-hidden="true">!</span><div>' +
+    "<b>Write it down before you continue.</b><br>This app does not store it " +
+    "and cannot recover it. A locked file with a forgotten password is a " +
+    "file nobody can open.</div></div></div>";
+}
+
+function passwordSheet() {
+  var f = ui.lockedFile;
+  if (!f) return "";
+  return '<div class="shd"><h2>This statement is locked</h2>' +
+    '<button type="button" class="ib grow" data-act="closePassword" ' +
+    'aria-label="Close">\u2715</button></div>' +
+    '<div class="wrap">' +
+    '<p class="sub">' + esc(f.name) + " is password protected. Banks usually " +
+    "use a mix of your name, date of birth, PAN or customer number \u2014 the " +
+    "email that carried the statement normally says which.</p>" +
+    (ui.lockWrong
+      ? '<div class="note bad"><span aria-hidden="true">\u2715</span><div>' +
+        "<b>That password did not open the file.</b><br>Nothing was read and " +
+        "nothing was changed. Check for capital letters, and for a date " +
+        "written as DDMMYYYY rather than DD/MM/YYYY.</div></div>"
+      : "") +
+    '<form data-form="pdfPassword"><div class="f">' +
+    '<label for="pdfPw">Password for this statement</label>' +
+    '<input id="pdfPw" name="filePw" type="password" autocomplete="off" ' +
+    'autocapitalize="off" spellcheck="false"></div>' +
+    '<div class="btns"><button type="submit" class="btn" style="flex:1">' +
+    "Open it</button>" +
+    '<button type="button" class="btn g" data-act="closePassword">Cancel</button>' +
+    "</div></form>" +
+    '<div class="note info"><span aria-hidden="true">\ud83d\udd12</span><div>' +
+    "<b>The password is used once and then dropped.</b><br>It is never saved, " +
+    "never synced, and never written into your data. Once the statement is " +
+    "read, only the masked figures are kept \u2014 the locked file is not." +
+    "</div></div></div>";
+}
+
 function readChosenStatements(fileList) {
   var files = [];
   for (var i = 0; fileList && i < fileList.length; i++) files.push(fileList[i]);
@@ -22292,7 +23263,18 @@ function readChosenStatements(fileList) {
       var bytes;
       try { bytes = new Uint8Array(reader.result); }
       catch (e) { bytes = new Uint8Array(0); }
-      readFileIsolated(name, bytes).then(function (file) {
+      readFileIsolated(name, bytes, ui.pdfPassword).then(function (file) {
+        /* A locked file is a question, not a failure. The bytes are kept in
+           memory only \u2014 never written to storage \u2014 so the password can
+           be tried without picking the file again. */
+        if (file.locked && !file.unsupportedLock) {
+          ui.lockedFile = { name: name, bytes: bytes };
+          ui.lockWrong = !!file.wrongPassword;
+          ui.stmtBusy = "";
+          render();
+          openSheet(passwordSheet());
+          return;
+        }
         var parsed = null;
         if (file.readable) {
           try { parsed = parseStatement(file); }
@@ -22345,7 +23327,10 @@ function workersAvailable() {
 var PARSE_EXPORTS = [
   canUnzip, inflateBytes, inflateAny, bytesToLatin1, readU16, readU32,
   zipEntries, zipRead, xmlTags, xmlText, colIndex, excelDate, readXlsx,
-  pdfString, pdfContentText, readPdf, pdfSummary, sniffKind, p2
+  pdfString, pdfContentText, readPdf, pdfSummary, sniffKind, p2,
+  /* the parser must be able to SEE a lock so it can report one. It is never
+     given a password \u2014 decryption always happens on the page. */
+  readEncryptInfo, hexToBytes, latinToBytes
 ];
 
 function parserSource() {
@@ -22357,7 +23342,7 @@ function parserSource() {
 
 /** Read a file in a worker. Falls back to reading it here if workers are not
     available, and says which happened rather than hiding it. */
-function readFileIsolated(name, bytes) {
+function readFileIsolated(name, bytes, password) {
   if (!workersAvailable()) {
     return readStatementFile(name, bytes).then(function (r) {
       r.isolated = false;
@@ -22421,11 +23406,14 @@ function readFileIsolated(name, bytes) {
     var giveUpAndReadHere = function () {
       /* the worker could not be started at all; reading here is still correct,
          and the caller is told it was not isolated */
-      readStatementFile(name, bytes).then(function (r) {
+      readStatementFile(name, bytes, password).then(function (r) {
         r.isolated = false;
         finish(r);
       });
     };
+    /* A password never leaves this page: it is not passed into a worker, and
+       the decryption happens where the key can be dropped straight after. */
+    if (password) { giveUpAndReadHere(); return; }
     try {
       url = URL.createObjectURL(new Blob([body], { type: "text/javascript" }));
       worker = new Worker(url);
@@ -26024,9 +27012,10 @@ function gapReport() {
         "no reading of pictures is claimed or attempted."
     ),
     gap(
-      "A password-protected PDF cannot be opened.",
-      "Save an unprotected copy from your bank instead. This keeps the " +
-        "password out of the app entirely."
+      "A password-protected statement is opened, not refused.",
+      "You are asked for the password, it is used once to unlock the file, " +
+        "and then dropped. It is never saved, synced or written into your " +
+        "data. A lock this app does not recognise says so rather than failing."
     ),
     gap(
       "Original-page extraction is refused for PDFs.",
@@ -28768,6 +29757,31 @@ function act(name, d) {
     case "merchant":
       ui.merchant = d.m || "";
       ui.view = "merchant"; render(); return;
+    case "introDone": {
+      if (!db.settings.introDone) db.settings.introDone = {};
+      db.settings.introDone[d.v] = true;
+      save(); reRender(); return;
+    }
+    case "introReset":
+      db.settings.introDone = {};
+      save(); render();
+      toast("The explanation on each screen will show again");
+      return;
+    case "lockNo":
+      ui.lockWith = ""; ui.lockAsked = true;
+      closeSheet();
+      act(ui.pendingExport && ui.pendingExport.length > 1 ? "exportAll" : "exportOne",
+        { f: (ui.pendingExport || ["pdf"])[0] });
+      return;
+    case "lockYes":
+      openSheet(lockPasswordSheet());
+      return;
+    case "closePassword":
+      ui.lockedFile = null; ui.lockWrong = false; ui.pdfPassword = "";
+      closeSheet(); render(); return;
+    case "moreGroup":
+      ui.moreOpen = ui.moreOpen === d.g ? "none" : d.g;
+      render(); return;
     case "lens":
       ui.lens = ui.lens === d.l ? "" : d.l;
       render(); return;
@@ -28830,14 +29844,34 @@ function act(name, d) {
     case "exportOne":
     case "exportAll": {
       var fmts = a === "exportAll" ? ["pdf", "csv", "xlsx", "json"] : [d.f];
+      /* a PDF can carry a password; ask once, before anything is written */
+      if (fmts.indexOf("pdf") > -1 && !ui.lockAsked) {
+        ui.pendingExport = fmts;
+        openSheet(lockAskSheet());
+        return;
+      }
+      ui.lockAsked = false;
       var res = runPeriodExport(fmts);
       if (!res.ok) { toast("Nothing downloaded \u2014 " + res.why); return; }
+      var wantLock = ui.lockWith || "";
+      ui.lockWith = "";
       var types = { pdf: "application/pdf", csv: "text/csv",
         json: "application/json",
         xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
+      var lockFailed = "";
       res.made.forEach(function (m) {
-        downloadBytes(m.name, m.body, types[m.format] || "text/plain");
+        var body = m.body, nm = m.name;
+        if (m.format === "pdf" && wantLock) {
+          var locked = lockPdf(body, wantLock);
+          if (locked.ok) { body = locked.bytes; nm = nm.replace(/\.pdf$/, "-locked.pdf"); }
+          else lockFailed = locked.why;
+        }
+        downloadBytes(nm, body, types[m.format] || "text/plain");
       });
+      if (lockFailed) {
+        toast("Downloaded, but not locked \u2014 " + lockFailed);
+        return;
+      }
       toast(res.made.length + (res.made.length === 1 ? " file" : " files") +
         " downloaded and checked \u2014 made by this app, not your bank");
       return;
@@ -29444,6 +30478,53 @@ function readForm(form) {
 function submitForm(kind, form) {
   var f = readForm(form), t, g;
   switch (kind) {
+    case "lockPassword": {
+      var lp = String(f.lockPw || "");
+      var lp2 = String(f.lockPw2 || "");
+      if (!lp) { toast("Type a password first"); return; }
+      if (lp !== lp2) { toast("The two passwords do not match"); return; }
+      ui.lockWith = lp;
+      ui.lockAsked = true;
+      closeSheet();
+      act(ui.pendingExport && ui.pendingExport.length > 1 ? "exportAll" : "exportOne",
+        { f: (ui.pendingExport || ["pdf"])[0] });
+      return;
+    }
+    case "pdfPassword": {
+      var lf = ui.lockedFile;
+      if (!lf) return;
+      var pw = String(f.filePw || "");
+      if (!pw) { toast("Type the password first"); return; }
+      ui.stmtBusy = "Opening " + lf.name + "\u2026";
+      ui.lockWrong = false;
+      closeSheet(); render();
+      readStatementFile(lf.name, lf.bytes, pw).then(function (file) {
+        /* the password has done its work; it is dropped here and nowhere
+           in this function is it written to storage */
+        pw = "";
+        if (file.locked) {
+          ui.lockWrong = !!file.wrongPassword;
+          ui.stmtBusy = "";
+          render();
+          openSheet(passwordSheet());
+          return;
+        }
+        var parsed = null;
+        if (file.readable) {
+          try { parsed = parseStatement(file); } catch (e) { file.readable = false; }
+        }
+        ui.lockedFile = null;
+        ui.lockWrong = false;
+        ui.stmtBusy = "";
+        ui.stmtRead = { file: file, parsed: parsed };
+        render();
+        openSheet(stmtReviewSheet());
+        toast(file.readable
+          ? "Opened and unlocked \u2014 the password was not saved"
+          : "Opened, but the layout was not understood");
+      });
+      return;
+    }
     case "account": {
       var isCard = f.kind === "card";
       var open = toMinor(f.open);
@@ -30449,6 +31530,14 @@ return {
              reportTab: reportTab, reportRoom: reportRoom, pageReportHub: pageReportHub,
              buildReport: buildReport, reportSeries: reportSeries,
              pageBuilder: pageBuilder, rbState: rbState, rbRange: rbRange,
+             lockAskSheet: lockAskSheet, lockPasswordSheet: lockPasswordSheet,
+             lockPdf: lockPdf, makeOwnerEntry: makeOwnerEntry, makeUserEntry: makeUserEntry,
+             passwordSheet: passwordSheet, readFileIsolated: readFileIsolated,
+             matchAccounts: matchAccounts,
+             readEncryptInfo: readEncryptInfo, pdfKeyFromPassword: pdfKeyFromPassword,
+             pdfPasswordWorks: pdfPasswordWorks, pdfPasswordWorksAsync: pdfPasswordWorksAsync,
+             unlockPdf: unlockPdf, md5Bytes: md5Bytes, rc4: rc4,
+             findScreens: findScreens,
              whatIsMissing: whatIsMissing, pageUnknown: pageUnknown,
              merchantRows: merchantRows, merchantFacts: merchantFacts,
              merchantLoyalty: merchantLoyalty, costOfConvenience: costOfConvenience,
