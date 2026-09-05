@@ -566,7 +566,7 @@ var MT = (function () {
    1. BASICS
    ========================================================= */
 var KEY = "moneytracker";
-var BUILD = "2026-09-05.9";  /* shown in Settings so you can tell which copy you are running */
+var BUILD = "2026-09-05.10";  /* shown in Settings so you can tell which copy you are running */
 var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 var DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 var COLORS = ["#0f766e","#f59e0b","#5b5bd6","#d92d20","#0ea5e9","#0b8a5f","#db2777","#65a30d","#ea580c","#64748b"];
@@ -16299,9 +16299,25 @@ function pdfContentText(content, cmap) {
      no row can be told from the next. The y value decides: same line, keep
      going; different y, start a new one. */
   var out = [], line = "", lastY = null;
-  var re = /\(((?:\\.|[^\\()])*)\)|<([0-9A-Fa-f\s]+)>|(-?[\d.]+)\s+(-?[\d.]+)\s+Tm|(T\*|Td|TD|TJ|Tj|'|")/g, m;
+  /* A line break is provisional until the next text actually arrives. Many
+     generators emit T* after every cell and then immediately reposition with
+     Tm on the SAME row \u2014 taking that T* at face value splits one
+     transaction across three lines and no row can be read. */
+  var pending = false, moved = false;
+  var settle = function () {
+    if (pending) {
+      if (line.trim()) out.push(line.trim());
+      line = "";
+      pending = false;
+    } else if (moved && line && !/\s$/.test(line)) {
+      line += " ";
+    }
+    moved = false;
+  };
+  var re = /\(((?:\\.|[^\\()])*)\)|<([0-9A-Fa-f\s]+)>|(-?[\d.]+)\s+(-?[\d.]+)\s+(Tm|Td|TD)|(T\*|TJ|Tj|'|")/g, m;
   while ((m = re.exec(content))) {
     if (m[1] !== undefined) {
+      settle();
       var lit = pdfString(m[1]);
       if (cmap) {
         var mapped = "";
@@ -16315,6 +16331,7 @@ function pdfContentText(content, cmap) {
       continue;
     }
     if (m[2] !== undefined) {
+      settle();
       var hex = m[2].replace(/\s+/g, ""), s = "";
       if (cmap) {
         /* A subset font numbers its glyphs from scratch, so the codes are
@@ -16339,22 +16356,33 @@ function pdfContentText(content, cmap) {
       line += s;
       continue;
     }
-    if (m[4] !== undefined) {
-      var y = parseFloat(m[4]);
-      if (lastY !== null && Math.abs(y - lastY) > 0.5) {
-        if (line.trim()) out.push(line.trim());
-        line = "";
+    if (m[5] !== undefined) {
+      var moveY = parseFloat(m[4]);
+      if (m[5] === "Tm") {
+        /* Tm is an absolute position. Landing on the same y means the same
+           visual row, which also cancels a break the generator asked for. */
+        if (lastY !== null && Math.abs(moveY - lastY) > 0.5) pending = true;
+        else pending = false;
+        lastY = moveY;
+        moved = true;
+      } else {
+        /* Td and TD are RELATIVE moves. Every cell of a table row is placed
+           with one of these, moving sideways with no vertical change \u2014 so
+           treating them all as line breaks splits one transaction across
+           three lines and no row can be read. Only a vertical move is a new
+           line; a sideways move is the next column. */
+        if (Math.abs(moveY) > 0.5) {
+          pending = true;
+          if (lastY !== null) lastY += moveY;
+        }
+        moved = true;
       }
-      lastY = y;
       continue;
     }
-    var op = m[5];
-    /* Td and TD move the cursor: on a statement that is the start of a new
-       line. */
-    if (op === "T*" || op === "Td" || op === "TD" || op === "'" || op === '"') {
-      if (line.trim()) out.push(line.trim());
-      line = "";
-    }
+    var op = m[6];
+    /* T*, ' and " ask for a new line \u2014 but only provisionally, since a
+       reposition onto the same row may follow immediately. */
+    if (op === "T*" || op === "'" || op === '"') pending = true;
   }
   if (line.trim()) out.push(line.trim());
   return out.join("\n");
@@ -17823,8 +17851,47 @@ function textToStatementLines(text, yearHint, kind) {
       note: note, ref: "", balance: bal, bal: bal, row: ix + 1
     });
   });
+  /* Some generators put every cell of a row on its own line, so a date, a
+     description and an amount arrive as three separate lines and nothing
+     matches. Rather than report no transactions, stitch them back together
+     and try once more \u2014 a row is a date followed by whatever precedes the
+     next date. */
+  if (!lines.length) {
+    var stitched = stitchColumnLines(src);
+    if (stitched && stitched !== String(text || "")) {
+      var again = textToStatementLines(stitched, yearHint, kind);
+      if (again.lines.length) {
+        again.stitched = true;
+        return again;
+      }
+    }
+  }
   directionFromBalance(lines);
   return { lines: lines, head: null, why: lines.length ? "" : "no dated rows found" };
+}
+
+/** Rejoin a table whose cells each landed on their own line. */
+function stitchColumnLines(src) {
+  var ONLY_DATE = /^\s*(\d{1,2}[\/\-. ](?:\d{1,2}|[A-Za-z]{3,9})[\/\-. ,]*\d{0,4}|\d{4}-\d{2}-\d{2})\s*$/;
+  var out = [], cur = null, dates = 0;
+  for (var i = 0; i < src.length; i++) {
+    var t = String(src[i] || "").trim();
+    if (!t) continue;
+    if (ONLY_DATE.test(t)) {
+      if (cur) out.push(cur);
+      cur = t;
+      dates += 1;
+      continue;
+    }
+    if (cur) {
+      /* a row is finished once it has an amount and hits the next date */
+      cur += " " + t;
+      if (cur.length > 300) { out.push(cur); cur = null; }
+    }
+  }
+  if (cur) out.push(cur);
+  /* fewer than two bare dates is not a column-per-line table */
+  return dates >= 2 ? out.join("\n") : "";
 }
 
 /** Work out which way the money went from the running balance.
@@ -31955,6 +32022,7 @@ return {
              pdfContentText: pdfContentText,
              ascii85Decode: ascii85Decode, asciiHexDecode: asciiHexDecode,
              applyFilters: applyFilters,
+             stitchColumnLines: stitchColumnLines,
              matchAccounts: matchAccounts,
              pdfKey256: pdfKey256, hash26: hash26,
              readEncryptInfo: readEncryptInfo, pdfKeyFromPassword: pdfKeyFromPassword,
